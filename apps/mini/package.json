@@ -1,0 +1,17 @@
+{
+	"name": "wx-mini",
+	"version": "0.2.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {
+		"lint": "eslint --cache --fix --ext .js",
+		"check": "node config/eslintCheck.js"
+	},
+	"dependencies": {
+		"dayjs": "^1.11.18",
+		"tdesign-miniprogram": "^1.11.0"
+	},
+	"devDependencies": {
+		"prettier": "3.6.2"
+	}
+}

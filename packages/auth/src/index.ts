@@ -1,8 +1,8 @@
-import { reactStartCookies } from 'better-auth/react-start';
-import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@wx-mini/db";
 import * as schema from "@wx-mini/db/schema/auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { reactStartCookies } from "better-auth/react-start";
 
 export const auth = betterAuth<BetterAuthOptions>({
 	database: drizzleAdapter(db, {
@@ -14,5 +14,5 @@ export const auth = betterAuth<BetterAuthOptions>({
 	emailAndPassword: {
 		enabled: true,
 	},
-  plugins: [reactStartCookies()]
+	plugins: [reactStartCookies()],
 });

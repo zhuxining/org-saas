@@ -1,5 +1,6 @@
 # Dependencies
 node_modules
+miniprogram_npm
 .pnp
 .pnp.js
 
