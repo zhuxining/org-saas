@@ -1,12 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { App as AntdApp, Button, Card, Form, Input, Typography } from "antd";
 import z from "zod";
 import { authClient } from "@/lib/auth-client";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 
 export default function SignUpForm({
 	onSwitchToSignIn,
@@ -17,6 +14,7 @@ export default function SignUpForm({
 		from: "/",
 	});
 	const { isPending } = authClient.useSession();
+	const { message } = AntdApp.useApp();
 
 	const form = useForm({
 		defaultValues: {
@@ -36,10 +34,10 @@ export default function SignUpForm({
 						navigate({
 							to: "/dashboard",
 						});
-						toast.success("Sign up successful");
+						message.success("Account created successfully");
 					},
 					onError: (error) => {
-						toast.error(error.error.message || error.error.statusText);
+						message.error(error.error.message || error.error.statusText);
 					},
 				},
 			);
@@ -58,44 +56,54 @@ export default function SignUpForm({
 	}
 
 	return (
-		<div className="mx-auto mt-10 w-full max-w-md p-6">
-			<h1 className="mb-6 text-center font-bold text-3xl">Create Account</h1>
-
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					form.handleSubmit();
-				}}
-				className="space-y-4"
-			>
-				<div>
+		<Card
+			style={{ maxWidth: 420, margin: "48px auto" }}
+			title={
+				<Typography.Title level={3} style={{ margin: 0, textAlign: "center" }}>
+					Create Account
+				</Typography.Title>
+			}
+		>
+			<Form layout="vertical" component={false}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+				>
 					<form.Field name="name">
 						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Name</Label>
+							<Form.Item
+								label="Name"
+								validateStatus={
+									field.state.meta.errors.length ? "error" : undefined
+								}
+								help={field.state.meta.errors[0]?.message}
+								required
+							>
 								<Input
 									id={field.name}
 									name={field.name}
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="name"
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
+							</Form.Item>
 						)}
 					</form.Field>
-				</div>
 
-				<div>
 					<form.Field name="email">
 						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Email</Label>
+							<Form.Item
+								label="Email"
+								validateStatus={
+									field.state.meta.errors.length ? "error" : undefined
+								}
+								help={field.state.meta.errors[0]?.message}
+								required
+							>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -103,62 +111,55 @@ export default function SignUpForm({
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="email"
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
+							</Form.Item>
 						)}
 					</form.Field>
-				</div>
 
-				<div>
 					<form.Field name="password">
 						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Password</Label>
-								<Input
+							<Form.Item
+								label="Password"
+								validateStatus={
+									field.state.meta.errors.length ? "error" : undefined
+								}
+								help={field.state.meta.errors[0]?.message}
+								required
+							>
+								<Input.Password
 									id={field.name}
 									name={field.name}
-									type="password"
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="new-password"
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
+							</Form.Item>
 						)}
 					</form.Field>
-				</div>
 
-				<form.Subscribe>
-					{(state) => (
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
-						>
-							{state.isSubmitting ? "Submitting..." : "Sign Up"}
-						</Button>
-					)}
-				</form.Subscribe>
-			</form>
+					<form.Subscribe>
+						{(state) => (
+							<Button
+								type="primary"
+								htmlType="submit"
+								block
+								loading={state.isSubmitting}
+								disabled={!state.canSubmit}
+							>
+								Sign Up
+							</Button>
+						)}
+					</form.Subscribe>
+				</form>
+			</Form>
 
-			<div className="mt-4 text-center">
-				<Button
-					variant="link"
-					onClick={onSwitchToSignIn}
-					className="text-indigo-600 hover:text-indigo-800"
-				>
+			<Typography.Paragraph style={{ marginTop: 16, textAlign: "center" }}>
+				<Button type="link" onClick={onSwitchToSignIn}>
 					Already have an account? Sign In
 				</Button>
-			</div>
-		</div>
+			</Typography.Paragraph>
+		</Card>
 	);
 }

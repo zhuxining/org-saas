@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { MenuProps } from "antd";
+import { Layout, Menu } from "antd";
 import UserMenu from "./user-menu";
 
 export default function Header() {
@@ -7,23 +9,43 @@ export default function Header() {
 		{ to: "/dashboard", label: "Dashboard" },
 	] as const;
 
+	const pathname = useRouterState({
+		select: (state) => state.location?.pathname ?? "/",
+	});
+	const selectedKey =
+		links
+			.slice()
+			.sort((a, b) => b.to.length - a.to.length)
+			.find(
+				(link) => pathname === link.to || pathname.startsWith(`${link.to}/`),
+			)?.to ?? "/";
+	const items: MenuProps["items"] = links.map(({ to, label }) => ({
+		key: to,
+		label: <Link to={to}>{label}</Link>,
+	}));
+
 	return (
-		<div>
-			<div className="flex flex-row items-center justify-between px-2 py-1">
-				<nav className="flex gap-4 text-lg">
-					{links.map(({ to, label }) => {
-						return (
-							<Link key={to} to={to}>
-								{label}
-							</Link>
-						);
-					})}
-				</nav>
-				<div className="flex items-center gap-2">
-					<UserMenu />
-				</div>
-			</div>
-			<hr />
-		</div>
+		<Layout.Header
+			style={{
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "space-between",
+				paddingInline: 24,
+				background: "transparent",
+				borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
+			}}
+		>
+			<Menu
+				mode="horizontal"
+				selectedKeys={[selectedKey]}
+				items={items}
+				style={{
+					flex: 1,
+					background: "transparent",
+					borderBottom: "none",
+				}}
+			/>
+			<UserMenu />
+		</Layout.Header>
 	);
 }

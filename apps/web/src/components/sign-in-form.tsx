@@ -1,12 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { App as AntdApp, Button, Card, Form, Input, Typography } from "antd";
 import z from "zod";
 import { authClient } from "@/lib/auth-client";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 
 export default function SignInForm({
 	onSwitchToSignUp,
@@ -17,6 +14,7 @@ export default function SignInForm({
 		from: "/",
 	});
 	const { isPending } = authClient.useSession();
+	const { message } = AntdApp.useApp();
 
 	const form = useForm({
 		defaultValues: {
@@ -34,10 +32,10 @@ export default function SignInForm({
 						navigate({
 							to: "/dashboard",
 						});
-						toast.success("Sign in successful");
+						message.success("Signed in successfully");
 					},
 					onError: (error) => {
-						toast.error(error.error.message || error.error.statusText);
+						message.error(error.error.message || error.error.statusText);
 					},
 				},
 			);
@@ -55,22 +53,32 @@ export default function SignInForm({
 	}
 
 	return (
-		<div className="mx-auto mt-10 w-full max-w-md p-6">
-			<h1 className="mb-6 text-center font-bold text-3xl">Welcome Back</h1>
-
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					form.handleSubmit();
-				}}
-				className="space-y-4"
-			>
-				<div>
+		<Card
+			style={{ maxWidth: 420, margin: "48px auto" }}
+			title={
+				<Typography.Title level={3} style={{ margin: 0, textAlign: "center" }}>
+					Welcome Back
+				</Typography.Title>
+			}
+		>
+			<Form layout="vertical" component={false}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+				>
 					<form.Field name="email">
 						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Email</Label>
+							<Form.Item
+								label="Email"
+								validateStatus={
+									field.state.meta.errors.length ? "error" : undefined
+								}
+								help={field.state.meta.errors[0]?.message}
+								required
+							>
 								<Input
 									id={field.name}
 									name={field.name}
@@ -78,62 +86,55 @@ export default function SignInForm({
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="email"
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
+							</Form.Item>
 						)}
 					</form.Field>
-				</div>
 
-				<div>
 					<form.Field name="password">
 						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Password</Label>
-								<Input
+							<Form.Item
+								label="Password"
+								validateStatus={
+									field.state.meta.errors.length ? "error" : undefined
+								}
+								help={field.state.meta.errors[0]?.message}
+								required
+							>
+								<Input.Password
 									id={field.name}
 									name={field.name}
-									type="password"
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
+									autoComplete="current-password"
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
-							</div>
+							</Form.Item>
 						)}
 					</form.Field>
-				</div>
 
-				<form.Subscribe>
-					{(state) => (
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
-						>
-							{state.isSubmitting ? "Submitting..." : "Sign In"}
-						</Button>
-					)}
-				</form.Subscribe>
-			</form>
+					<form.Subscribe>
+						{(state) => (
+							<Button
+								type="primary"
+								htmlType="submit"
+								block
+								loading={state.isSubmitting}
+								disabled={!state.canSubmit}
+							>
+								Sign In
+							</Button>
+						)}
+					</form.Subscribe>
+				</form>
+			</Form>
 
-			<div className="mt-4 text-center">
-				<Button
-					variant="link"
-					onClick={onSwitchToSignUp}
-					className="text-indigo-600 hover:text-indigo-800"
-				>
+			<Typography.Paragraph style={{ marginTop: 16, textAlign: "center" }}>
+				<Button type="link" onClick={onSwitchToSignUp}>
 					Need an account? Sign Up
 				</Button>
-			</div>
-		</div>
+			</Typography.Paragraph>
+		</Card>
 	);
 }

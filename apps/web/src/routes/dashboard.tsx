@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Card, Space, Typography } from "antd";
 import { getUser } from "@/functions/get-user";
 import { orpc } from "@/utils/orpc";
 
@@ -24,10 +25,22 @@ function RouteComponent() {
 	const privateData = useQuery(orpc.privateData.queryOptions());
 
 	return (
-		<div>
-			<h1>Dashboard</h1>
-			<p>Welcome {session?.user.name}</p>
-			<p>API: {privateData.data?.message}</p>
-		</div>
+		<Space direction="vertical" size="large" style={{ width: "100%" }}>
+			<Typography.Title level={2} style={{ marginBottom: 0 }}>
+				Dashboard
+			</Typography.Title>
+			<Card>
+				<Space direction="vertical">
+					<Typography.Text>
+						Welcome back, <strong>{session?.user.name}</strong>
+					</Typography.Text>
+					<Typography.Paragraph>
+						{privateData.isLoading
+							? "Loading private data..."
+							: privateData.data?.message}
+					</Typography.Paragraph>
+				</Space>
+			</Card>
+		</Space>
 	);
 }

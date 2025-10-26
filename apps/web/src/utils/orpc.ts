@@ -7,18 +7,14 @@ import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { createContext } from "@wx-mini/api/context";
 import { appRouter } from "@wx-mini/api/routers/index";
-import { toast } from "sonner";
+import { notification } from "antd";
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({
 		onError: (error) => {
-			toast.error(`Error: ${error.message}`, {
-				action: {
-					label: "retry",
-					onClick: () => {
-						queryClient.invalidateQueries();
-					},
-				},
+			notification.error({
+				message: "Request Error",
+				description: error.message,
 			});
 		},
 	}),
