@@ -1,4 +1,3 @@
-import "@ant-design/v5-patch-for-react-19";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";

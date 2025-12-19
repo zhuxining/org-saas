@@ -25,12 +25,12 @@ function RouteComponent() {
 	const privateData = useQuery(orpc.privateData.queryOptions());
 
 	return (
-		<Space direction="vertical" size="large" style={{ width: "100%" }}>
+		<Space orientation="vertical" size="large" style={{ width: "100%" }}>
 			<Typography.Title level={2} style={{ marginBottom: 0 }}>
 				Dashboard
 			</Typography.Title>
 			<Card>
-				<Space direction="vertical">
+				<Space orientation="vertical">
 					<Typography.Text>
 						Welcome back, <strong>{session?.user.name}</strong>
 					</Typography.Text>

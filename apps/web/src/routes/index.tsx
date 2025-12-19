@@ -28,7 +28,7 @@ function HomeComponent() {
 
 	return (
 		<div style={{ maxWidth: 720, margin: "0 auto" }}>
-			<Space direction="vertical" size="large" style={{ width: "100%" }}>
+			<Space orientation="vertical" size="large" style={{ width: "100%" }}>
 				<Card>
 					<Typography.Paragraph>
 						<pre style={{ margin: 0, overflow: "auto" }}>{TITLE_TEXT}</pre>
