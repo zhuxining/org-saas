@@ -5,7 +5,8 @@
 	"scripts": {
 		"build": "vite build",
 		"serve": "vite preview",
-		"dev": "vite dev"
+		"dev": "vite dev",
+		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.0.0",

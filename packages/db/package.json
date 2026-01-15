@@ -13,7 +13,8 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio",
-		"db:migrate": "drizzle-kit migrate"
+		"db:migrate": "drizzle-kit migrate",
+		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
 		"@wx-mini/env": "workspace:*",

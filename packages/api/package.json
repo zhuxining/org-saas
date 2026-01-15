@@ -9,7 +9,9 @@
 			"default": "./src/*.ts"
 		}
 	},
-	"scripts": {},
+	"scripts": {
+		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
+	},
 	"dependencies": {
 		"@orpc/client": "catalog:",
 		"@orpc/openapi": "catalog:",

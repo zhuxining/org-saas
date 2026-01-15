@@ -29,7 +29,8 @@
 		"db:studio": "turbo -F @wx-mini/db db:studio",
 		"db:generate": "turbo -F @wx-mini/db db:generate",
 		"db:migrate": "turbo -F @wx-mini/db db:migrate",
-		"check": "biome check --write ."
+		"check": "biome check --write .",
+		"clean": "turbo clean && git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
 		"@wx-mini/env": "workspace:*",

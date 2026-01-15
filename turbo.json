@@ -29,6 +29,9 @@
 		},
 		"db:generate": {
 			"cache": false
+		},
+		"clean": {
+			"cache": false
 		}
 	}
 }
