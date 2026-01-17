@@ -57,7 +57,7 @@
 		"@types/node": "^25.0.9",
 		"@org-sass/config": "workspace:*",
 		"lefthook": "^2.0.15",
-		"turbo": "^2.7.4",
+		"turbo": "^2.7.5",
 		"typescript": "^5.9.3"
 	},
 	"packageManager": "bun@1.3.6"
