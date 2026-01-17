@@ -62,6 +62,17 @@ protectedProcedure.handler(({ context }) => {
 
 Session is extracted in `packages/api/src/context.ts` via `auth.api.getSession()`. Always use `context.session` to check if user is authenticated.
 
+### Admin & Organization Plugins
+
+Better-Auth provides powerful plugins for managing component architecture roles and permissions:
+
+- **Admin Plugin** - Manages admin users and elevated permissions within the system
+- **Organization Plugin** - Manages multi-tenant organizations, teams, members, and hierarchies
+- **Role-based Access Control (RBAC)** - Define custom roles and permissions for organizational structures
+- **Configuration**: Plugins are configured in `packages/auth/src/index.ts` when initializing Better-Auth
+- **Database Schema**: Both plugins auto-generate required database tables; use `bun run db:push` to apply schema changes
+- **Usage Pattern**: Access organization and admin context via `context.session?.user` in protected procedures to enforce role-based authorization
+
 ### Database Schema
 
 - Schemas live in `packages/db/src/schema/`
