@@ -1,6 +1,6 @@
-import { db } from "@wx-mini/db";
-import * as schema from "@wx-mini/db/schema/auth";
-import { env } from "@wx-mini/env/server";
+import { db } from "@org-sass/db";
+import * as schema from "@org-sass/db/schema/auth";
+import { env } from "@org-sass/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { tanstackStartCookies } from "better-auth/tanstack-start";

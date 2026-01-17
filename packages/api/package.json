@@ -1,5 +1,5 @@
 {
-	"name": "@wx-mini/api",
+	"name": "@org-sass/api",
 	"type": "module",
 	"exports": {
 		".": {
@@ -17,14 +17,14 @@
 		"@orpc/openapi": "catalog:",
 		"@orpc/server": "catalog:",
 		"@orpc/zod": "catalog:",
-		"@wx-mini/auth": "workspace:*",
-		"@wx-mini/db": "workspace:*",
-		"@wx-mini/env": "workspace:*",
+		"@org-sass/auth": "workspace:*",
+		"@org-sass/db": "workspace:*",
+		"@org-sass/env": "workspace:*",
 		"dotenv": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@wx-mini/config": "workspace:*",
+		"@org-sass/config": "workspace:*",
 		"typescript": "catalog:"
 	}
 }

@@ -1,4 +1,4 @@
-# wx-mini
+# org-sass
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Self, ORPC, and more.
 
@@ -51,7 +51,7 @@ Open [http://localhost:3001](http://localhost:3001) in your browser to see the f
 ## Project Structure
 
 ```
-wx-mini/
+org-sass/
 ├── apps/
 │   └── web/         # Fullstack application (React + TanStack Start)
 ├── packages/

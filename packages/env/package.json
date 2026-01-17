@@ -1,5 +1,5 @@
 {
-	"name": "@wx-mini/env",
+	"name": "@org-sass/env",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
@@ -17,7 +17,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@wx-mini/config": "workspace:*",
+		"@org-sass/config": "workspace:*",
 		"typescript": "catalog:"
 	}
 }

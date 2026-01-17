@@ -1,5 +1,5 @@
 {
-	"name": "@wx-mini/db",
+	"name": "@org-sass/db",
 	"type": "module",
 	"exports": {
 		".": {
@@ -17,7 +17,7 @@
 		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
-		"@wx-mini/env": "workspace:*",
+		"@org-sass/env": "workspace:*",
 		"dotenv": "catalog:",
 		"drizzle-orm": "^0.45.1",
 		"pg": "^8.17.1",
@@ -25,7 +25,7 @@
 	},
 	"devDependencies": {
 		"@types/pg": "^8.16.0",
-		"@wx-mini/config": "workspace:*",
+		"@org-sass/config": "workspace:*",
 		"drizzle-kit": "^0.31.8",
 		"typescript": "catalog:"
 	}

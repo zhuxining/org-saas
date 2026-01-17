@@ -1,3 +1,5 @@
+import { createContext } from "@org-sass/api/context";
+import { appRouter } from "@org-sass/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
@@ -5,8 +7,6 @@ import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { createContext } from "@wx-mini/api/context";
-import { appRouter } from "@wx-mini/api/routers/index";
 import { toast } from "sonner";
 
 export const queryClient = new QueryClient({

@@ -1,5 +1,5 @@
+import { auth } from "@org-sass/auth";
 import { createMiddleware } from "@tanstack/react-start";
-import { auth } from "@wx-mini/auth";
 
 export const authMiddleware = createMiddleware().server(
 	async ({ next, request }) => {

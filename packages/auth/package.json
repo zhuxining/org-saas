@@ -1,5 +1,5 @@
 {
-	"name": "@wx-mini/auth",
+	"name": "@org-sass/auth",
 	"type": "module",
 	"exports": {
 		".": {
@@ -13,14 +13,14 @@
 		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
-		"@wx-mini/db": "workspace:*",
-		"@wx-mini/env": "workspace:*",
+		"@org-sass/db": "workspace:*",
+		"@org-sass/env": "workspace:*",
 		"better-auth": "catalog:",
 		"dotenv": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@wx-mini/config": "workspace:*",
+		"@org-sass/config": "workspace:*",
 		"typescript": "catalog:"
 	}
 }

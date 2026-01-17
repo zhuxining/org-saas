@@ -1,5 +1,5 @@
+import { auth } from "@org-sass/auth";
 import { createFileRoute } from "@tanstack/react-router";
-import { auth } from "@wx-mini/auth";
 
 export const Route = createFileRoute("/api/auth/$")({
 	server: {

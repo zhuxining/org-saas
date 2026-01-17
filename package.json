@@ -1,5 +1,5 @@
 {
-	"name": "wx-mini",
+	"name": "org-sass",
 	"private": true,
 	"workspaces": {
 		"packages": [
@@ -40,22 +40,22 @@
 		"check-types": "turbo check-types",
 		"dev:native": "turbo -F native dev",
 		"dev:web": "turbo -F web dev",
-		"db:push": "turbo -F @wx-mini/db db:push",
-		"db:studio": "turbo -F @wx-mini/db db:studio",
-		"db:generate": "turbo -F @wx-mini/db db:generate",
-		"db:migrate": "turbo -F @wx-mini/db db:migrate",
+		"db:push": "turbo -F @org-sass/db db:push",
+		"db:studio": "turbo -F @org-sass/db db:studio",
+		"db:generate": "turbo -F @org-sass/db db:generate",
+		"db:migrate": "turbo -F @org-sass/db db:migrate",
 		"check": "biome check --write .",
 		"clean": "turbo clean && git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
-		"@wx-mini/env": "workspace:*",
+		"@org-sass/env": "workspace:*",
 		"dotenv": "^17.2.3",
 		"zod": "^4.3.5"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.11",
-		"@types/node": "^25.0.8",
-		"@wx-mini/config": "workspace:*",
+		"@types/node": "^25.0.9",
+		"@org-sass/config": "workspace:*",
 		"lefthook": "^2.0.15",
 		"turbo": "^2.7.4",
 		"typescript": "^5.9.3"

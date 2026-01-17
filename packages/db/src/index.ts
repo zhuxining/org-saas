@@ -1,4 +1,4 @@
-import { env } from "@wx-mini/env/server";
+import { env } from "@org-sass/env/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 
 import * as schema from "./schema";

@@ -1,8 +1,8 @@
-# AGENTS.md for wx-mini Codebase
+# AGENTS.md for org-sass Codebase
 
 ## Architecture Overview
 
-**wx-mini** is a Turborepo monorepo combining a web frontend, WeChat mini program, and documentation site with a shared API layer.
+**org-sass** is a Turborepo monorepo combining a web frontend, WeChat mini program, and documentation site with a shared API layer.
 
 - **Apps**: `web` (TanStack Start + React), `mini` (WeChat mini program), `fumadocs` (docs)
 - **Packages**: `api` (oRPC type-safe backend), `auth` (Better-Auth), `db` (Drizzle ORM), `env`, `config`
@@ -10,7 +10,7 @@
 ### Data Flow
 
 1. **Web Frontend** → calls oRPC client → `/api/rpc` endpoint
-2. **oRPC Server** (in `@wx-mini/api`) → authenticates via Better-Auth → queries database via Drizzle
+2. **oRPC Server** (in `@org-sass/api`) → authenticates via Better-Auth → queries database via Drizzle
 3. **Database**: PostgreSQL with Drizzle schema in `packages/db/src/schema/`
 4. **Authentication**: Better-Auth handles session + credentials, stored in Drizzle DB
 
@@ -90,9 +90,9 @@ TanStack Router with file-based route generation:
 Use workspace paths for internal imports:
 
 ```typescript
-import { appRouter } from "@wx-mini/api/routers/index";
-import { db } from "@wx-mini/db";
-import { auth } from "@wx-mini/auth";
+import { appRouter } from "@org-sass/api/routers/index";
+import { db } from "@org-sass/db";
+import { auth } from "@org-sass/auth";
 ```
 
 Each package exports via `exports` field in `package.json`. Follow the pattern.
