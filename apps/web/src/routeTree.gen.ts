@@ -12,8 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrgLayoutRouteImport } from './routes/org/_layout'
+import { Route as AdminLayoutRouteImport } from './routes/admin/_layout'
+import { Route as OrgLayoutIndexRouteImport } from './routes/org/_layout/index'
+import { Route as AdminLayoutIndexRouteImport } from './routes/admin/_layout/index'
+import { Route as OrgLayoutCreateRouteImport } from './routes/org/_layout/create'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AdminLayoutUsersRouteImport } from './routes/admin/_layout/users'
+import { Route as AdminLayoutOrganizationsRouteImport } from './routes/admin/_layout/organizations'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -30,6 +37,31 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrgLayoutRoute = OrgLayoutRouteImport.update({
+  id: '/org/_layout',
+  path: '/org',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLayoutRoute = AdminLayoutRouteImport.update({
+  id: '/admin/_layout',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgLayoutIndexRoute = OrgLayoutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrgLayoutRoute,
+} as any)
+const AdminLayoutIndexRoute = AdminLayoutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminLayoutRoute,
+} as any)
+const OrgLayoutCreateRoute = OrgLayoutCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => OrgLayoutRoute,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -40,41 +72,108 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLayoutUsersRoute = AdminLayoutUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminLayoutRoute,
+} as any)
+const AdminLayoutOrganizationsRoute =
+  AdminLayoutOrganizationsRouteImport.update({
+    id: '/organizations',
+    path: '/organizations',
+    getParentRoute: () => AdminLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AdminLayoutRouteWithChildren
+  '/org': typeof OrgLayoutRouteWithChildren
+  '/admin/organizations': typeof AdminLayoutOrganizationsRoute
+  '/admin/users': typeof AdminLayoutUsersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/org/create': typeof OrgLayoutCreateRoute
+  '/admin/': typeof AdminLayoutIndexRoute
+  '/org/': typeof OrgLayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/admin/organizations': typeof AdminLayoutOrganizationsRoute
+  '/admin/users': typeof AdminLayoutUsersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/org/create': typeof OrgLayoutCreateRoute
+  '/admin': typeof AdminLayoutIndexRoute
+  '/org': typeof OrgLayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/admin/_layout': typeof AdminLayoutRouteWithChildren
+  '/org/_layout': typeof OrgLayoutRouteWithChildren
+  '/admin/_layout/organizations': typeof AdminLayoutOrganizationsRoute
+  '/admin/_layout/users': typeof AdminLayoutUsersRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/org/_layout/create': typeof OrgLayoutCreateRoute
+  '/admin/_layout/': typeof AdminLayoutIndexRoute
+  '/org/_layout/': typeof OrgLayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/admin'
+    | '/org'
+    | '/admin/organizations'
+    | '/admin/users'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/org/create'
+    | '/admin/'
+    | '/org/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/admin/organizations'
+    | '/admin/users'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/org/create'
+    | '/admin'
+    | '/org'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/admin/_layout'
+    | '/org/_layout'
+    | '/admin/_layout/organizations'
+    | '/admin/_layout/users'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/org/_layout/create'
+    | '/admin/_layout/'
+    | '/org/_layout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  AdminLayoutRoute: typeof AdminLayoutRouteWithChildren
+  OrgLayoutRoute: typeof OrgLayoutRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
@@ -102,6 +201,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/org/_layout': {
+      id: '/org/_layout'
+      path: '/org'
+      fullPath: '/org'
+      preLoaderRoute: typeof OrgLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/_layout': {
+      id: '/admin/_layout'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/_layout/': {
+      id: '/org/_layout/'
+      path: '/'
+      fullPath: '/org/'
+      preLoaderRoute: typeof OrgLayoutIndexRouteImport
+      parentRoute: typeof OrgLayoutRoute
+    }
+    '/admin/_layout/': {
+      id: '/admin/_layout/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminLayoutIndexRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
+    '/org/_layout/create': {
+      id: '/org/_layout/create'
+      path: '/create'
+      fullPath: '/org/create'
+      preLoaderRoute: typeof OrgLayoutCreateRouteImport
+      parentRoute: typeof OrgLayoutRoute
+    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
@@ -116,13 +250,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/_layout/users': {
+      id: '/admin/_layout/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminLayoutUsersRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
+    '/admin/_layout/organizations': {
+      id: '/admin/_layout/organizations'
+      path: '/organizations'
+      fullPath: '/admin/organizations'
+      preLoaderRoute: typeof AdminLayoutOrganizationsRouteImport
+      parentRoute: typeof AdminLayoutRoute
+    }
   }
 }
+
+interface AdminLayoutRouteChildren {
+  AdminLayoutOrganizationsRoute: typeof AdminLayoutOrganizationsRoute
+  AdminLayoutUsersRoute: typeof AdminLayoutUsersRoute
+  AdminLayoutIndexRoute: typeof AdminLayoutIndexRoute
+}
+
+const AdminLayoutRouteChildren: AdminLayoutRouteChildren = {
+  AdminLayoutOrganizationsRoute: AdminLayoutOrganizationsRoute,
+  AdminLayoutUsersRoute: AdminLayoutUsersRoute,
+  AdminLayoutIndexRoute: AdminLayoutIndexRoute,
+}
+
+const AdminLayoutRouteWithChildren = AdminLayoutRoute._addFileChildren(
+  AdminLayoutRouteChildren,
+)
+
+interface OrgLayoutRouteChildren {
+  OrgLayoutCreateRoute: typeof OrgLayoutCreateRoute
+  OrgLayoutIndexRoute: typeof OrgLayoutIndexRoute
+}
+
+const OrgLayoutRouteChildren: OrgLayoutRouteChildren = {
+  OrgLayoutCreateRoute: OrgLayoutCreateRoute,
+  OrgLayoutIndexRoute: OrgLayoutIndexRoute,
+}
+
+const OrgLayoutRouteWithChildren = OrgLayoutRoute._addFileChildren(
+  OrgLayoutRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  AdminLayoutRoute: AdminLayoutRouteWithChildren,
+  OrgLayoutRoute: OrgLayoutRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
