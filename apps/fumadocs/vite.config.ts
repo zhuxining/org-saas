@@ -9,9 +9,7 @@ export default defineConfig({
 	server: {
 		port: 3000,
 	},
-	optimizeDeps: {
-		exclude: ["react", "react-dom"],
-	},
+	optimizeDeps: {},
 	plugins: [
 		mdx(await import("./source.config")),
 		tailwindcss(),
