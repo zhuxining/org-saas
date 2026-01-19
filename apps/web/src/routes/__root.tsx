@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
 	createRootRouteWithContext,
+	HeadContent,
 	Outlet,
 	Scripts,
 } from "@tanstack/react-router";
@@ -44,8 +45,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 function RootDocument() {
 	return (
 		<html lang="zh" className="light">
+			<head>
+				<HeadContent />
+			</head>
 			<body>
-				<div className="grid h-svh grid-rows-[auto_1fr]">
+				<div className="h-svh">
 					<Outlet />
 				</div>
 				<Toaster richColors />

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as OrgRouteRouteImport } from './routes/org/route'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as publicRouteRouteImport } from './routes/(public)/route'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as OrgDashboardIndexRouteImport } from './routes/org/dashboard/index'
@@ -28,10 +29,14 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const publicIndexRoute = publicIndexRouteImport.update({
-  id: '/(public)/',
-  path: '/',
+const publicRouteRoute = publicRouteRouteImport.update({
+  id: '/(public)',
   getParentRoute: () => rootRouteImport,
+} as any)
+const publicIndexRoute = publicIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => publicRouteRoute,
 } as any)
 const authLoginRoute = authLoginRouteImport.update({
   id: '/(auth)/login',
@@ -81,6 +86,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/(public)': typeof publicRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
   '/org': typeof OrgRouteRouteWithChildren
   '/(auth)/login': typeof authLoginRoute
@@ -113,6 +119,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
   id:
     | '__root__'
+    | '/(public)'
     | '/admin'
     | '/org'
     | '/(auth)/login'
@@ -124,10 +131,10 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  publicRouteRoute: typeof publicRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   OrgRouteRoute: typeof OrgRouteRouteWithChildren
   authLoginRoute: typeof authLoginRoute
-  publicIndexRoute: typeof publicIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
@@ -148,12 +155,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(public)': {
+      id: '/(public)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof publicRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(public)/': {
       id: '/(public)/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof publicIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof publicRouteRoute
     }
     '/(auth)/login': {
       id: '/(auth)/login'
@@ -193,6 +207,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface publicRouteRouteChildren {
+  publicIndexRoute: typeof publicIndexRoute
+}
+
+const publicRouteRouteChildren: publicRouteRouteChildren = {
+  publicIndexRoute: publicIndexRoute,
+}
+
+const publicRouteRouteWithChildren = publicRouteRoute._addFileChildren(
+  publicRouteRouteChildren,
+)
+
 interface AdminRouteRouteChildren {
   AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
 }
@@ -218,10 +244,10 @@ const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  publicRouteRoute: publicRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   OrgRouteRoute: OrgRouteRouteWithChildren,
   authLoginRoute: authLoginRoute,
-  publicIndexRoute: publicIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
