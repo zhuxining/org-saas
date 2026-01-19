@@ -9,26 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrgRouteRouteImport } from './routes/org/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as publicIndexRouteImport } from './routes/(public)/index'
+import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as OrgDashboardIndexRouteImport } from './routes/org/dashboard/index'
+import { Route as AdminDashboardIndexRouteImport } from './routes/admin/dashboard/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
+const OrgRouteRoute = OrgRouteRouteImport.update({
+  id: '/org',
+  path: '/org',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const publicIndexRoute = publicIndexRouteImport.update({
+  id: '/(public)/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authLoginRoute = authLoginRouteImport.update({
+  id: '/(auth)/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+const OrgDashboardIndexRoute = OrgDashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => OrgRouteRoute,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
+const AdminDashboardIndexRoute = AdminDashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
@@ -42,65 +60,121 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/org': typeof OrgRouteRouteWithChildren
+  '/login': typeof authLoginRoute
+  '/': typeof publicIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/admin/dashboard/': typeof AdminDashboardIndexRoute
+  '/org/dashboard/': typeof OrgDashboardIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/org': typeof OrgRouteRouteWithChildren
+  '/login': typeof authLoginRoute
+  '/': typeof publicIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/admin/dashboard': typeof AdminDashboardIndexRoute
+  '/org/dashboard': typeof OrgDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/org': typeof OrgRouteRouteWithChildren
+  '/(auth)/login': typeof authLoginRoute
+  '/(public)/': typeof publicIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/admin/dashboard/': typeof AdminDashboardIndexRoute
+  '/org/dashboard/': typeof OrgDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
+  fullPaths:
+    | '/admin'
+    | '/org'
+    | '/login'
+    | '/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/admin/dashboard/'
+    | '/org/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
+  to:
+    | '/admin'
+    | '/org'
+    | '/login'
+    | '/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/admin/dashboard'
+    | '/org/dashboard'
+  id:
+    | '__root__'
+    | '/admin'
+    | '/org'
+    | '/(auth)/login'
+    | '/(public)/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/admin/dashboard/'
+    | '/org/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  OrgRouteRoute: typeof OrgRouteRouteWithChildren
+  authLoginRoute: typeof authLoginRoute
+  publicIndexRoute: typeof publicIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/org': {
+      id: '/org'
+      path: '/org'
+      fullPath: '/org'
+      preLoaderRoute: typeof OrgRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/(public)/': {
+      id: '/(public)/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof publicIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/login': {
+      id: '/(auth)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof authLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/dashboard/': {
+      id: '/org/dashboard/'
+      path: '/dashboard'
+      fullPath: '/org/dashboard/'
+      preLoaderRoute: typeof OrgDashboardIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/admin/dashboard/': {
+      id: '/admin/dashboard/'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard/'
+      preLoaderRoute: typeof AdminDashboardIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -119,10 +193,35 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteRouteChildren {
+  AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminDashboardIndexRoute: AdminDashboardIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface OrgRouteRouteChildren {
+  OrgDashboardIndexRoute: typeof OrgDashboardIndexRoute
+}
+
+const OrgRouteRouteChildren: OrgRouteRouteChildren = {
+  OrgDashboardIndexRoute: OrgDashboardIndexRoute,
+}
+
+const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
+  OrgRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  OrgRouteRoute: OrgRouteRouteWithChildren,
+  authLoginRoute: authLoginRoute,
+  publicIndexRoute: publicIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
