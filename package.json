@@ -48,7 +48,7 @@
 		"db:studio": "turbo -F @org-sass/db db:studio",
 		"db:generate": "turbo -F @org-sass/db db:generate",
 		"db:migrate": "turbo -F @org-sass/db db:migrate",
-		"check": "biome check --write .",
+		"check": "biome check --write --unsafe .",
 		"clean": "turbo clean && git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {

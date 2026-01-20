@@ -33,10 +33,17 @@ export default function SignInForm({
 				},
 				{
 					onSuccess: () => {
-						navigate({
-							to: "/org/dashboard",
-						});
-						toast.success("Sign in successful");
+						const session = authClient.useSession();
+						const role = session.data?.user?.role;
+						if (typeof role === "string" && role.includes("admin")) {
+							navigate({
+								to: "/admin/dashboard",
+							});
+						} else {
+							navigate({
+								to: "/org/dashboard",
+							});
+						}
 					},
 					onError: (error) => {
 						toast.error(error.error.message || error.error.statusText);

@@ -14,12 +14,15 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as publicRouteRouteImport } from './routes/(public)/route'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as OrgTeamsIndexRouteImport } from './routes/org/teams/index'
 import { Route as OrgSettingsIndexRouteImport } from './routes/org/settings/index'
 import { Route as OrgMembersIndexRouteImport } from './routes/org/members/index'
 import { Route as OrgDashboardIndexRouteImport } from './routes/org/dashboard/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminOrganizationsIndexRouteImport } from './routes/admin/organizations/index'
 import { Route as AdminDashboardIndexRouteImport } from './routes/admin/dashboard/index'
+import { Route as OrgTeamsTeamIdRouteImport } from './routes/org/teams/$teamId'
+import { Route as InvitationsAcceptInvitationIdRouteImport } from './routes/invitations/accept/$invitationId'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AdminOrganizationsOrgIdRouteImport } from './routes/admin/organizations/$orgId'
@@ -47,6 +50,11 @@ const authLoginRoute = authLoginRouteImport.update({
   id: '/(auth)/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrgTeamsIndexRoute = OrgTeamsIndexRouteImport.update({
+  id: '/teams/',
+  path: '/teams/',
+  getParentRoute: () => OrgRouteRoute,
 } as any)
 const OrgSettingsIndexRoute = OrgSettingsIndexRouteImport.update({
   id: '/settings/',
@@ -78,6 +86,17 @@ const AdminDashboardIndexRoute = AdminDashboardIndexRouteImport.update({
   path: '/dashboard/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const OrgTeamsTeamIdRoute = OrgTeamsTeamIdRouteImport.update({
+  id: '/teams/$teamId',
+  path: '/teams/$teamId',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const InvitationsAcceptInvitationIdRoute =
+  InvitationsAcceptInvitationIdRouteImport.update({
+    id: '/invitations/accept/$invitationId',
+    path: '/invitations/accept/$invitationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -102,12 +121,15 @@ export interface FileRoutesByFullPath {
   '/admin/organizations/$orgId': typeof AdminOrganizationsOrgIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/invitations/accept/$invitationId': typeof InvitationsAcceptInvitationIdRoute
+  '/org/teams/$teamId': typeof OrgTeamsTeamIdRoute
   '/admin/dashboard/': typeof AdminDashboardIndexRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/org/dashboard/': typeof OrgDashboardIndexRoute
   '/org/members/': typeof OrgMembersIndexRoute
   '/org/settings/': typeof OrgSettingsIndexRoute
+  '/org/teams/': typeof OrgTeamsIndexRoute
 }
 export interface FileRoutesByTo {
   '/admin': typeof AdminRouteRouteWithChildren
@@ -117,12 +139,15 @@ export interface FileRoutesByTo {
   '/admin/organizations/$orgId': typeof AdminOrganizationsOrgIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/invitations/accept/$invitationId': typeof InvitationsAcceptInvitationIdRoute
+  '/org/teams/$teamId': typeof OrgTeamsTeamIdRoute
   '/admin/dashboard': typeof AdminDashboardIndexRoute
   '/admin/organizations': typeof AdminOrganizationsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/org/dashboard': typeof OrgDashboardIndexRoute
   '/org/members': typeof OrgMembersIndexRoute
   '/org/settings': typeof OrgSettingsIndexRoute
+  '/org/teams': typeof OrgTeamsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,12 +159,15 @@ export interface FileRoutesById {
   '/admin/organizations/$orgId': typeof AdminOrganizationsOrgIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/invitations/accept/$invitationId': typeof InvitationsAcceptInvitationIdRoute
+  '/org/teams/$teamId': typeof OrgTeamsTeamIdRoute
   '/admin/dashboard/': typeof AdminDashboardIndexRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/org/dashboard/': typeof OrgDashboardIndexRoute
   '/org/members/': typeof OrgMembersIndexRoute
   '/org/settings/': typeof OrgSettingsIndexRoute
+  '/org/teams/': typeof OrgTeamsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,12 +179,15 @@ export interface FileRouteTypes {
     | '/admin/organizations/$orgId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/invitations/accept/$invitationId'
+    | '/org/teams/$teamId'
     | '/admin/dashboard/'
     | '/admin/organizations/'
     | '/admin/users/'
     | '/org/dashboard/'
     | '/org/members/'
     | '/org/settings/'
+    | '/org/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/admin'
@@ -166,12 +197,15 @@ export interface FileRouteTypes {
     | '/admin/organizations/$orgId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/invitations/accept/$invitationId'
+    | '/org/teams/$teamId'
     | '/admin/dashboard'
     | '/admin/organizations'
     | '/admin/users'
     | '/org/dashboard'
     | '/org/members'
     | '/org/settings'
+    | '/org/teams'
   id:
     | '__root__'
     | '/(public)'
@@ -182,12 +216,15 @@ export interface FileRouteTypes {
     | '/admin/organizations/$orgId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/invitations/accept/$invitationId'
+    | '/org/teams/$teamId'
     | '/admin/dashboard/'
     | '/admin/organizations/'
     | '/admin/users/'
     | '/org/dashboard/'
     | '/org/members/'
     | '/org/settings/'
+    | '/org/teams/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +234,7 @@ export interface RootRouteChildren {
   authLoginRoute: typeof authLoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
+  InvitationsAcceptInvitationIdRoute: typeof InvitationsAcceptInvitationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -235,6 +273,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof authLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/org/teams/': {
+      id: '/org/teams/'
+      path: '/teams'
+      fullPath: '/org/teams/'
+      preLoaderRoute: typeof OrgTeamsIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
     }
     '/org/settings/': {
       id: '/org/settings/'
@@ -277,6 +322,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/dashboard/'
       preLoaderRoute: typeof AdminDashboardIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/org/teams/$teamId': {
+      id: '/org/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/org/teams/$teamId'
+      preLoaderRoute: typeof OrgTeamsTeamIdRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/invitations/accept/$invitationId': {
+      id: '/invitations/accept/$invitationId'
+      path: '/invitations/accept/$invitationId'
+      fullPath: '/invitations/accept/$invitationId'
+      preLoaderRoute: typeof InvitationsAcceptInvitationIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -333,15 +392,19 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 )
 
 interface OrgRouteRouteChildren {
+  OrgTeamsTeamIdRoute: typeof OrgTeamsTeamIdRoute
   OrgDashboardIndexRoute: typeof OrgDashboardIndexRoute
   OrgMembersIndexRoute: typeof OrgMembersIndexRoute
   OrgSettingsIndexRoute: typeof OrgSettingsIndexRoute
+  OrgTeamsIndexRoute: typeof OrgTeamsIndexRoute
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
+  OrgTeamsTeamIdRoute: OrgTeamsTeamIdRoute,
   OrgDashboardIndexRoute: OrgDashboardIndexRoute,
   OrgMembersIndexRoute: OrgMembersIndexRoute,
   OrgSettingsIndexRoute: OrgSettingsIndexRoute,
+  OrgTeamsIndexRoute: OrgTeamsIndexRoute,
 }
 
 const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
@@ -355,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   authLoginRoute: authLoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
+  InvitationsAcceptInvitationIdRoute: InvitationsAcceptInvitationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -19,7 +19,7 @@ function OrgDashboard() {
 		orpc.privateData.queryOptions(),
 	);
 
-	const { data: org, isLoading: orgLoading } = useQuery(
+	const { isLoading: orgLoading } = useQuery(
 		orpc.organization.getFullOrganization.queryOptions({
 			organizationId: session?.user?.activeOrganizationId || "",
 		}),
@@ -43,7 +43,7 @@ function OrgDashboard() {
 		}),
 	);
 
-	const isLoading =
+	const _isLoading =
 		sessionLoading ||
 		orgLoading ||
 		membersLoading ||

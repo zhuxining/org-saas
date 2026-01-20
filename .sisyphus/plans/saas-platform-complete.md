@@ -424,7 +424,7 @@ Phase 6 (Public Pages):
 
 ### Phase 3: Dashboards
 
-- [ ] 6. Implement admin dashboard
+- [x] 6. Implement admin dashboard
 
   **What to do**:
   - Modify `apps/web/src/routes/admin/dashboard/index.tsx`
@@ -477,7 +477,7 @@ Phase 6 (Public Pages):
   - Files: `apps/web/src/routes/admin/dashboard/index.tsx`
   - Pre-commit: `bun run check`
 
-- [ ] 7. Implement org dashboard
+- [x] 7. Implement org dashboard
 
   **What to do**:
   - Modify `apps/web/src/routes/org/dashboard/index.tsx`
@@ -534,7 +534,7 @@ Phase 6 (Public Pages):
 
 ### Phase 4: Team Management
 
-- [ ] 8. Create teams list page
+- [x] 8. Create teams list page
 
   **What to do**:
   - Create `apps/web/src/routes/org/teams/index.tsx` (new page)
@@ -598,7 +598,7 @@ Phase 6 (Public Pages):
   - Files: `apps/web/src/routes/org/teams/index.tsx`
   - Pre-commit: `bun run check`
 
-- [ ] 9. Create team detail page
+- [x] 9. Create team detail page
 
   **What to do**:
   - Create `apps/web/src/routes/org/teams/$teamId.tsx` (new page)
@@ -665,7 +665,7 @@ Phase 6 (Public Pages):
 
 ### Phase 5: Invitation Flow
 
-- [ ] 10. Create public invitation accept/reject page
+- [x] 10. Create public invitation accept/reject page
 
   **What to do**:
   - Create `apps/web/src/routes/invitations/accept/$invitationId.tsx` (new public route)
