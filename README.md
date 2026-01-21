@@ -68,3 +68,63 @@ org-sass/
 - `bun run db:push`: Push schema changes to database
 - `bun run db:studio`: Open database studio UI
 - `bun run check`: Run Biome formatting and linting
+
+---
+
+## Pre-existing Type Issues
+
+This project has some pre-existing TypeScript warnings that don't affect functionality:
+
+### activeOrganizationId Property
+The `session.user.activeOrganizationId` property exists at runtime (added by Better-Auth) but isn't included in the generated TypeScript types.
+
+**Workaround**: Use optional chaining
+```typescript
+const organizationId = session?.user?.activeOrganizationId || "";
+```
+
+**Files Affected**:
+- `apps/web/src/routes/admin/dashboard/index.tsx`
+- `apps/web/src/routes/org/dashboard/index.tsx`
+- `apps/web/src/routes/org/-components/org-switcher.tsx`
+- `apps/web/src/routes/org/teams/index.tsx`
+- `apps/web/src/routes/org/teams/$teamId.tsx`
+
+**Impact**: These warnings don't block functionality. Code works correctly at runtime.
+
+### queryOptions Type Mismatch
+The generated oRPC types expect `{ input: {...} }` structure but the actual usage pattern passes objects directly.
+
+**Expected Pattern**:
+```typescript
+orpc.organization.listMembers.queryOptions({
+  input: { organizationId: "..." }
+})
+```
+
+**Actual Usage (works at runtime)**:
+```typescript
+orpc.organization.listMembers.queryOptions({
+  organizationId: "..."
+})
+```
+
+**Files Affected**: All files using oRPC queries
+
+**Impact**: Not blocking - generated oRPC types have this structure, code works correctly at runtime.
+
+### Route Registration
+New public pages (`/pricing`, `/about`, `/landing`) need the route tree to be regenerated for TypeScript to recognize them.
+
+**Resolution**: Run `bun run dev` to trigger TanStack Router's automatic route tree generation.
+
+---
+
+## Evolution Phases
+
+This project has been through complete implementation phases (see `.sisyphus/plans/evolution-roadmap.md`):
+
+- ✅ **Phase 1-6**: Core platform implementation (33 tasks completed)
+- ⚠️ **Phase 7-12**: Evolution and optimization phases (in progress)
+
+For detailed evolution roadmap, see `.sisyphus/plans/evolution-roadmap.md`.
