@@ -1,8 +1,9 @@
 import { auth } from "@org-sass/auth";
-import { ORPCError } from "@orpc/server";
+import { getLogger } from "@orpc/experimental-pino";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
+import { mapAuthErrorToORPC } from "../lib/error-handler";
 
 type OrgRole = "member" | "admin" | "owner";
 
@@ -19,35 +20,75 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "CREATE_ORGANIZATION",
+					organizationName: input.name,
+					organizationSlug: input.slug,
+				},
+				"Creating organization",
+			);
+
 			try {
 				const result = await auth.api.createOrganization({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "CREATE_ORGANIZATION",
+						organizationSlug: input.slug,
+						success: true,
+					},
+					"Organization created successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to create organization",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "CREATE_ORGANIZATION",
+						organizationSlug: input.slug,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to create organization",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
 	listOrganizations: protectedProcedure.handler(async ({ context }) => {
+		const logger = getLogger(context);
+
+		logger?.debug(
+			{
+				userId: context.session.user.id,
+				action: "LIST_ORGANIZATIONS",
+			},
+			"Listing organizations",
+		);
+
 		try {
 			const result = await auth.api.listOrganizations({
 				headers: context.req.headers,
 			});
 			return result;
 		} catch (error) {
-			throw new ORPCError("INTERNAL_SERVER_ERROR", {
-				message:
-					error instanceof Error
-						? error.message
-						: "Failed to list organizations",
-			});
+			logger?.error(
+				{
+					userId: context.session.user.id,
+					action: "LIST_ORGANIZATIONS",
+					error: error instanceof Error ? error.message : "Unknown error",
+				},
+				"Failed to list organizations",
+			);
+			throw mapAuthErrorToORPC(error);
 		}
 	}),
 
@@ -60,6 +101,18 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "GET_ORGANIZATION",
+					organizationId: input.organizationId,
+					organizationSlug: input.organizationSlug,
+				},
+				"Getting organization details",
+			);
+
 			try {
 				const result = await auth.api.getFullOrganization({
 					query: input,
@@ -67,12 +120,17 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to get organization",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "GET_ORGANIZATION",
+						organizationId: input.organizationId,
+						organizationSlug: input.organizationSlug,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to get organization",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -84,19 +142,45 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "UPDATE_ORGANIZATION",
+					organizationId: input.organizationId,
+				},
+				"Updating organization",
+			);
+
 			try {
 				const result = await auth.api.updateOrganization({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "UPDATE_ORGANIZATION",
+						organizationId: input.organizationId,
+						success: true,
+					},
+					"Organization updated successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to update organization",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "UPDATE_ORGANIZATION",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to update organization",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -107,19 +191,45 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.warn(
+				{
+					userId: context.session.user.id,
+					action: "DELETE_ORGANIZATION",
+					organizationId: input.organizationId,
+				},
+				"Deleting organization",
+			);
+
 			try {
 				const result = await auth.api.deleteOrganization({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.warn(
+					{
+						userId: context.session.user.id,
+						action: "DELETE_ORGANIZATION",
+						organizationId: input.organizationId,
+						success: true,
+					},
+					"Organization deleted successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to delete organization",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "DELETE_ORGANIZATION",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to delete organization",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -131,19 +241,46 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "SET_ACTIVE_ORGANIZATION",
+					organizationId: input.organizationId,
+					organizationSlug: input.organizationSlug,
+				},
+				"Setting active organization",
+			);
+
 			try {
 				const result = await auth.api.setActiveOrganization({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "SET_ACTIVE_ORGANIZATION",
+						organizationId: input.organizationId,
+						success: true,
+					},
+					"Active organization set successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to set active organization",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "SET_ACTIVE_ORGANIZATION",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to set active organization",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -157,6 +294,20 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "ADD_MEMBER",
+					targetUserId: input.userId,
+					role: input.role,
+					organizationId: input.organizationId,
+					teamId: input.teamId,
+				},
+				"Adding member",
+			);
+
 			try {
 				const result = await auth.api.addMember({
 					body: {
@@ -167,12 +318,31 @@ export const organizationRouter = {
 					},
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "ADD_MEMBER",
+						targetUserId: input.userId,
+						role: input.role,
+						success: true,
+					},
+					"Member added successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to add member",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "ADD_MEMBER",
+						targetUserId: input.userId,
+						role: input.role,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to add member",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -184,17 +354,46 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.warn(
+				{
+					userId: context.session.user.id,
+					action: "REMOVE_MEMBER",
+					memberIdOrEmail: input.memberIdOrEmail,
+					organizationId: input.organizationId,
+				},
+				"Removing member",
+			);
+
 			try {
 				const result = await auth.api.removeMember({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.warn(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_MEMBER",
+						memberIdOrEmail: input.memberIdOrEmail,
+						success: true,
+					},
+					"Member removed successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to remove member",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_MEMBER",
+						memberIdOrEmail: input.memberIdOrEmail,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to remove member",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -215,6 +414,18 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "LIST_MEMBERS",
+					organizationId: input.organizationId,
+					organizationSlug: input.organizationSlug,
+				},
+				"Listing members",
+			);
+
 			try {
 				const result = await auth.api.listMembers({
 					query: input,
@@ -222,10 +433,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to list members",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LIST_MEMBERS",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to list members",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -238,6 +455,19 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "UPDATE_MEMBER_ROLE",
+					memberId: input.memberId,
+					newRole: input.role,
+					organizationId: input.organizationId,
+				},
+				"Updating member role",
+			);
+
 			try {
 				const result = await auth.api.updateMemberRole({
 					body: {
@@ -247,30 +477,59 @@ export const organizationRouter = {
 					},
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "UPDATE_MEMBER_ROLE",
+						memberId: input.memberId,
+						newRole: input.role,
+						success: true,
+					},
+					"Member role updated successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to update member role",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "UPDATE_MEMBER_ROLE",
+						memberId: input.memberId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to update member role",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
 	getActiveMember: protectedProcedure.handler(async ({ context }) => {
+		const logger = getLogger(context);
+
+		logger?.debug(
+			{
+				userId: context.session.user.id,
+				action: "GET_ACTIVE_MEMBER",
+			},
+			"Getting active member",
+		);
+
 		try {
 			const result = await auth.api.getActiveMember({
 				headers: context.req.headers,
 			});
 			return result;
 		} catch (error) {
-			throw new ORPCError("INTERNAL_SERVER_ERROR", {
-				message:
-					error instanceof Error
-						? error.message
-						: "Failed to get active member",
-			});
+			logger?.error(
+				{
+					userId: context.session.user.id,
+					action: "GET_ACTIVE_MEMBER",
+					error: error instanceof Error ? error.message : "Unknown error",
+				},
+				"Failed to get active member",
+			);
+			throw mapAuthErrorToORPC(error);
 		}
 	}),
 
@@ -281,19 +540,45 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "LEAVE_ORGANIZATION",
+					organizationId: input.organizationId,
+				},
+				"Leaving organization",
+			);
+
 			try {
 				const result = await auth.api.leaveOrganization({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "LEAVE_ORGANIZATION",
+						organizationId: input.organizationId,
+						success: true,
+					},
+					"Left organization successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to leave organization",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LEAVE_ORGANIZATION",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to leave organization",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -308,6 +593,19 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "INVITE_MEMBER",
+					email: input.email,
+					role: input.role,
+					organizationId: input.organizationId,
+				},
+				"Inviting member",
+			);
+
 			try {
 				const result = await auth.api.createInvitation({
 					body: {
@@ -319,12 +617,30 @@ export const organizationRouter = {
 					},
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "INVITE_MEMBER",
+						email: input.email,
+						role: input.role,
+						success: true,
+					},
+					"Member invited successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to invite member",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "INVITE_MEMBER",
+						email: input.email,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to invite member",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -335,19 +651,45 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "ACCEPT_INVITATION",
+					invitationId: input.invitationId,
+				},
+				"Accepting invitation",
+			);
+
 			try {
 				const result = await auth.api.acceptInvitation({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "ACCEPT_INVITATION",
+						invitationId: input.invitationId,
+						success: true,
+					},
+					"Invitation accepted successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to accept invitation",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "ACCEPT_INVITATION",
+						invitationId: input.invitationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to accept invitation",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -358,19 +700,45 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "REJECT_INVITATION",
+					invitationId: input.invitationId,
+				},
+				"Rejecting invitation",
+			);
+
 			try {
 				const result = await auth.api.rejectInvitation({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "REJECT_INVITATION",
+						invitationId: input.invitationId,
+						success: true,
+					},
+					"Invitation rejected successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to reject invitation",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "REJECT_INVITATION",
+						invitationId: input.invitationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to reject invitation",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -381,19 +749,45 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.warn(
+				{
+					userId: context.session.user.id,
+					action: "CANCEL_INVITATION",
+					invitationId: input.invitationId,
+				},
+				"Cancelling invitation",
+			);
+
 			try {
 				const result = await auth.api.cancelInvitation({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.warn(
+					{
+						userId: context.session.user.id,
+						action: "CANCEL_INVITATION",
+						invitationId: input.invitationId,
+						success: true,
+					},
+					"Invitation cancelled successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to cancel invitation",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "CANCEL_INVITATION",
+						invitationId: input.invitationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to cancel invitation",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -404,6 +798,17 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "GET_INVITATION",
+					invitationId: input.id,
+				},
+				"Getting invitation",
+			);
+
 			try {
 				const result = await auth.api.getInvitation({
 					query: input,
@@ -411,10 +816,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to get invitation",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "GET_INVITATION",
+						invitationId: input.id,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to get invitation",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -425,6 +836,17 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "LIST_INVITATIONS",
+					organizationId: input.organizationId,
+				},
+				"Listing invitations",
+			);
+
 			try {
 				const result = await auth.api.listInvitations({
 					query: input,
@@ -432,12 +854,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to list invitations",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LIST_INVITATIONS",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to list invitations",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -449,17 +875,46 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "CREATE_TEAM",
+					teamName: input.name,
+					organizationId: input.organizationId,
+				},
+				"Creating team",
+			);
+
 			try {
 				const result = await auth.api.createTeam({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "CREATE_TEAM",
+						teamName: input.name,
+						success: true,
+					},
+					"Team created successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to create team",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "CREATE_TEAM",
+						teamName: input.name,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to create team",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -472,17 +927,46 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "UPDATE_TEAM",
+					teamId: input.teamId,
+					organizationId: input.organizationId,
+				},
+				"Updating team",
+			);
+
 			try {
 				const result = await auth.api.updateTeam({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "UPDATE_TEAM",
+						teamId: input.teamId,
+						success: true,
+					},
+					"Team updated successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to update team",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "UPDATE_TEAM",
+						teamId: input.teamId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to update team",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -494,17 +978,46 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.warn(
+				{
+					userId: context.session.user.id,
+					action: "REMOVE_TEAM",
+					teamId: input.teamId,
+					organizationId: input.organizationId,
+				},
+				"Removing team",
+			);
+
 			try {
 				const result = await auth.api.removeTeam({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.warn(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_TEAM",
+						teamId: input.teamId,
+						success: true,
+					},
+					"Team removed successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to remove team",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_TEAM",
+						teamId: input.teamId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to remove team",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -515,6 +1028,17 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "LIST_TEAMS",
+					organizationId: input.organizationId,
+				},
+				"Listing teams",
+			);
+
 			try {
 				const result = await auth.api.listOrganizationTeams({
 					query: input,
@@ -522,10 +1046,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error ? error.message : "Failed to list teams",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LIST_TEAMS",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to list teams",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -537,19 +1067,48 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "ADD_TEAM_MEMBER",
+					teamId: input.teamId,
+					targetUserId: input.userId,
+				},
+				"Adding team member",
+			);
+
 			try {
 				const result = await auth.api.addTeamMember({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "ADD_TEAM_MEMBER",
+						teamId: input.teamId,
+						targetUserId: input.userId,
+						success: true,
+					},
+					"Team member added successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to add team member",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "ADD_TEAM_MEMBER",
+						teamId: input.teamId,
+						targetUserId: input.userId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to add team member",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -561,19 +1120,48 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.warn(
+				{
+					userId: context.session.user.id,
+					action: "REMOVE_TEAM_MEMBER",
+					teamId: input.teamId,
+					targetUserId: input.userId,
+				},
+				"Removing team member",
+			);
+
 			try {
 				const result = await auth.api.removeTeamMember({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.warn(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_TEAM_MEMBER",
+						teamId: input.teamId,
+						targetUserId: input.userId,
+						success: true,
+					},
+					"Team member removed successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to remove team member",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_TEAM_MEMBER",
+						teamId: input.teamId,
+						targetUserId: input.userId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to remove team member",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -584,33 +1172,74 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "SET_ACTIVE_TEAM",
+					teamId: input.teamId,
+				},
+				"Setting active team",
+			);
+
 			try {
 				const result = await auth.api.setActiveTeam({
 					body: input,
 					headers: context.req.headers,
 				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "SET_ACTIVE_TEAM",
+						teamId: input.teamId,
+						success: true,
+					},
+					"Active team set successfully",
+				);
+
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to set active team",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "SET_ACTIVE_TEAM",
+						teamId: input.teamId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to set active team",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
 	listUserTeams: protectedProcedure.handler(async ({ context }) => {
+		const logger = getLogger(context);
+
+		logger?.debug(
+			{
+				userId: context.session.user.id,
+				action: "LIST_USER_TEAMS",
+			},
+			"Listing user teams",
+		);
+
 		try {
 			const result = await auth.api.listUserTeams({
 				headers: context.req.headers,
 			});
 			return result;
 		} catch (error) {
-			throw new ORPCError("INTERNAL_SERVER_ERROR", {
-				message:
-					error instanceof Error ? error.message : "Failed to list user teams",
-			});
+			logger?.error(
+				{
+					userId: context.session.user.id,
+					action: "LIST_USER_TEAMS",
+					error: error instanceof Error ? error.message : "Unknown error",
+				},
+				"Failed to list user teams",
+			);
+			throw mapAuthErrorToORPC(error);
 		}
 	}),
 
@@ -621,6 +1250,17 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "LIST_TEAM_MEMBERS",
+					teamId: input.teamId,
+				},
+				"Listing team members",
+			);
+
 			try {
 				const result = await auth.api.listTeamMembers({
 					query: input,
@@ -628,12 +1268,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to list team members",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LIST_TEAM_MEMBERS",
+						teamId: input.teamId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to list team members",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -653,6 +1297,18 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "CHECK_PERMISSION",
+					organizationId: input.organizationId,
+					permissions: input.permissions,
+				},
+				"Checking permissions",
+			);
+
 			try {
 				const result = await auth.api.hasPermission({
 					body: {
@@ -663,12 +1319,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to check permission",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "CHECK_PERMISSION",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to check permission",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 
@@ -679,6 +1339,17 @@ export const organizationRouter = {
 			}),
 		)
 		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "CHECK_ORGANIZATION_SLUG",
+					slug: input.slug,
+				},
+				"Checking organization slug",
+			);
+
 			try {
 				const result = await auth.api.checkOrganizationSlug({
 					body: input,
@@ -686,12 +1357,16 @@ export const organizationRouter = {
 				});
 				return result;
 			} catch (error) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message:
-						error instanceof Error
-							? error.message
-							: "Failed to check organization slug",
-				});
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "CHECK_ORGANIZATION_SLUG",
+						slug: input.slug,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to check organization slug",
+				);
+				throw mapAuthErrorToORPC(error);
 			}
 		}),
 };

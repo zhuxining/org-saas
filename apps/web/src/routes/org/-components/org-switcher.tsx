@@ -59,7 +59,7 @@ export function OrgSwitcher() {
 	};
 
 	const handleAddOrg = () => {
-		console.log("Add org button clicked - implement org creation flow");
+		// TODO: 实现组织创建流程
 	};
 
 	return (

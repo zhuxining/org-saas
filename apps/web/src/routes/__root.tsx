@@ -8,6 +8,8 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import type { orpc } from "@/utils/orpc";
 
@@ -38,7 +40,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 			},
 		],
 	}),
-
+	errorComponent: ({ error, reset }) => (
+		<ErrorBoundary error={error} reset={reset} />
+	),
 	component: RootDocument,
 });
 

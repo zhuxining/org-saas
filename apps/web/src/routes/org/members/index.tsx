@@ -53,6 +53,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { orpc } from "@/utils/orpc";
 import { requireActiveOrg } from "@/utils/route-guards";
 
@@ -74,6 +75,7 @@ export const Route = createFileRoute("/org/members/")({
 
 function OrgMembersPage() {
 	const queryClient = useQueryClient();
+	const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
 	// 数据已在 loader 中预取，无加载状态
 	const { data: membersData } = useSuspenseQuery(
@@ -137,8 +139,13 @@ function OrgMembersPage() {
 		});
 	};
 
-	const handleRemove = (memberId: string) => {
-		if (confirm("Are you sure you want to remove this member?")) {
+	const handleRemove = async (memberId: string) => {
+		const confirmed = await confirm({
+			title: "Remove Member",
+			description: "Are you sure you want to remove this member?",
+			variant: "destructive",
+		});
+		if (confirmed) {
 			removeMember.mutate({ memberIdOrEmail: memberId });
 		}
 	};
@@ -150,14 +157,20 @@ function OrgMembersPage() {
 		});
 	};
 
-	const handleCancelInvite = (invitationId: string) => {
-		if (confirm("Cancel this invitation?")) {
+	const handleCancelInvite = async (invitationId: string) => {
+		const confirmed = await confirm({
+			title: "Cancel Invitation",
+			description: "Cancel this invitation?",
+			variant: "destructive",
+		});
+		if (confirmed) {
 			cancelInvitation.mutate({ invitationId });
 		}
 	};
 
 	return (
 		<>
+			{ConfirmDialogComponent}
 			<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 				<div className="flex items-center gap-2 px-4">
 					<SidebarTrigger className="-ml-1" />

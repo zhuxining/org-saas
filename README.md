@@ -64,10 +64,9 @@ org-sass/
 
 - `bun run dev`: Start all applications in development mode
 - `bun run build`: Build all applications
-- `bun run check-types`: Check TypeScript types across all apps
 - `bun run db:push`: Push schema changes to database
 - `bun run db:studio`: Open database studio UI
-- `bun run check`: Run Biome formatting and linting
+- `bun run check`: Run Biome formatting and linting,Check TypeScript types across all apps
 
 ---
 

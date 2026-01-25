@@ -36,6 +36,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { orpc } from "@/utils/orpc";
 import { requireActiveOrg } from "@/utils/route-guards";
 
@@ -52,6 +53,7 @@ export const Route = createFileRoute("/org/teams/")({
 
 function TeamsListPage() {
 	const queryClient = useQueryClient();
+	const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
 	// 数据已在 loader 中预取，无加载状态
 	const { data: teams } = useSuspenseQuery(
@@ -130,16 +132,22 @@ function TeamsListPage() {
 		});
 	};
 
-	const handleDelete = (id: string, name: string) => {
-		if (
-			confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)
-		) {
+	const handleDelete = async (id: string, name: string) => {
+		const confirmed = await confirm({
+			title: "Delete Team",
+			description: `Are you sure you want to delete ${name}? This cannot be undone.`,
+			confirmLabel: "Delete",
+			cancelLabel: "Cancel",
+			variant: "destructive",
+		});
+		if (confirmed) {
 			deleteTeam.mutate({ teamId: id, organizationId });
 		}
 	};
 
 	return (
 		<>
+			{ConfirmDialogComponent}
 			<header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
 				<div className="flex items-center gap-2 px-4">
 					<SidebarTrigger className="-ml-1" />

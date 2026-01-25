@@ -1,4 +1,5 @@
 import { createContext } from "@org-sass/api/context";
+import { standardLimiter } from "@org-sass/api/index";
 import { appRouter } from "@org-sass/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -31,7 +32,10 @@ const getORPCClient = createIsomorphicFn()
 	.server(() =>
 		createRouterClient(appRouter, {
 			context: async ({ req }) => {
-				return createContext({ req });
+				return {
+					...(await createContext({ req })),
+					ratelimiter: standardLimiter,
+				};
 			},
 		}),
 	)

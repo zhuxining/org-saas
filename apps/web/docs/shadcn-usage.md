@@ -437,7 +437,7 @@ function MenuButton({ children }: { children: React.ReactNode }) {
 - [ ] 替换为 `render` props
 - [ ] 确保 `mergeProps` 第一个参数是空对象 `{}`
 - [ ] 使用 `data-slot` 进行样式定位
-- [ ] 运行 `bun run check-types` 验证类型
+- [ ] 运行 `bun run check` 验证类型
 
 ### 参考资源
 

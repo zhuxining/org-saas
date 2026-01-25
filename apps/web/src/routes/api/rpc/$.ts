@@ -1,4 +1,5 @@
 import { createContext } from "@org-sass/api/context";
+import { standardLimiter } from "@org-sass/api/index";
 import { appRouter } from "@org-sass/api/routers/index";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -29,15 +30,20 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 });
 
 async function handle({ request }: { request: Request }) {
+	const context = {
+		...(await createContext({ req: request })),
+		ratelimiter: standardLimiter,
+	};
+
 	const rpcResult = await rpcHandler.handle(request, {
 		prefix: "/api/rpc",
-		context: await createContext({ req: request }),
+		context,
 	});
 	if (rpcResult.response) return rpcResult.response;
 
 	const apiResult = await apiHandler.handle(request, {
 		prefix: "/api/rpc/api-reference",
-		context: await createContext({ req: request }),
+		context,
 	});
 	if (apiResult.response) return apiResult.response;
 
