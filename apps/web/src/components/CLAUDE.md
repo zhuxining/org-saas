@@ -48,6 +48,7 @@ bunx shadcn@latest add [component-name]
 ```
 
 **已使用的 shadcn/ui 组件**:
+
 - `button`, `card`, `input`, `label`, `select`
 - `dialog`, `sheet`, `sidebar`, `collapsible`
 - `table`, `breadcrumb`, `separator`
@@ -62,13 +63,14 @@ bunx shadcn@latest add [component-name]
 ### CRUD 页面模式
 
 **关键要点**:
+
 - 使用 `useQuery` 获取数据，`queryOptions()` 提供类型安全
 - 使用 `useMutation` 执行变更，`mutationOptions()` 处理成功/错误
 - 成功后使用 `invalidateQueries` 刷新数据
 - 使用 `toast` (Sonner) 显示操作结果
 - 使用 `Skeleton` 组件显示加载状态
 
-**详细示例**: [docs/component-patterns.md#crud-页面模式](../../docs/component-patterns.md#crud-页面模式)
+**详细示例**: [docs/component-patterns.md#crud-页面模式](../../../../docs/component-patterns.md#crud-页面模式)
 
 ### 表单模式
 
@@ -78,7 +80,7 @@ bunx shadcn@latest add [component-name]
 - 使用 `form.Subscribe` 订阅表单状态
 - 禁用提交按钮：`!state.canSubmit || state.isSubmitting`
 
-**详细示例**: [docs/form-patterns.md](../docs/form-patterns.md)
+**详细示例**: [docs/form-patterns.md](../../docs/form-patterns.md)
 
 ### 数据加载模式
 
@@ -86,7 +88,7 @@ bunx shadcn@latest add [component-name]
 - 使用 `Skeleton` 组件显示加载状态
 - 处理错误状态并提供重试功能
 
-**详细示例**: [docs/data-loading.md](../docs/data-loading.md)
+**详细示例**: [docs/data-loading.md](../../docs/data-loading.md)
 
 ### Toast 通知模式
 
@@ -94,21 +96,21 @@ bunx shadcn@latest add [component-name]
 - 支持带操作的通知
 - 支持 Promise 状态自动处理
 
-**详细示例**: [docs/component-patterns.md#toast-通知模式](../../docs/component-patterns.md#toast-通知模式)
+**详细示例**: [docs/component-patterns.md#toast-通知模式](../../../../docs/component-patterns.md#toast-通知模式)
 
 ### 对话框模式
 
 - 使用 `Dialog`, `DialogContent`, `DialogTrigger` 组件
 - 支持创建/编辑对话框和删除确认对话框
 
-**详细示例**: [docs/component-patterns.md#对话框模式](../../docs/component-patterns.md#对话框模式)
+**详细示例**: [docs/component-patterns.md#对话框模式](../../../../docs/component-patterns.md#对话框模式)
 
 ### Session 获取模式
 
 - 使用 `authClient.useSession()` 在组件中获取 session
 - 使用 `orpc.privateData.query()` 在路由 loader 中获取
 
-**详细示例**: [docs/data-loading.md#session-获取](../docs/data-loading.md#session-获取)
+**详细示例**: [docs/data-loading.md#session-获取](../../docs/data-loading.md#session-获取)
 
 ---
 
@@ -142,7 +144,7 @@ bunx shadcn@latest add [component-name]
 
 ## 相关文档
 
-- **组件模式详解**: [docs/component-patterns.md](../../docs/component-patterns.md)
-- **表单模式详解**: [docs/form-patterns.md](../docs/form-patterns.md)
-- **数据加载详解**: [docs/data-loading.md](../docs/data-loading.md)
+- **组件模式详解**: [docs/component-patterns.md](../../../../docs/component-patterns.md)
+- **表单模式详解**: [docs/form-patterns.md](../../docs/form-patterns.md)
+- **数据加载详解**: [docs/data-loading.md](../../docs/data-loading.md)
 - **shadcn/ui 组件**: [https://ui.shadcn.com/](https://ui.shadcn.com/)

@@ -47,13 +47,13 @@ export default function SignInForm({
 			}
 
 			// Use the user data from the response
-			const user = response.data?.user;
+			const user = response.data?.user as { role?: string } | undefined;
 			if (!user) {
 				toast.error("Failed to get user information");
 				return;
 			}
 
-			const role = (user as any).role;
+			const role = user.role;
 			if (typeof role === "string" && role.includes("admin")) {
 				navigate({
 					to: "/admin/dashboard",
