@@ -1,136 +1,115 @@
-# org-sass
+# Org SaaS
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Self, ORPC, and more.
+基于 Better-T-Stack 技术栈构建的多组织 SaaS 平台，采用 Turborepo 管理的 Monorepo 架构。
 
-## Features
+## 项目定位
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Start** - SSR framework with TanStack Router
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **shadcn/ui** - Reusable UI components
-- **oRPC** - End-to-end type-safe APIs with OpenAPI integration
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
-- **Biome** - Linting and formatting
-- **Turborepo** - Optimized monorepo build system
+多组织 SaaS 平台，支持三种用户角色和访问端点：
 
-## Getting Started
+| 端点 | 说明 | 权限 |
+|------|------|------|
+| **Admin** | 系统管理员管理所有组织和用户 | 全局权限 |
+| **Org** | 组织成员管理团队、成员、邀请 | Owner/Admin/Member 三级权限 |
+| **Public** | 公开访问页面（落地页、关于） | 无需认证 |
 
-First, install the dependencies:
+## 技术栈
+
+- **TanStack Start** - SSR 框架 + TanStack Router
+- **React 19** - UI 框架
+- **TailwindCSS 4** - 样式框架
+- **shadcn/ui** - 可复用 UI 组件
+- **oRPC** - 端到端类型安全 API
+- **Better-Auth** - 认证系统（Admin + Organization 插件）
+- **Drizzle ORM** - TypeScript-first ORM
+- **PostgreSQL** - 数据库
+- **Biome** - 代码格式化和 Lint
+- **Turborepo** - Monorepo 构建系统
+
+## 快速开始
+
+### 1. 安装依赖
 
 ```bash
 bun install
 ```
 
-## Database Setup
+### 2. 数据库设置
 
-This project uses PostgreSQL with Drizzle ORM.
-
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/web/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
+1. 确保 PostgreSQL 数据库已就绪
+2. 在 `apps/web/.env` 中配置数据库连接字符串
+3. 推送 schema 到数据库：
 
 ```bash
 bun run db:push
 ```
 
-Then, run the development server:
+### 3. 启动开发服务器
 
 ```bash
 bun run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the fullstack application.
+访问 [http://localhost:3001](http://localhost:3001) 查看应用。
 
-## Git Hooks and Formatting
-
-- Format and lint fix: `bun run check`
-
-## Project Structure
+## 项目结构
 
 ```
-org-sass/
+org-saas/
 ├── apps/
-│   └── web/         # Fullstack application (React + TanStack Start)
-├── packages/
-│   ├── api/         # API layer / business logic
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
+│   └── web/              # 主站应用 (TanStack Start SSR)
+└── packages/
+    ├── api/              # oRPC API 层
+    ├── auth/             # Better-Auth 配置
+    ├── db/               # 数据库模型和 Drizzle ORM
+    ├── config/           # 共享配置
+    └── env/              # 环境变量类型
 ```
 
-## Available Scripts
+## 详细文档
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run db:push`: Push schema changes to database
-- `bun run db:studio`: Open database studio UI
-- `bun run check`: Run Biome formatting and linting,Check TypeScript types across all apps
+| 主题 | 文档 |
+|------|------|
+| **Web App 开发** | [apps/web/CLAUDE.md](apps/web/CLAUDE.md) |
+| **API 开发** | [packages/api/CLAUDE.md](packages/api/CLAUDE.md) |
+| **认证流程** | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
+| **数据库** | [packages/db/CLAUDE.md](packages/db/CLAUDE.md) |
 
----
+## 常用命令
 
-## Pre-existing Type Issues
+### 开发和构建
 
-This project has some pre-existing TypeScript warnings that don't affect functionality:
-
-### activeOrganizationId Property
-
-The `session.user.activeOrganizationId` property exists at runtime (added by Better-Auth) but isn't included in the generated TypeScript types.
-
-**Workaround**: Use optional chaining
-
-```typescript
-const organizationId = session?.user?.activeOrganizationId || "";
+```bash
+bun run dev              # 启动所有应用
+bun run dev:web          # 仅启动 Web 应用
+bun run build            # 构建所有应用
 ```
 
-**Files Affected**:
+### 数据库操作
 
-- `apps/web/src/routes/admin/dashboard/index.tsx`
-- `apps/web/src/routes/org/dashboard/index.tsx`
-- `apps/web/src/routes/org/-components/org-switcher.tsx`
-- `apps/web/src/routes/org/teams/index.tsx`
-- `apps/web/src/routes/org/teams/$teamId.tsx`
-
-**Impact**: These warnings don't block functionality. Code works correctly at runtime.
-
-### queryOptions Type Mismatch
-
-The generated oRPC types expect `{ input: {...} }` structure but the actual usage pattern passes objects directly.
-
-**Expected Pattern**:
-
-```typescript
-orpc.organization.listMembers.queryOptions({
-  input: { organizationId: "..." }
-})
+```bash
+bun run db:push          # 推送 schema (开发环境)
+bun run db:studio        # 打开 Drizzle Studio
+bun run db:generate      # 生成 schema 类型
+bun run db:migrate       # 创建迁移文件 (生产环境)
 ```
 
-**Actual Usage (works at runtime)**:
+### 代码质量
 
-```typescript
-orpc.organization.listMembers.queryOptions({
-  organizationId: "..."
-})
+```bash
+bun run check            # 格式化和 lint (Biome)
 ```
 
-**Files Affected**: All files using oRPC queries
+## 核心概念
 
-**Impact**: Not blocking - generated oRPC types have this structure, code works correctly at runtime.
+- **类型安全**: oRPC 提供端到端类型安全
+- **同构处理**: 相同代码在 SSR 和客户端运行
+- **权限分层**: Admin (全局) → Organization (租户) → Member (用户)
+- **多租户**: 用户可属于多个组织，通过 `activeOrganizationId` 切换
 
-### Route Registration
+## 相关资源
 
-New public pages (`/pricing`, `/about`, `/landing`) need the route tree to be regenerated for TypeScript to recognize them.
-
-**Resolution**: Run `bun run dev` to trigger TanStack Router's automatic route tree generation.
-
----
-
-## Evolution Phases
-
-This project has been through complete implementation phases (see `.sisyphus/plans/evolution-roadmap.md`):
-
-- ✅ **Phase 1-6**: Core platform implementation (33 tasks completed)
-- ⚠️ **Phase 7-12**: Evolution and optimization phases (in progress)
-
-For detailed evolution roadmap, see `.sisyphus/plans/evolution-roadmap.md`.
+- [Better-T-Stack 文档](https://github.com/AmanVarshney01/create-better-t-stack)
+- [TanStack Router 文档](https://tanstack.com/router/latest)
+- [oRPC 文档](https://orpc.unnoq.com/)
+- [Drizzle ORM 文档](https://orm.drizzle.team/)
+- [Better-Auth 文档](https://www.better-auth.com/docs)
