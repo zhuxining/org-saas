@@ -5,7 +5,7 @@ import { z } from "zod";
 import { protectedProcedure } from "../index";
 import { mapAuthErrorToORPC } from "../lib/error-handler";
 
-type OrgRole = "member" | "admin" | "owner";
+type OrgRole = "member" | "moderator" | "owner";
 
 export const organizationRouter = {
 	createOrganization: protectedProcedure
@@ -1286,12 +1286,26 @@ export const organizationRouter = {
 			z.object({
 				organizationId: z.string().optional(),
 				permissions: z.object({
-					organization: z.array(z.enum(["update", "delete"])).optional(),
-					member: z.array(z.enum(["create", "update", "delete"])).optional(),
-					invitation: z.array(z.enum(["create", "cancel"])).optional(),
-					team: z.array(z.enum(["create", "update", "delete"])).optional(),
+					organization: z
+						.array(
+							z.enum(["update", "delete", "manage-settings", "view-analytics"]),
+						)
+						.optional(),
+					member: z
+						.array(
+							z.enum(["create", "update", "delete", "update-role", "view"]),
+						)
+						.optional(),
+					invitation: z
+						.array(z.enum(["create", "cancel", "resend", "view"]))
+						.optional(),
+					team: z
+						.array(
+							z.enum(["create", "update", "delete", "view", "manage-members"]),
+						)
+						.optional(),
 					ac: z
-						.array(z.enum(["create", "update", "delete", "read"]))
+						.array(z.enum(["create", "update", "delete", "view"]))
 						.optional(),
 				}),
 			}),

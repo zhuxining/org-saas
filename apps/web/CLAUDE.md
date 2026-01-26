@@ -17,8 +17,9 @@ apps/web/src/
 ├── components/          # 全局共享组件
 │   └── ui/              # shadcn/ui (DO NOT EDIT)
 ├── utils/
-│   ├── orpc.ts          # oRPC 客户端
-│   └── route-guards.ts  # 路由守卫
+│   ├── orpc.ts                # oRPC 客户端
+│   ├── route-guards.ts       # 基础路由守卫
+│   └── permission-guards.ts  # 权限路由守卫
 ```
 
 ### 1.2 快速索引
@@ -43,7 +44,7 @@ apps/web/src/
 **核心功能**:
 
 - 文件系统路由 - 通过文件结构自动生成路由
-- 权限守卫 - `requireSession`, `requireActiveOrg`, `requireAdmin`
+- 权限守卫 - `requireSession`, `requireActiveOrg`, `requireAdmin`, `requirePermission`, `requireOwner`
 - 数据预加载 - `loader` + `useSuspenseQuery` 模式
 - oRPC 集成 - 端到端类型安全的 API 调用
 
@@ -56,11 +57,58 @@ apps/web/src/
 | `admin/*` | 仅 Admin | `requireAdmin` |
 | `org/*` | 有活跃组织 | `requireActiveOrg` |
 
+**权限守卫**:
+
+文件位置: [src/utils/route-guards.ts](src/utils/route-guards.ts) 和 [src/utils/permission-guards.ts](src/utils/permission-guards.ts)
+
+基础守卫: `requireSession`, `requireActiveOrg`, `requireAdmin`
+
+权限守卫: `requirePermission(resource, actions, redirectTo?)`, `requireOwner(redirectTo?)`
+
 **快速链接**:
 
 - 完整文档 → [docs/routing.md](docs/routing.md)
 - 数据加载 → [docs/data-loading.md](docs/data-loading.md)
 - 认证流程 → [docs/authentication.md](docs/authentication.md)
+- 权限系统 → [packages/auth/docs/permission-design.md](../../packages/auth/docs/permission-design.md)
+
+---
+
+## 2.1 权限系统
+
+基于细粒度的权限控制系统，支持动态角色和自定义权限。
+
+**权限层次**:
+
+| 层级 | 角色 | 权限范围 |
+|------|------|----------|
+| **系统级** | System Admin (`user.role = "admin"`) | 管理所有组织和用户，创建组织 |
+| **组织级** | Owner (`member.role = "owner"`) | 完全控制组织 |
+| | Moderator (`member.role = "moderator"`) | 管理成员和团队（原 admin） |
+| | Member (`member.role = "member"`) | 只读访问 |
+| **自定义** | Dynamic Roles | 组织可自定义细粒度权限 |
+
+**权限资源**:
+
+- `organization`: 组织管理（update, delete, manage-settings, view-analytics）
+- `member`: 成员管理（create, update, delete, update-role, view）
+- `invitation`: 邀请管理（create, cancel, resend, view）
+- `team`: 团队管理（create, update, delete, view, manage-members）
+- `project`: 项目管理（可扩展）
+- `billing`: 账单管理（可扩展）
+- `tickets`: 工单管理（可扩展）
+- `ac`: 访问控制管理（create, update, delete, view）
+
+**前端权限守卫**:
+
+文件位置: [src/utils/permission-guards.ts](src/utils/permission-guards.ts)
+
+- `requirePermission(ctx, resource, actions, redirectTo?)` - 要求特定权限
+- `requireOwner(ctx, redirectTo?)` - 要求所有者权限
+
+**权限检查流程**: 访问路由 → `requirePermission` 调用 API → 权限不足则重定向
+
+详细权限设计: [packages/auth/docs/permission-design.md](../../packages/auth/docs/permission-design.md)
 
 ---
 
@@ -138,10 +186,8 @@ src/components/
 
 ### 4.2 导入规范
 
-```typescript
-import { orpc } from "@/utils/orpc";  // 内部导入
-import { db } from "@org-sass/db";     // 跨包导入
-```
+内部导入: `import { orpc } from "@/utils/orpc"`
+跨包导入: `import { db } from "@org-sass/db"`
 
 ### 4.3 文件命名
 
