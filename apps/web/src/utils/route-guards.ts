@@ -24,7 +24,8 @@ export type SessionUser = NonNullable<Context["session"]>["user"] & {
 export async function requireSession(
 	ctx: BeforeLoadContext,
 ): Promise<{ message: string; user: SessionUser }> {
-	const result = await ctx.context.queryClient.ensureQueryData(
+	// Use fetchQuery to always get fresh session data, bypassing cache
+	const result = await ctx.context.queryClient.fetchQuery(
 		orpc.privateData.queryOptions(),
 	);
 

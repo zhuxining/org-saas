@@ -23,6 +23,5 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		}
-	},
-	"exclude": ["src/components/ui/**"]
+	}
 }

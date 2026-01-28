@@ -21,8 +21,8 @@ export const auth = betterAuth({
 		tanstackStartCookies(),
 		admin(),
 		organization({
-			// Only system admins can create organizations
-			allowUserToCreateOrganization: false,
+			// Allow any authenticated user to create organizations
+			allowUserToCreateOrganization: true,
 			teams: {
 				enabled: true,
 			},

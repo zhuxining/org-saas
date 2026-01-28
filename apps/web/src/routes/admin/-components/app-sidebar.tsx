@@ -52,42 +52,53 @@ function NavMain({
 		<SidebarGroup>
 			<SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
 			<SidebarMenu>
-				{items.map((item) => (
-					<Collapsible
-						key={item.title}
-						defaultOpen={item.isActive || isActive(item.url)}
-						className="group/collapsible"
-					>
-						<SidebarMenuItem>
-							<CollapsibleTrigger
-								render={
-									<SidebarMenuButton tooltip={item.title}>
-										{item.icon && <item.icon />}
-										<span>{item.title}</span>
-										{item.items && item.items.length > 0 && (
-											<span className="ml-auto">{"->"}</span>
-										)}
-									</SidebarMenuButton>
-								}
-							/>
-							{item.items && item.items.length > 0 && (
-								<CollapsibleContent>
-									<SidebarMenuSub>
-										{item.items.map((subItem) => (
-											<SidebarMenuSubItem key={subItem.title}>
-												<SidebarMenuSubButton
-													render={<Link to={subItem.url} />}
-												>
-													<span>{subItem.title}</span>
-												</SidebarMenuSubButton>
-											</SidebarMenuSubItem>
-										))}
-									</SidebarMenuSub>
-								</CollapsibleContent>
-							)}
-						</SidebarMenuItem>
-					</Collapsible>
-				))}
+				{items.map((item) => {
+					const hasSubItems = item.items && item.items.length > 0;
+
+					return (
+						<Collapsible
+							key={item.title}
+							defaultOpen={item.isActive || isActive(item.url)}
+							className="group/collapsible"
+						>
+							<SidebarMenuItem>
+								{hasSubItems ? (
+									<>
+										<CollapsibleTrigger
+											render={
+												<SidebarMenuButton tooltip={item.title}>
+													{item.icon && <item.icon />}
+													<span>{item.title}</span>
+													<span className="ml-auto">{"->"}</span>
+												</SidebarMenuButton>
+											}
+										/>
+										<CollapsibleContent>
+											<SidebarMenuSub>
+												{item.items?.map((subItem) => (
+													<SidebarMenuSubItem key={subItem.title}>
+														<SidebarMenuSubButton
+															render={<Link to={subItem.url} />}
+														>
+															<span>{subItem.title}</span>
+														</SidebarMenuSubButton>
+													</SidebarMenuSubItem>
+												))}
+											</SidebarMenuSub>
+										</CollapsibleContent>
+									</>
+								) : (
+									<Link to={item.url}>
+										<SidebarMenuButton tooltip={item.title}>
+											{item.icon && <item.icon />}
+											<span>{item.title}</span>
+										</SidebarMenuButton>
+									</Link>
+								)}
+							</SidebarMenuItem>
+						</Collapsible>
+					);
+				})}
 			</SidebarMenu>
 		</SidebarGroup>
 	);

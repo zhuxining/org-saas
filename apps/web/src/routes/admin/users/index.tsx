@@ -32,6 +32,7 @@ import {
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuGroup,
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
@@ -418,43 +419,45 @@ function AdminUsersPage() {
 													<MoreHorizontal className="h-4 w-4" />
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
-													<DropdownMenuLabel>Actions</DropdownMenuLabel>
-													<DropdownMenuSeparator />
-													<DropdownMenuItem
-														onClick={() =>
-															handleRoleChange(
-																user.id,
-																user.role === "admin" ? "user" : "admin",
-															)
-														}
-													>
-														{user.role === "admin"
-															? "Demote to User"
-															: "Promote to Admin"}
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														onClick={() =>
-															handleBanToggle(user.id, !!user.banned)
-														}
-													>
-														{user.banned ? (
-															<>
-																<CheckCircle className="mr-2 h-4 w-4" /> Unban
-																User
-															</>
-														) : (
-															<>
-																<Ban className="mr-2 h-4 w-4" /> Ban User
-															</>
-														)}
-													</DropdownMenuItem>
-													<DropdownMenuSeparator />
-													<DropdownMenuItem
-														className="text-destructive focus:text-destructive"
-														onClick={() => handleDelete(user.id)}
-													>
-														<Trash2 className="mr-2 h-4 w-4" /> Delete User
-													</DropdownMenuItem>
+													<DropdownMenuGroup>
+														<DropdownMenuLabel>Actions</DropdownMenuLabel>
+														<DropdownMenuSeparator />
+														<DropdownMenuItem
+															onClick={() =>
+																handleRoleChange(
+																	user.id,
+																	user.role === "admin" ? "user" : "admin",
+																)
+															}
+														>
+															{user.role === "admin"
+																? "Demote to User"
+																: "Promote to Admin"}
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={() =>
+																handleBanToggle(user.id, !!user.banned)
+															}
+														>
+															{user.banned ? (
+																<>
+																	<CheckCircle className="mr-2 h-4 w-4" /> Unban
+																	User
+																</>
+															) : (
+																<>
+																	<Ban className="mr-2 h-4 w-4" /> Ban User
+																</>
+															)}
+														</DropdownMenuItem>
+														<DropdownMenuSeparator />
+														<DropdownMenuItem
+															variant="destructive"
+															onClick={() => handleDelete(user.id)}
+														>
+															<Trash2 className="mr-2 h-4 w-4" /> Delete User
+														</DropdownMenuItem>
+													</DropdownMenuGroup>
 												</DropdownMenuContent>
 											</DropdownMenu>
 										</TableCell>
