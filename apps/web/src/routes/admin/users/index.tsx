@@ -59,7 +59,6 @@ import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/admin/users/")({
-	// ✅ 继承父路由 /admin 的 beforeLoad,无需重复检查
 	loader: async ({ context }) => {
 		await context.queryClient.ensureQueryData(
 			orpc.admin.listUsers.queryOptions({ input: {} }),

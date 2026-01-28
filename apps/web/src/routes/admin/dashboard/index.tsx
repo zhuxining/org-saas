@@ -10,9 +10,7 @@ import {
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/admin/dashboard/")({
-	// ✅ 继承父路由 /admin 的 beforeLoad,无需重复检查
 	loader: async ({ context }) => {
-		// 并行预取数据
 		await Promise.all([
 			context.queryClient.ensureQueryData(
 				orpc.organization.listOrganizations.queryOptions({ input: {} }),
@@ -26,7 +24,6 @@ export const Route = createFileRoute("/admin/dashboard/")({
 });
 
 function AdminDashboard() {
-	// 数据已在 loader 中预取，无加载状态
 	const { data: orgs } = useSuspenseQuery(
 		orpc.organization.listOrganizations.queryOptions({ input: {} }),
 	);
