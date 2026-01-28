@@ -9,6 +9,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { ThemeProvider } from "next-themes";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/sonner";
 import type { orpc } from "@/utils/orpc";
@@ -48,31 +49,33 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
 	return (
-		<html lang="zh" className="light">
+		<html lang="zh" suppressHydrationWarning>
 			<head>
 				<HeadContent />
 			</head>
 			<body>
-				<div className="h-svh">
-					<Outlet />
-				</div>
-				<Toaster richColors />
-				<TanStackDevtools
-					plugins={[
-						{
-							name: "TanStack Query",
-							render: <ReactQueryDevtoolsPanel />,
-						},
-						{
-							name: "TanStack Router",
-							render: <TanStackRouterDevtoolsPanel />,
-						},
-						{
-							name: "TanStack Form",
-							render: <FormDevtoolsPanel />,
-						},
-					]}
-				/>
+				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+					<div className="min-h-screen">
+						<Outlet />
+					</div>
+					<Toaster richColors />
+					<TanStackDevtools
+						plugins={[
+							{
+								name: "TanStack Query",
+								render: <ReactQueryDevtoolsPanel />,
+							},
+							{
+								name: "TanStack Router",
+								render: <TanStackRouterDevtoolsPanel />,
+							},
+							{
+								name: "TanStack Form",
+								render: <FormDevtoolsPanel />,
+							},
+						]}
+					/>
+				</ThemeProvider>
 				<Scripts />
 			</body>
 		</html>
