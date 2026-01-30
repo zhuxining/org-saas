@@ -1,6 +1,11 @@
 import { auth } from "@org-sass/auth";
 import { db, eq } from "@org-sass/db";
-import { member, organization } from "@org-sass/db/schema/auth";
+import {
+	invitation,
+	member,
+	organization,
+	user,
+} from "@org-sass/db/schema/auth";
 import { getLogger } from "@orpc/experimental-pino";
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
@@ -954,6 +959,194 @@ export const adminRouter = {
 					"Failed to check permission",
 				);
 				throw mapAuthErrorToORPC(error);
+			}
+		}),
+
+	/**
+	 * 获取所有组织（Admin专用）
+	 * Admin 可以看到所有组织，即使不是组织的成员
+	 */
+	listAllOrganizations: protectedProcedure.handler(async ({ context }) => {
+		const logger = getLogger(context);
+		requireAdmin(context);
+
+		logger?.debug(
+			{
+				userId: context.session.user.id,
+				action: "LIST_ALL_ORGANIZATIONS",
+			},
+			"Listing all organizations",
+		);
+
+		try {
+			// 直接从数据库查询所有组织
+			const allOrgs = await db
+				.select({
+					id: organization.id,
+					name: organization.name,
+					slug: organization.slug,
+					logo: organization.logo,
+					createdAt: organization.createdAt,
+				})
+				.from(organization)
+				.orderBy(organization.createdAt);
+
+			return allOrgs;
+		} catch (error) {
+			logger?.error(
+				{
+					userId: context.session.user.id,
+					action: "LIST_ALL_ORGANIZATIONS",
+					error: error instanceof Error ? error.message : "Unknown error",
+				},
+				"Failed to list all organizations",
+			);
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Failed to list all organizations",
+			});
+		}
+	}),
+
+	/**
+	 * 获取完整组织信息（Admin专用）
+	 * Admin 可以查看任何组织的完整详情，包括成员列表，无需是组织成员
+	 */
+	getFullOrganizationById: protectedProcedure
+		.input(
+			z.object({
+				organizationId: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+			requireAdmin(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "GET_FULL_ORGANIZATION_BY_ID",
+					organizationId: input.organizationId,
+				},
+				"Getting full organization details by ID",
+			);
+
+			try {
+				// 查询组织基本信息
+				const [orgData] = await db
+					.select()
+					.from(organization)
+					.where(eq(organization.id, input.organizationId))
+					.limit(1);
+
+				if (!orgData) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Organization not found",
+					});
+				}
+
+				// 查询组织成员，关联 user 表获取用户信息
+				const membersData = await db
+					.select({
+						id: member.id,
+						userId: member.userId,
+						role: member.role,
+						createdAt: member.createdAt,
+						userEmail: user.email,
+						userName: user.name,
+						userImage: user.image,
+					})
+					.from(member)
+					.leftJoin(user, eq(member.userId, user.id))
+					.where(eq(member.organizationId, input.organizationId));
+
+				// 组装成员数据，格式与 Better-Auth 的 getFullOrganization 一致
+				const members = membersData.map((m) => ({
+					id: m.id,
+					role: m.role,
+					createdAt: m.createdAt,
+					user: {
+						id: m.userId,
+						name: m.userName,
+						email: m.userEmail,
+						image: m.userImage,
+					},
+				}));
+
+				return {
+					...orgData,
+					members,
+				};
+			} catch (error) {
+				if (error instanceof ORPCError) {
+					throw error;
+				}
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "GET_FULL_ORGANIZATION_BY_ID",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to get organization details",
+				);
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to get organization details",
+				});
+			}
+		}),
+
+	/**
+	 * 列出组织的邀请（Admin专用）
+	 * Admin 可以查看任何组织的邀请列表，无需是组织成员
+	 */
+	listInvitationsById: protectedProcedure
+		.input(
+			z.object({
+				organizationId: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+			requireAdmin(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "LIST_INVITATIONS_BY_ID",
+					organizationId: input.organizationId,
+				},
+				"Listing invitations by organization ID",
+			);
+
+			try {
+				// 直接从数据库查询邀请列表
+				const invitationsData = await db
+					.select({
+						id: invitation.id,
+						email: invitation.email,
+						role: invitation.role,
+						status: invitation.status,
+						expiresAt: invitation.expiresAt,
+						createdAt: invitation.createdAt,
+						teamId: invitation.teamId,
+					})
+					.from(invitation)
+					.where(eq(invitation.organizationId, input.organizationId));
+
+				return invitationsData;
+			} catch (error) {
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LIST_INVITATIONS_BY_ID",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to list invitations",
+				);
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to list invitations",
+				});
 			}
 		}),
 };

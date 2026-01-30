@@ -31,8 +31,9 @@ import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/admin/organizations/")({
 	loader: async ({ context }) => {
+		// Admin 使用专用 API 获取所有组织
 		await context.queryClient.ensureQueryData(
-			orpc.organization.listOrganizations.queryOptions(),
+			orpc.admin.listAllOrganizations.queryOptions(),
 		);
 	},
 	component: AdminOrganizationsPage,
@@ -44,7 +45,7 @@ function AdminOrganizationsPage() {
 
 	// 数据已在 loader 中预取，无加载状态
 	const { data: orgs } = useSuspenseQuery(
-		orpc.organization.listOrganizations.queryOptions(),
+		orpc.admin.listAllOrganizations.queryOptions(),
 	);
 
 	const [isCreateOpen, setIsCreateOpen] = useState(false);

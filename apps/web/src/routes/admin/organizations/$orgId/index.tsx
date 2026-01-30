@@ -4,15 +4,7 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-	Crown,
-	Mail,
-	Save,
-	Shield,
-	ShieldAlert,
-	Trash2,
-	Users,
-} from "lucide-react";
+import { Crown, Mail, Save, ShieldAlert, Trash2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
@@ -48,25 +40,27 @@ import {
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { orpc } from "@/utils/orpc";
 
-export const Route = createFileRoute("/admin/organizations/$orgId")({
+export const Route = createFileRoute("/admin/organizations/$orgId/")({
 	loader: async ({ context, params }) => {
 		await Promise.all([
+			// Admin 专用 API，无需是组织成员
 			context.queryClient.ensureQueryData(
-				orpc.organization.getFullOrganization.queryOptions({
+				orpc.admin.getFullOrganizationById.queryOptions({
 					input: { organizationId: params.orgId },
 				}),
 			),
+			// Admin 专用 API 查询邀请列表
 			context.queryClient.ensureQueryData(
-				orpc.organization.listInvitations.queryOptions({
+				orpc.admin.listInvitationsById.queryOptions({
 					input: { organizationId: params.orgId },
 				}),
 			),
 		]);
 	},
-	component: AdminOrganizationDetailPage,
+	component: AdminOrgOverviewPage,
 });
 
-function AdminOrganizationDetailPage() {
+function AdminOrgOverviewPage() {
 	const { orgId } = Route.useParams();
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
@@ -74,13 +68,13 @@ function AdminOrganizationDetailPage() {
 
 	// 数据已在 loader 中预取
 	const { data: org } = useSuspenseQuery(
-		orpc.organization.getFullOrganization.queryOptions({
+		orpc.admin.getFullOrganizationById.queryOptions({
 			input: { organizationId: orgId },
 		}),
 	);
 
 	const { data: invitations } = useSuspenseQuery(
-		orpc.organization.listInvitations.queryOptions({
+		orpc.admin.listInvitationsById.queryOptions({
 			input: { organizationId: orgId },
 		}),
 	);
@@ -181,40 +175,11 @@ function AdminOrganizationDetailPage() {
 	const moderators = members.filter((m) => m.role === "moderator");
 	const regularMembers = members.filter((m) => m.role === "member");
 
-	const getRoleBadge = (role: string) => {
-		switch (role) {
-			case "owner":
-				return (
-					<Badge variant="default" className="gap-1">
-						<Crown className="h-3 w-3" />
-						Owner
-					</Badge>
-				);
-			case "moderator":
-				return (
-					<Badge variant="secondary" className="gap-1">
-						<Shield className="h-3 w-3" />
-						Moderator
-					</Badge>
-				);
-			default:
-				return (
-					<Badge variant="outline" className="gap-1">
-						<Users className="h-3 w-3" />
-						Member
-					</Badge>
-				);
-		}
-	};
-
 	return (
 		<>
 			{ConfirmDialogComponent}
-			<div className="flex flex-1 flex-col gap-6 p-4 pt-0">
-				<div className="flex items-center justify-between">
-					<h1 className="font-bold text-2xl tracking-tight">
-						Organization Details
-					</h1>
+			<div className="flex flex-1 flex-col gap-6">
+				<div className="flex items-center justify-end">
 					<div className="flex gap-2">
 						<Button
 							variant="outline"
@@ -333,53 +298,49 @@ function AdminOrganizationDetailPage() {
 						</form>
 					</Card>
 
-					{/* 成员列表卡片 */}
+					{/* 邀请列表卡片 */}
 					<Card>
 						<CardHeader>
-							<CardTitle>Members</CardTitle>
+							<CardTitle>Pending Invitations</CardTitle>
 							<CardDescription>
-								View organization members. (Read-only view for admin)
+								Invitations sent to join this organization.
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
-							{members.length === 0 ? (
+							{!invitations || invitations.length === 0 ? (
 								<div className="py-8 text-center text-muted-foreground text-sm">
-									No members in this organization
+									No pending invitations
 								</div>
 							) : (
 								<Table>
 									<TableHeader>
 										<TableRow>
-											<TableHead>User</TableHead>
+											<TableHead>Email</TableHead>
 											<TableHead>Role</TableHead>
-											<TableHead className="text-right">Joined</TableHead>
+											<TableHead>Expires</TableHead>
+											<TableHead>Status</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{members.map((member) => (
-											<TableRow key={member.id}>
+										{invitations.map((invitation) => (
+											<TableRow key={invitation.id}>
+												<TableCell>{invitation.email}</TableCell>
 												<TableCell>
-													<div className="flex items-center gap-2">
-														<Avatar className="h-6 w-6">
-															<AvatarImage src={member.user?.image || ""} />
-															<AvatarFallback>
-																{member.user?.name?.charAt(0).toUpperCase() ||
-																	"?"}
-															</AvatarFallback>
-														</Avatar>
-														<div>
-															<div className="font-medium text-sm">
-																{member.user?.name}
-															</div>
-															<div className="text-muted-foreground text-xs">
-																{member.user?.email}
-															</div>
-														</div>
-													</div>
+													<Badge variant="outline">{invitation.role}</Badge>
 												</TableCell>
-												<TableCell>{getRoleBadge(member.role)}</TableCell>
-												<TableCell className="text-right text-muted-foreground text-xs">
-													{new Date(member.createdAt).toLocaleDateString()}
+												<TableCell className="text-muted-foreground text-xs">
+													{new Date(invitation.expiresAt).toLocaleString()}
+												</TableCell>
+												<TableCell>
+													<Badge
+														variant={
+															invitation.status === "accepted"
+																? "default"
+																: "secondary"
+														}
+													>
+														{invitation.status}
+													</Badge>
 												</TableCell>
 											</TableRow>
 										))}
@@ -389,58 +350,6 @@ function AdminOrganizationDetailPage() {
 						</CardContent>
 					</Card>
 				</div>
-
-				{/* 邀请列表卡片 */}
-				<Card>
-					<CardHeader>
-						<CardTitle>Pending Invitations</CardTitle>
-						<CardDescription>
-							Invitations sent to join this organization.
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						{!invitations || invitations.length === 0 ? (
-							<div className="py-8 text-center text-muted-foreground text-sm">
-								No pending invitations
-							</div>
-						) : (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Email</TableHead>
-										<TableHead>Role</TableHead>
-										<TableHead>Expires</TableHead>
-										<TableHead>Status</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{invitations.map((invitation) => (
-										<TableRow key={invitation.id}>
-											<TableCell>{invitation.email}</TableCell>
-											<TableCell>
-												<Badge variant="outline">{invitation.role}</Badge>
-											</TableCell>
-											<TableCell className="text-muted-foreground text-xs">
-												{new Date(invitation.expiresAt).toLocaleString()}
-											</TableCell>
-											<TableCell>
-												<Badge
-													variant={
-														invitation.status === "accepted"
-															? "default"
-															: "secondary"
-													}
-												>
-													{invitation.status}
-												</Badge>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						)}
-					</CardContent>
-				</Card>
 			</div>
 
 			{/* 转移所有权对话框 */}

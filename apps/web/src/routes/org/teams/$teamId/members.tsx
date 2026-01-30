@@ -4,9 +4,12 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle, Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
+
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
 	Dialog,
@@ -36,11 +39,13 @@ import {
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { orpc } from "@/utils/orpc";
 
-export const Route = createFileRoute("/org/teams/$teamId")({
-	// ✅ 继承父路由 /org 的 beforeLoad,无需重复检查
+export const Route = createFileRoute("/org/teams/$teamId/members")({
+	beforeLoad: async ({ context }) => {
+		const { requirePermission } = await import("@/utils/permission-guards");
+		await requirePermission({ context }, "team", ["manage-members"]);
+	},
 	loader: async ({ context, params }) => {
 		await Promise.all([
-			context.queryClient.ensureQueryData(orpc.privateData.queryOptions()),
 			context.queryClient.ensureQueryData(
 				orpc.organization.listTeamMembers.queryOptions({
 					input: { teamId: params.teamId },
@@ -51,47 +56,38 @@ export const Route = createFileRoute("/org/teams/$teamId")({
 			),
 		]);
 	},
-	component: TeamDetailPage,
+	component: TeamMembersPage,
 });
 
-function TeamDetailPage() {
+function TeamMembersPage() {
 	const { teamId } = Route.useParams();
 	const queryClient = useQueryClient();
 	const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
-	// 数据已在 loader 中预取，无加载状态
-	const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions());
 	const { data: teamMembers } = useSuspenseQuery(
 		orpc.organization.listTeamMembers.queryOptions({
-			input: {
-				teamId,
-			},
+			input: { teamId },
 		}),
 	);
 	const { data: orgMembersData } = useSuspenseQuery(
-		orpc.organization.listMembers.queryOptions({
-			input: {},
-		}),
+		orpc.organization.listMembers.queryOptions({ input: {} }),
 	);
 
 	const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 	const [selectedMemberId, setSelectedMemberId] = useState<string>("");
 
-	const activeTeamId = (
-		session.user as {
-			activeTeamId?: string | null;
-		}
-	).activeTeamId;
-	const isActiveTeam = activeTeamId === teamId;
-
 	const addTeamMember = useMutation(
 		orpc.organization.addTeamMember.mutationOptions({
 			onSuccess: () => {
+				toast.success("Member added to team successfully");
 				setIsAddMemberOpen(false);
 				setSelectedMemberId("");
 				queryClient.invalidateQueries({
 					queryKey: orpc.organization.listTeamMembers.key(),
 				});
+			},
+			onError: (error) => {
+				toast.error(error.message || "Failed to add member to team");
 			},
 		}),
 	);
@@ -99,19 +95,13 @@ function TeamDetailPage() {
 	const removeTeamMember = useMutation(
 		orpc.organization.removeTeamMember.mutationOptions({
 			onSuccess: () => {
+				toast.success("Member removed from team successfully");
 				queryClient.invalidateQueries({
 					queryKey: orpc.organization.listTeamMembers.key(),
 				});
 			},
-		}),
-	);
-
-	const setActiveTeam = useMutation(
-		orpc.organization.setActiveTeam.mutationOptions({
-			onSuccess: () => {
-				queryClient.invalidateQueries({
-					queryKey: orpc.privateData.key(),
-				});
+			onError: (error) => {
+				toast.error(error.message || "Failed to remove member from team");
 			},
 		}),
 	);
@@ -133,10 +123,6 @@ function TeamDetailPage() {
 		}
 	};
 
-	const handleSetActiveTeam = () => {
-		setActiveTeam.mutate({ teamId });
-	};
-
 	const orgMembers = orgMembersData?.members || [];
 	const availableMembers = orgMembers.filter(
 		(orgMember) =>
@@ -153,79 +139,62 @@ function TeamDetailPage() {
 	return (
 		<>
 			{ConfirmDialogComponent}
-			<div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+			<div className="flex flex-1 flex-col gap-4">
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="font-bold text-2xl tracking-tight">Team Details</h1>
-						<p className="text-muted-foreground">
-							Manage team members and settings.
+						<h2 className="font-semibold text-lg">Manage Team Members</h2>
+						<p className="text-muted-foreground text-sm">
+							Add or remove members from this team
 						</p>
 					</div>
 
-					<div className="flex gap-2">
-						<Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-							<DialogTrigger
-								className={buttonVariants({
-									className: "cursor-pointer",
-								})}
-							>
-								<Plus className="mr-2 h-4 w-4" />
-								Add Member
-							</DialogTrigger>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>Add Team Member</DialogTitle>
-									<DialogDescription>
-										Select a member from your organization to add to this team.
-									</DialogDescription>
-								</DialogHeader>
-								<form onSubmit={handleAddMember} className="space-y-4 py-4">
-									<div className="space-y-2">
-										<Label htmlFor="member">Member</Label>
-										<Select
-											value={selectedMemberId}
-											onValueChange={(value) =>
-												setSelectedMemberId(value || "")
-											}
-											required
-										>
-											<SelectTrigger id="member">
-												<SelectValue placeholder="Select a member" />
-											</SelectTrigger>
-											<SelectContent>
-												{availableMembers.map((member) => (
-													<SelectItem key={member.userId} value={member.userId}>
-														{member.user.name} ({member.user.email})
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<DialogFooter>
-										<Button
-											type="button"
-											variant="outline"
-											onClick={() => setIsAddMemberOpen(false)}
-										>
-											Cancel
-										</Button>
-										<Button type="submit" disabled={addTeamMember.isPending}>
-											{addTeamMember.isPending ? "Adding..." : "Add"}
-										</Button>
-									</DialogFooter>
-								</form>
-							</DialogContent>
-						</Dialog>
-
-						<Button
-							variant={isActiveTeam ? "default" : "outline"}
-							onClick={handleSetActiveTeam}
-							disabled={setActiveTeam.isPending || isActiveTeam}
-						>
-							{isActiveTeam ? <CheckCircle className="mr-2 h-4 w-4" /> : null}
-							{isActiveTeam ? "Active Team" : "Set as Active"}
-						</Button>
-					</div>
+					<Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+						<DialogTrigger className={buttonVariants()}>
+							<Plus className="mr-2 h-4 w-4" />
+							Add Member
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Add Team Member</DialogTitle>
+								<DialogDescription>
+									Select a member from your organization to add to this team.
+								</DialogDescription>
+							</DialogHeader>
+							<form onSubmit={handleAddMember} className="space-y-4 py-4">
+								<div className="space-y-2">
+									<Label htmlFor="member">Member</Label>
+									<Select
+										value={selectedMemberId}
+										onValueChange={(val) => val && setSelectedMemberId(val)}
+										required
+									>
+										<SelectTrigger id="member">
+											<SelectValue placeholder="Select a member" />
+										</SelectTrigger>
+										<SelectContent>
+											{availableMembers.map((member) => (
+												<SelectItem key={member.userId} value={member.userId}>
+													{member.user.name} ({member.user.email})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<DialogFooter>
+									<Button
+										type="button"
+										variant="outline"
+										onClick={() => setIsAddMemberOpen(false)}
+									>
+										Cancel
+									</Button>
+									<Button type="submit" disabled={addTeamMember.isPending}>
+										{addTeamMember.isPending ? "Adding..." : "Add"}
+									</Button>
+								</DialogFooter>
+							</form>
+						</DialogContent>
+					</Dialog>
 				</div>
 
 				<div className="overflow-hidden rounded-md border">
@@ -234,14 +203,15 @@ function TeamDetailPage() {
 							<TableRow>
 								<TableHead>Member</TableHead>
 								<TableHead>Email</TableHead>
+								<TableHead>Role</TableHead>
 								<TableHead className="text-right">Actions</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							{teamMembers?.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={3} className="h-24 text-center">
-										No team members found.
+									<TableCell colSpan={4} className="h-24 text-center">
+										No team members found. Add members to get started.
 									</TableCell>
 								</TableRow>
 							) : (
@@ -269,22 +239,23 @@ function TeamDetailPage() {
 												</div>
 											</TableCell>
 											<TableCell>{member.user.email}</TableCell>
+											<TableCell>
+												<Badge variant="outline">{member.role}</Badge>
+											</TableCell>
 											<TableCell className="text-right">
-												<div className="flex justify-end gap-2">
-													<Button
-														variant="ghost"
-														size="icon"
-														className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-														onClick={() =>
-															handleRemoveMember(
-																teamMember.userId,
-																member.user.name,
-															)
-														}
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</div>
+												<Button
+													variant="ghost"
+													size="icon"
+													className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+													onClick={() =>
+														handleRemoveMember(
+															teamMember.userId,
+															member.user.name,
+														)
+													}
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
 											</TableCell>
 										</TableRow>
 									);
@@ -296,11 +267,12 @@ function TeamDetailPage() {
 
 				<div className="flex justify-between">
 					<Link
-						to="/org/teams"
+						to="/org/teams/$teamId"
+						params={{ teamId }}
 						className={buttonVariants({ variant: "ghost" })}
 					>
 						<X className="mr-2 h-4 w-4" />
-						Back to Teams
+						Back to Team Overview
 					</Link>
 				</div>
 			</div>

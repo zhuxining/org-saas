@@ -3,7 +3,7 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, MoreHorizontal, Plus, Shield, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
@@ -299,9 +299,13 @@ function OrgMembersPage() {
 													</AvatarFallback>
 												</Avatar>
 												<div className="flex flex-col">
-													<span className="font-medium">
+													<Link
+														to="/org/members/$memberId"
+														params={{ memberId: member.id }}
+														className="font-medium hover:underline"
+													>
 														{member.user.name}
-													</span>
+													</Link>
 													<span className="text-muted-foreground text-xs">
 														{member.user.email}
 													</span>

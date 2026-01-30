@@ -1,11 +1,11 @@
 import { auth } from "@org-sass/auth";
+import { db, eq } from "@org-sass/db";
+import { member, organization } from "@org-sass/db/schema/auth";
 import { getLogger } from "@orpc/experimental-pino";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
 import { mapAuthErrorToORPC } from "../lib/error-handler";
-
-type OrgRole = "member" | "moderator" | "owner";
 
 export const organizationRouter = {
 	createOrganization: protectedProcedure
@@ -89,6 +89,52 @@ export const organizationRouter = {
 				"Failed to list organizations",
 			);
 			throw mapAuthErrorToORPC(error);
+		}
+	}),
+
+	/**
+	 * 直接从数据库查询用户所属的组织列表
+	 * 用于 SSR 环境，绕过 Better-Auth 的 session 限制
+	 */
+	listMyOrganizations: protectedProcedure.handler(async ({ context }) => {
+		const logger = getLogger(context);
+
+		logger?.debug(
+			{
+				userId: context.session.user.id,
+				action: "LIST_MY_ORGANIZATIONS",
+			},
+			"Listing user organizations from database",
+		);
+
+		try {
+			// 直接从数据库查询用户的组织成员关系
+			const userOrgs = await db
+				.select({
+					id: organization.id,
+					name: organization.name,
+					slug: organization.slug,
+					logo: organization.logo,
+					createdAt: organization.createdAt,
+					role: member.role,
+					memberId: member.id,
+				})
+				.from(member)
+				.innerJoin(organization, eq(member.organizationId, organization.id))
+				.where(eq(member.userId, context.session.user.id))
+				.orderBy(member.createdAt);
+
+			return userOrgs;
+		} catch (error) {
+			logger?.error(
+				{
+					userId: context.session.user.id,
+					action: "LIST_MY_ORGANIZATIONS",
+					error: error instanceof Error ? error.message : "Unknown error",
+				},
+				"Failed to list user organizations",
+			);
+			throw error;
 		}
 	}),
 
@@ -236,19 +282,17 @@ export const organizationRouter = {
 	setActiveOrganization: protectedProcedure
 		.input(
 			z.object({
-				organizationId: z.string().nullable().optional(),
-				organizationSlug: z.string().optional(),
+				organizationId: z.string(),
 			}),
 		)
 		.handler(async ({ input, context }) => {
 			const logger = getLogger(context);
 
-			logger?.info(
+			logger?.debug(
 				{
 					userId: context.session.user.id,
 					action: "SET_ACTIVE_ORGANIZATION",
 					organizationId: input.organizationId,
-					organizationSlug: input.organizationSlug,
 				},
 				"Setting active organization",
 			);
@@ -259,7 +303,7 @@ export const organizationRouter = {
 					headers: context.headers as Headers,
 				});
 
-				logger?.info(
+				logger?.debug(
 					{
 						userId: context.session.user.id,
 						action: "SET_ACTIVE_ORGANIZATION",
@@ -284,133 +328,43 @@ export const organizationRouter = {
 			}
 		}),
 
-	addMember: protectedProcedure
-		.input(
-			z.object({
-				userId: z.string(),
-				role: z.enum(["member", "moderator", "owner"]),
-				organizationId: z.string().optional(),
-				teamId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
+	getActiveMember: protectedProcedure.handler(async ({ context }) => {
+		const logger = getLogger(context);
 
-			logger?.info(
+		logger?.debug(
+			{
+				userId: context.session.user.id,
+				action: "GET_ACTIVE_MEMBER",
+			},
+			"Getting active member",
+		);
+
+		try {
+			const result = await auth.api.getActiveMember({
+				headers: context.headers as Headers,
+			});
+			return result;
+		} catch (error) {
+			logger?.error(
 				{
 					userId: context.session.user.id,
-					action: "ADD_MEMBER",
-					targetUserId: input.userId,
-					role: input.role,
-					organizationId: input.organizationId,
-					teamId: input.teamId,
+					action: "GET_ACTIVE_MEMBER",
+					error: error instanceof Error ? error.message : "Unknown error",
 				},
-				"Adding member",
+				"Failed to get active member",
 			);
-
-			try {
-				const result = await auth.api.addMember({
-					body: {
-						userId: input.userId,
-						role: input.role as OrgRole,
-						organizationId: input.organizationId,
-						teamId: input.teamId,
-					},
-					headers: context.headers as Headers,
-				});
-
-				logger?.info(
-					{
-						userId: context.session.user.id,
-						action: "ADD_MEMBER",
-						targetUserId: input.userId,
-						role: input.role,
-						success: true,
-					},
-					"Member added successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "ADD_MEMBER",
-						targetUserId: input.userId,
-						role: input.role,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to add member",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	removeMember: protectedProcedure
-		.input(
-			z.object({
-				memberIdOrEmail: z.string(),
-				organizationId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.warn(
-				{
-					userId: context.session.user.id,
-					action: "REMOVE_MEMBER",
-					memberIdOrEmail: input.memberIdOrEmail,
-					organizationId: input.organizationId,
-				},
-				"Removing member",
-			);
-
-			try {
-				const result = await auth.api.removeMember({
-					body: input,
-					headers: context.headers as Headers,
-				});
-
-				logger?.warn(
-					{
-						userId: context.session.user.id,
-						action: "REMOVE_MEMBER",
-						memberIdOrEmail: input.memberIdOrEmail,
-						success: true,
-					},
-					"Member removed successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "REMOVE_MEMBER",
-						memberIdOrEmail: input.memberIdOrEmail,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to remove member",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
+			throw mapAuthErrorToORPC(error);
+		}
+	}),
 
 	listMembers: protectedProcedure
 		.input(
 			z.object({
 				organizationId: z.string().optional(),
 				organizationSlug: z.string().optional(),
-				limit: z.union([z.string(), z.number()]).optional(),
-				offset: z.union([z.string(), z.number()]).optional(),
-				sortBy: z.string().optional(),
-				sortDirection: z.enum(["asc", "desc"]).optional(),
-				filterField: z.string().optional(),
-				filterValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
-				filterOperator: z
-					.enum(["eq", "ne", "lt", "lte", "gt", "gte", "contains"])
-					.optional(),
+				limit: z.number().optional(),
+				offset: z.number().optional(),
+				searchQuery: z.string().optional(),
 			}),
 		)
 		.handler(async ({ input, context }) => {
@@ -446,12 +400,67 @@ export const organizationRouter = {
 			}
 		}),
 
+	addMember: protectedProcedure
+		.input(
+			z.object({
+				userId: z.string().optional(),
+				email: z.string().optional(),
+				role: z.enum(["member", "moderator", "owner"]),
+				organizationId: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "ADD_MEMBER",
+					organizationId: input.organizationId,
+					targetUserId: input.userId,
+					targetEmail: input.email,
+					role: input.role,
+				},
+				"Adding member",
+			);
+
+			try {
+				const result = await auth.api.addMember({
+					body: input,
+					headers: context.headers as Headers,
+				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "ADD_MEMBER",
+						organizationId: input.organizationId,
+						success: true,
+					},
+					"Member added successfully",
+				);
+
+				return result;
+			} catch (error) {
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "ADD_MEMBER",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to add member",
+				);
+				throw mapAuthErrorToORPC(error);
+			}
+		}),
+
 	updateMemberRole: protectedProcedure
 		.input(
 			z.object({
 				memberId: z.string(),
 				role: z.enum(["member", "moderator", "owner"]),
-				organizationId: z.string().optional(),
+				organizationId: z.string(),
 			}),
 		)
 		.handler(async ({ input, context }) => {
@@ -462,7 +471,7 @@ export const organizationRouter = {
 					userId: context.session.user.id,
 					action: "UPDATE_MEMBER_ROLE",
 					memberId: input.memberId,
-					newRole: input.role,
+					role: input.role,
 					organizationId: input.organizationId,
 				},
 				"Updating member role",
@@ -470,11 +479,7 @@ export const organizationRouter = {
 
 			try {
 				const result = await auth.api.updateMemberRole({
-					body: {
-						memberId: input.memberId,
-						role: input.role as OrgRole,
-						organizationId: input.organizationId,
-					},
+					body: input,
 					headers: context.headers as Headers,
 				});
 
@@ -483,7 +488,7 @@ export const organizationRouter = {
 						userId: context.session.user.id,
 						action: "UPDATE_MEMBER_ROLE",
 						memberId: input.memberId,
-						newRole: input.role,
+						role: input.role,
 						success: true,
 					},
 					"Member role updated successfully",
@@ -496,6 +501,7 @@ export const organizationRouter = {
 						userId: context.session.user.id,
 						action: "UPDATE_MEMBER_ROLE",
 						memberId: input.memberId,
+						role: input.role,
 						error: error instanceof Error ? error.message : "Unknown error",
 					},
 					"Failed to update member role",
@@ -504,34 +510,56 @@ export const organizationRouter = {
 			}
 		}),
 
-	getActiveMember: protectedProcedure.handler(async ({ context }) => {
-		const logger = getLogger(context);
+	removeMember: protectedProcedure
+		.input(
+			z.object({
+				memberId: z.string(),
+				organizationId: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
 
-		logger?.debug(
-			{
-				userId: context.session.user.id,
-				action: "GET_ACTIVE_MEMBER",
-			},
-			"Getting active member",
-		);
-
-		try {
-			const result = await auth.api.getActiveMember({
-				headers: context.headers as Headers,
-			});
-			return result;
-		} catch (error) {
-			logger?.error(
+			logger?.info(
 				{
 					userId: context.session.user.id,
-					action: "GET_ACTIVE_MEMBER",
-					error: error instanceof Error ? error.message : "Unknown error",
+					action: "REMOVE_MEMBER",
+					memberId: input.memberId,
+					organizationId: input.organizationId,
 				},
-				"Failed to get active member",
+				"Removing member",
 			);
-			throw mapAuthErrorToORPC(error);
-		}
-	}),
+
+			try {
+				const result = await auth.api.removeMember({
+					body: input,
+					headers: context.headers as Headers,
+				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_MEMBER",
+						memberId: input.memberId,
+						success: true,
+					},
+					"Member removed successfully",
+				);
+
+				return result;
+			} catch (error) {
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "REMOVE_MEMBER",
+						memberId: input.memberId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to remove member",
+				);
+				throw mapAuthErrorToORPC(error);
+			}
+		}),
 
 	leaveOrganization: protectedProcedure
 		.input(
@@ -585,11 +613,9 @@ export const organizationRouter = {
 	inviteMember: protectedProcedure
 		.input(
 			z.object({
-				email: z.email(),
+				email: z.string().email(),
 				role: z.enum(["member", "moderator", "owner"]),
-				organizationId: z.string().optional(),
-				resend: z.boolean().optional(),
-				teamId: z.union([z.string(), z.array(z.string())]).optional(),
+				organizationId: z.string(),
 			}),
 		)
 		.handler(async ({ input, context }) => {
@@ -599,22 +625,16 @@ export const organizationRouter = {
 				{
 					userId: context.session.user.id,
 					action: "INVITE_MEMBER",
+					organizationId: input.organizationId,
 					email: input.email,
 					role: input.role,
-					organizationId: input.organizationId,
 				},
 				"Inviting member",
 			);
 
 			try {
-				const result = await auth.api.createInvitation({
-					body: {
-						email: input.email,
-						role: input.role as OrgRole,
-						organizationId: input.organizationId,
-						resend: input.resend,
-						teamId: input.teamId,
-					},
+				const result = await auth.api.inviteMember({
+					body: input,
 					headers: context.headers as Headers,
 				});
 
@@ -622,8 +642,8 @@ export const organizationRouter = {
 					{
 						userId: context.session.user.id,
 						action: "INVITE_MEMBER",
+						organizationId: input.organizationId,
 						email: input.email,
-						role: input.role,
 						success: true,
 					},
 					"Member invited successfully",
@@ -635,10 +655,100 @@ export const organizationRouter = {
 					{
 						userId: context.session.user.id,
 						action: "INVITE_MEMBER",
+						organizationId: input.organizationId,
 						email: input.email,
 						error: error instanceof Error ? error.message : "Unknown error",
 					},
 					"Failed to invite member",
+				);
+				throw mapAuthErrorToORPC(error);
+			}
+		}),
+
+	listInvitations: protectedProcedure
+		.input(
+			z.object({
+				organizationId: z.string().optional(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.debug(
+				{
+					userId: context.session.user.id,
+					action: "LIST_INVITATIONS",
+					organizationId: input.organizationId,
+				},
+				"Listing invitations",
+			);
+
+			try {
+				const result = await auth.api.listInvitations({
+					query: input,
+					headers: context.headers as Headers,
+				});
+				return result;
+			} catch (error) {
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "LIST_INVITATIONS",
+						organizationId: input.organizationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to list invitations",
+				);
+				throw mapAuthErrorToORPC(error);
+			}
+		}),
+
+	cancelInvitation: protectedProcedure
+		.input(
+			z.object({
+				invitationId: z.string(),
+				organizationId: z.string(),
+			}),
+		)
+		.handler(async ({ input, context }) => {
+			const logger = getLogger(context);
+
+			logger?.info(
+				{
+					userId: context.session.user.id,
+					action: "CANCEL_INVITATION",
+					invitationId: input.invitationId,
+					organizationId: input.organizationId,
+				},
+				"Cancelling invitation",
+			);
+
+			try {
+				const result = await auth.api.cancelInvitation({
+					body: input,
+					headers: context.headers as Headers,
+				});
+
+				logger?.info(
+					{
+						userId: context.session.user.id,
+						action: "CANCEL_INVITATION",
+						invitationId: input.invitationId,
+						success: true,
+					},
+					"Invitation cancelled successfully",
+				);
+
+				return result;
+			} catch (error) {
+				logger?.error(
+					{
+						userId: context.session.user.id,
+						action: "CANCEL_INVITATION",
+						invitationId: input.invitationId,
+						error: error instanceof Error ? error.message : "Unknown error",
+					},
+					"Failed to cancel invitation",
 				);
 				throw mapAuthErrorToORPC(error);
 			}
@@ -742,38 +852,43 @@ export const organizationRouter = {
 			}
 		}),
 
-	cancelInvitation: protectedProcedure
+	updateInvitation: protectedProcedure
 		.input(
 			z.object({
 				invitationId: z.string(),
+				role: z.enum(["member", "moderator", "owner"]),
+				organizationId: z.string(),
 			}),
 		)
 		.handler(async ({ input, context }) => {
 			const logger = getLogger(context);
 
-			logger?.warn(
+			logger?.info(
 				{
 					userId: context.session.user.id,
-					action: "CANCEL_INVITATION",
+					action: "UPDATE_INVITATION",
 					invitationId: input.invitationId,
+					role: input.role,
+					organizationId: input.organizationId,
 				},
-				"Cancelling invitation",
+				"Updating invitation",
 			);
 
 			try {
-				const result = await auth.api.cancelInvitation({
+				const result = await auth.api.updateInvitation({
 					body: input,
 					headers: context.headers as Headers,
 				});
 
-				logger?.warn(
+				logger?.info(
 					{
 						userId: context.session.user.id,
-						action: "CANCEL_INVITATION",
+						action: "UPDATE_INVITATION",
 						invitationId: input.invitationId,
+						role: input.role,
 						success: true,
 					},
-					"Invitation cancelled successfully",
+					"Invitation updated successfully",
 				);
 
 				return result;
@@ -781,87 +896,12 @@ export const organizationRouter = {
 				logger?.error(
 					{
 						userId: context.session.user.id,
-						action: "CANCEL_INVITATION",
+						action: "UPDATE_INVITATION",
 						invitationId: input.invitationId,
+						role: input.role,
 						error: error instanceof Error ? error.message : "Unknown error",
 					},
-					"Failed to cancel invitation",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	getInvitation: protectedProcedure
-		.input(
-			z.object({
-				id: z.string(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.debug(
-				{
-					userId: context.session.user.id,
-					action: "GET_INVITATION",
-					invitationId: input.id,
-				},
-				"Getting invitation",
-			);
-
-			try {
-				const result = await auth.api.getInvitation({
-					query: input,
-					headers: context.headers as Headers,
-				});
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "GET_INVITATION",
-						invitationId: input.id,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to get invitation",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	listInvitations: protectedProcedure
-		.input(
-			z.object({
-				organizationId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.debug(
-				{
-					userId: context.session.user.id,
-					action: "LIST_INVITATIONS",
-					organizationId: input.organizationId,
-				},
-				"Listing invitations",
-			);
-
-			try {
-				const result = await auth.api.listInvitations({
-					query: input,
-					headers: context.headers as Headers,
-				});
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "LIST_INVITATIONS",
-						organizationId: input.organizationId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to list invitations",
+					"Failed to update invitation",
 				);
 				throw mapAuthErrorToORPC(error);
 			}
@@ -913,434 +953,6 @@ export const organizationRouter = {
 						error: error instanceof Error ? error.message : "Unknown error",
 					},
 					"Failed to create team",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	updateTeam: protectedProcedure
-		.input(
-			z.object({
-				teamId: z.string(),
-				data: z.record(z.string(), z.unknown()),
-				organizationId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.info(
-				{
-					userId: context.session.user.id,
-					action: "UPDATE_TEAM",
-					teamId: input.teamId,
-					organizationId: input.organizationId,
-				},
-				"Updating team",
-			);
-
-			try {
-				const result = await auth.api.updateTeam({
-					body: input,
-					headers: context.headers as Headers,
-				});
-
-				logger?.info(
-					{
-						userId: context.session.user.id,
-						action: "UPDATE_TEAM",
-						teamId: input.teamId,
-						success: true,
-					},
-					"Team updated successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "UPDATE_TEAM",
-						teamId: input.teamId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to update team",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	removeTeam: protectedProcedure
-		.input(
-			z.object({
-				teamId: z.string(),
-				organizationId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.warn(
-				{
-					userId: context.session.user.id,
-					action: "REMOVE_TEAM",
-					teamId: input.teamId,
-					organizationId: input.organizationId,
-				},
-				"Removing team",
-			);
-
-			try {
-				const result = await auth.api.removeTeam({
-					body: input,
-					headers: context.headers as Headers,
-				});
-
-				logger?.warn(
-					{
-						userId: context.session.user.id,
-						action: "REMOVE_TEAM",
-						teamId: input.teamId,
-						success: true,
-					},
-					"Team removed successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "REMOVE_TEAM",
-						teamId: input.teamId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to remove team",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	listTeams: protectedProcedure
-		.input(
-			z.object({
-				organizationId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.debug(
-				{
-					userId: context.session.user.id,
-					action: "LIST_TEAMS",
-					organizationId: input.organizationId,
-				},
-				"Listing teams",
-			);
-
-			try {
-				const result = await auth.api.listOrganizationTeams({
-					query: input,
-					headers: context.headers as Headers,
-				});
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "LIST_TEAMS",
-						organizationId: input.organizationId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to list teams",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	addTeamMember: protectedProcedure
-		.input(
-			z.object({
-				teamId: z.string(),
-				userId: z.string(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.info(
-				{
-					userId: context.session.user.id,
-					action: "ADD_TEAM_MEMBER",
-					teamId: input.teamId,
-					targetUserId: input.userId,
-				},
-				"Adding team member",
-			);
-
-			try {
-				const result = await auth.api.addTeamMember({
-					body: input,
-					headers: context.headers as Headers,
-				});
-
-				logger?.info(
-					{
-						userId: context.session.user.id,
-						action: "ADD_TEAM_MEMBER",
-						teamId: input.teamId,
-						targetUserId: input.userId,
-						success: true,
-					},
-					"Team member added successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "ADD_TEAM_MEMBER",
-						teamId: input.teamId,
-						targetUserId: input.userId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to add team member",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	removeTeamMember: protectedProcedure
-		.input(
-			z.object({
-				teamId: z.string(),
-				userId: z.string(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.warn(
-				{
-					userId: context.session.user.id,
-					action: "REMOVE_TEAM_MEMBER",
-					teamId: input.teamId,
-					targetUserId: input.userId,
-				},
-				"Removing team member",
-			);
-
-			try {
-				const result = await auth.api.removeTeamMember({
-					body: input,
-					headers: context.headers as Headers,
-				});
-
-				logger?.warn(
-					{
-						userId: context.session.user.id,
-						action: "REMOVE_TEAM_MEMBER",
-						teamId: input.teamId,
-						targetUserId: input.userId,
-						success: true,
-					},
-					"Team member removed successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "REMOVE_TEAM_MEMBER",
-						teamId: input.teamId,
-						targetUserId: input.userId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to remove team member",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	setActiveTeam: protectedProcedure
-		.input(
-			z.object({
-				teamId: z.string().nullable().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.info(
-				{
-					userId: context.session.user.id,
-					action: "SET_ACTIVE_TEAM",
-					teamId: input.teamId,
-				},
-				"Setting active team",
-			);
-
-			try {
-				const result = await auth.api.setActiveTeam({
-					body: input,
-					headers: context.headers as Headers,
-				});
-
-				logger?.info(
-					{
-						userId: context.session.user.id,
-						action: "SET_ACTIVE_TEAM",
-						teamId: input.teamId,
-						success: true,
-					},
-					"Active team set successfully",
-				);
-
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "SET_ACTIVE_TEAM",
-						teamId: input.teamId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to set active team",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	listUserTeams: protectedProcedure.handler(async ({ context }) => {
-		const logger = getLogger(context);
-
-		logger?.debug(
-			{
-				userId: context.session.user.id,
-				action: "LIST_USER_TEAMS",
-			},
-			"Listing user teams",
-		);
-
-		try {
-			const result = await auth.api.listUserTeams({
-				headers: context.headers as Headers,
-			});
-			return result;
-		} catch (error) {
-			logger?.error(
-				{
-					userId: context.session.user.id,
-					action: "LIST_USER_TEAMS",
-					error: error instanceof Error ? error.message : "Unknown error",
-				},
-				"Failed to list user teams",
-			);
-			throw mapAuthErrorToORPC(error);
-		}
-	}),
-
-	listTeamMembers: protectedProcedure
-		.input(
-			z.object({
-				teamId: z.string().optional(),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.debug(
-				{
-					userId: context.session.user.id,
-					action: "LIST_TEAM_MEMBERS",
-					teamId: input.teamId,
-				},
-				"Listing team members",
-			);
-
-			try {
-				const result = await auth.api.listTeamMembers({
-					query: input,
-					headers: context.headers as Headers,
-				});
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "LIST_TEAM_MEMBERS",
-						teamId: input.teamId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to list team members",
-				);
-				throw mapAuthErrorToORPC(error);
-			}
-		}),
-
-	hasPermission: protectedProcedure
-		.input(
-			z.object({
-				organizationId: z.string().optional(),
-				permissions: z.object({
-					organization: z
-						.array(
-							z.enum(["update", "delete", "manage-settings", "view-analytics"]),
-						)
-						.optional(),
-					member: z
-						.array(
-							z.enum(["create", "update", "delete", "update-role", "view"]),
-						)
-						.optional(),
-					invitation: z
-						.array(z.enum(["create", "cancel", "resend", "view"]))
-						.optional(),
-					team: z
-						.array(
-							z.enum(["create", "update", "delete", "view", "manage-members"]),
-						)
-						.optional(),
-					ac: z
-						.array(z.enum(["create", "update", "delete", "view"]))
-						.optional(),
-				}),
-			}),
-		)
-		.handler(async ({ input, context }) => {
-			const logger = getLogger(context);
-
-			logger?.debug(
-				{
-					userId: context.session.user.id,
-					action: "CHECK_PERMISSION",
-					organizationId: input.organizationId,
-					permissions: input.permissions,
-				},
-				"Checking permissions",
-			);
-
-			try {
-				const result = await auth.api.hasPermission({
-					body: {
-						organizationId: input.organizationId,
-						permissions: input.permissions,
-					},
-					headers: context.headers as Headers,
-				});
-				return result;
-			} catch (error) {
-				logger?.error(
-					{
-						userId: context.session.user.id,
-						action: "CHECK_PERMISSION",
-						organizationId: input.organizationId,
-						error: error instanceof Error ? error.message : "Unknown error",
-					},
-					"Failed to check permission",
 				);
 				throw mapAuthErrorToORPC(error);
 			}

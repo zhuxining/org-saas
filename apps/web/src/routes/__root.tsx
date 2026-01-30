@@ -11,7 +11,10 @@ import {
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "next-themes";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { ForbiddenPage } from "@/components/errors/forbidden";
+import { UnauthorizedPage } from "@/components/errors/unauthorized";
 import { Toaster } from "@/components/ui/sonner";
+import { isAuthError } from "@/utils/guards";
 import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
 
@@ -41,9 +44,19 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 			},
 		],
 	}),
-	errorComponent: ({ error, reset }) => (
-		<ErrorBoundary error={error} reset={reset} />
-	),
+	errorComponent: ({ error, reset }) => {
+		// 处理权限相关错误
+		if (isAuthError(error)) {
+			if (error.statusCode === 403) {
+				return <ForbiddenPage error={error} />;
+			}
+			if (error.statusCode === 401) {
+				return <UnauthorizedPage error={error} />;
+			}
+		}
+		// 默认错误处理
+		return <ErrorBoundary error={error} reset={reset} />;
+	},
 	component: RootDocument,
 });
 

@@ -78,3 +78,50 @@ export async function requireOwner(
 		throw redirect({ to: redirectTo });
 	}
 }
+
+/**
+ * Require moderator or higher role (Owner/Moderator)
+ */
+export async function requireModerator(
+	ctx: BeforeLoadContext,
+	redirectTo = "/org/dashboard",
+): Promise<void> {
+	const session = await requireSession(ctx);
+	const organizationId = session.user.activeOrganizationId;
+
+	if (!organizationId) {
+		throw redirect({ to: "/" });
+	}
+
+	const memberData = await ctx.context.queryClient.ensureQueryData(
+		orpc.organization.getActiveMember.queryOptions(),
+	);
+
+	if (memberData?.role !== "owner" && memberData?.role !== "moderator") {
+		throw redirect({ to: redirectTo });
+	}
+}
+
+/**
+ * Require any of the specified roles
+ */
+export async function requireAnyRole(
+	ctx: BeforeLoadContext,
+	roles: Array<"owner" | "moderator" | "member">,
+	redirectTo = "/org/dashboard",
+): Promise<void> {
+	const session = await requireSession(ctx);
+	const organizationId = session.user.activeOrganizationId;
+
+	if (!organizationId) {
+		throw redirect({ to: "/" });
+	}
+
+	const memberData = await ctx.context.queryClient.ensureQueryData(
+		orpc.organization.getActiveMember.queryOptions(),
+	);
+
+	if (!memberData?.role || !roles.includes(memberData.role)) {
+		throw redirect({ to: redirectTo });
+	}
+}
