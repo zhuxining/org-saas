@@ -84,6 +84,10 @@ export const organization = pgTable("organization", {
 	logo: text("logo"),
 	metadata: text("metadata"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => /* @__PURE__ */ new Date())
+		.notNull(),
 });
 
 export const member = pgTable(
@@ -98,6 +102,10 @@ export const member = pgTable(
 			.references(() => organization.id, { onDelete: "cascade" }),
 		role: text("role").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
 	},
 	(table) => [
 		index("member_organization_id_user_id_idx").on(
@@ -123,6 +131,10 @@ export const invitation = pgTable(
 		expiresAt: timestamp("expires_at").notNull(),
 		teamId: text("team_id"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
 	},
 	(table) => [
 		index("invitation_organization_id_email_idx").on(
@@ -181,6 +193,10 @@ export const teamMember = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull(),
 	},
 	(table) => [
 		index("team_member_team_id_user_id_idx").on(table.teamId, table.userId),
