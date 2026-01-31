@@ -177,7 +177,62 @@ organization({
 | 邀请管理 | `createInvitation`, `acceptInvitation`, `rejectInvitation`, `cancelInvitation`, `getInvitation`, `listInvitations` |
 | 团队管理 | `createTeam`, `updateTeam`, `removeTeam`, `listTeams`, `addTeamMember`, `removeTeamMember` |
 
-**详细文档**: [packages/api/docs/org-api.md](../../api/docs/org-api.md)
+**详细文档**: [packages/api/docs/org-api.md](../../api/docs/better-auth-api.md)
+
+---
+
+### 3. OpenAPI 插件
+
+**导入**: `import { openAPI } from "better-auth/plugins"`
+
+**作用**: 自动生成 OpenAPI 3.1.1 规范文档，提供交互式 API 文档
+
+**配置**:
+
+```typescript
+export const auth = betterAuth({
+  plugins: [
+    openAPI(),  // 默认配置即可
+  ],
+});
+```
+
+**可选配置**:
+
+```typescript
+openAPI({
+  path: "/api/auth",              // API 基础路径 (默认: "/api/auth")
+  disableDefaultReference: false, // 是否禁用默认文档 (默认: false)
+  theme: "default",               // 主题: "default" | "moon" | "forest"
+})
+```
+
+**功能特性**:
+
+| 功能 | 说明 |
+|------|------|
+| **自动生成 OpenAPI 3.1.1 规范** | 包含所有插件端点的完整文档 (39 个端点) |
+| **Scalar UI 集成** | 美观的交互式 API 文档界面 |
+| **Schema 导出** | 可导出 JSON 格式的 OpenAPI 规范 |
+
+**可用端点**:
+
+| 端点 | 功能 |
+|------|------|
+| `GET /api/auth/reference` | 交互式 API 文档（Scalar UI） |
+| `GET /api/auth/open-api/generate-schema` | 获取 OpenAPI Schema JSON |
+
+**使用方式**:
+
+| 方式 | 适用场景 | 示例 |
+|------|---------|------|
+| **Web App - authClient** | 前端组件中的认证操作 | `authClient.signIn.email()` |
+| **OpenAPI Schema** | 查看所有端点、集成第三方工具 | `orpc.betterAuthOpenAPIDocs.getOpenAPISchema()` |
+
+**相关文档**:
+
+- [Better-Auth API 端点文档](../../../api/docs/better-auth-api.md) - 完整的 39 个端点参考
+- [Better-Auth 官方文档](https://www.better-auth.com/docs/plugins/open-api)
 
 ---
 

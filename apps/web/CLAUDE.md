@@ -9,21 +9,19 @@ apps/web/src/
 ├── routes/              # 文件系统路由
 │   ├── (public)/        # 公开页面
 │   ├── (auth)/          # 认证流程
-│   ├── admin/           # 管理端 (Admin 权限)
-│   │   └── -components/ # 管理端共享组件
 │   ├── org/             # 组织端 (登录用户)
 │   │   └── -components/ # 组织端共享组件
 │   └── __root.tsx       # 根布局
 ├── components/          # 全局共享组件
 │   └── ui/              # shadcn/ui (DO NOT EDIT)
-├── middleware/         # 全局中间件
-│   └── auth.ts         # 认证中间件
-├── functions/         # Server Functions
+├── middleware/          # 全局中间件
+│   └── auth.ts          # 认证中间件
+├── functions/           # Server Functions
 │   └── ...
 ├── utils/
-│   ├── orpc.ts                # oRPC 客户端
+│   ├── orpc.ts               # oRPC 客户端
 │   └── route-guards.ts       # 路由守卫
-└── start.ts            # Start 配置（全局中间件）
+└── ...
 ```
 
 ### 1.2 快速索引
@@ -47,26 +45,15 @@ apps/web/src/
 
 **核心功能**:
 
-- 文件系统路由 - 通过文件结构自动生成路由
+- 文件系统路由 - 通过文件结构自动生成路由,运行 `bun run dev` 触发
 - 权限守卫 - `requireSession`, `requireActiveOrg`, `requireAdmin`, `requirePermission`, `requireOwner`
 - 数据预加载 - `loader` + `useSuspenseQuery` 模式
 - oRPC 集成 - 端到端类型安全的 API 调用
 
-**路由分组**:
-
-| 路由组 | 访问规则 | 守卫 |
-|--------|----------|------|
-| `(public)/` | 公开访问 | 无 |
-| `(auth)/` | 登录后 | `requireSession` |
-| `admin/*` | 仅 Admin | `requireAdmin` |
-| `org/*` | 有活跃组织 | `requireActiveOrg` |
-
 **权限守卫**:
 
 文件位置: [src/utils/route-guards.ts](src/utils/route-guards.ts) 和 [src/utils/permission-guards.ts](src/utils/permission-guards.ts)
-
 基础守卫: `requireSession`, `requireActiveOrg`, `requireAdmin`
-
 权限守卫: `requirePermission(resource, actions, redirectTo?)`, `requireOwner(redirectTo?)`
 
 **快速链接**:
@@ -74,7 +61,6 @@ apps/web/src/
 - 完整文档 → [docs/routing.md](docs/routing.md)
 - 数据加载 → [docs/data-loading.md](docs/data-loading.md)
 - 认证流程 → [docs/authentication.md](docs/authentication.md)
-- 权限系统 → [packages/auth/docs/permission-design.md](../../packages/auth/docs/permission-design.md)
 
 ---
 
@@ -90,17 +76,6 @@ apps/web/src/
 | | Admin (`member.role = "admin"`) | 管理成员和团队 |
 | | Member (`member.role = "member"`) | 只读访问 |
 
-**权限资源**:
-
-- `organization`: 组织管理（update, delete, manage-settings, view-analytics）
-- `member`: 成员管理（create, update, delete, update-role, view）
-- `invitation`: 邀请管理（create, cancel, resend, view）
-- `team`: 团队管理（create, update, delete, view, manage-members）
-- `project`: 项目管理（可扩展）
-- `billing`: 账单管理（可扩展）
-- `tickets`: 工单管理（可扩展）
-- `ac`: 访问控制管理（create, update, delete, view）
-
 **前端权限守卫**:
 
 文件位置: [src/utils/permission-guards.ts](src/utils/permission-guards.ts)
@@ -109,8 +84,6 @@ apps/web/src/
 - `requireOwner(ctx, redirectTo?)` - 要求所有者权限
 
 **权限检查流程**: 访问路由 → `requirePermission` 调用 API → 权限不足则重定向
-
-详细权限设计: [packages/auth/docs/permission-design.md](../../packages/auth/docs/permission-design.md)
 
 ---
 
@@ -164,6 +137,7 @@ src/components/
 
 - 不支持 `asChild` prop，使用 `render` prop 替代 `asChild`
 - 创建包装器时使用 `useRender` + `mergeProps`，`mergeProps` 第一个参数必须是 `{}`
+- **重点关注组件**：`collapsible`、`sidebar`、`dropdown-menu`
 - 参见 [shadcn-usage.md](docs/shadcn-usage.md#base-ui-组件使用规范)
 
 ---
@@ -175,12 +149,11 @@ src/components/
 **路由相关**:
 
 - 不要在 `src/routes/` 中创建顶级组件 - 使用 `-components/` 子目录
-- 不要混合路由组 - 保持 `admin/` 与 `org/` 分离
-- 不要修改 `routeTree.gen.ts` - 由 TanStack Router 自动生成
+- 不要修改 `routeTree.gen.ts` - 由 `bun run dev`自动生成
 
 **组件相关**:
 
-- 不要编辑 `ui/*.tsx` 文件 - 使用 shadcn CLI 重新生成
+- 不要编辑 `src/components/ui/*.tsx` 文件 - 使用 shadcn CLI 重新生成
 - 不要混合加载状态 - 使用一致的 Skeleton 或 Loader 模式
 - 不要跳过 toast 通知 - 始终为 mutations 提供反馈
 - 不要忘记查询失效 - 在 mutations 后刷新数据
@@ -221,6 +194,9 @@ src/components/
 
 ### 5.3 外部资源
 
-- **shadcn/ui**: [https://ui.shadcn.com/](https://ui.shadcn.com/)
-- **TanStack Router**: [https://tanstack.com/router/latest](https://tanstack.com/router/latest)
-- **TanStack Query**: [https://tanstack.com/query/latest](https://tanstack.com/query/latest)
+- [Shadcn/ui 文档(使用Base UI)](https://ui.shadcn.com/llms.txt)
+- [TanStack Start 文档](https://tanstack.com/start/latest)
+- [TanStack Router 文档](https://tanstack.com/router/latest)
+- [TanStack Query 文档](https://tanstack.com/query/latest)
+- [TanStack Table 文档](https://tanstack.com/table/latest)
+- [TanStack Form 文档](https://tanstack.com/form/latest)

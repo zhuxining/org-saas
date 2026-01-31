@@ -20,6 +20,12 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
 		new OpenAPIReferencePlugin({
 			schemaConverters: [new ZodToJsonSchemaConverter()],
+			specGenerateOptions: {
+				info: {
+					title: "org-sass API",
+					version: "1.0.0",
+				},
+			},
 		}),
 	],
 	interceptors: [
@@ -42,7 +48,7 @@ async function handle({ request }: { request: Request }) {
 	if (rpcResult.response) return rpcResult.response;
 
 	const apiResult = await apiHandler.handle(request, {
-		prefix: "/api/rpc/api-reference",
+		prefix: "/api/rpc/api-docs", // `http://localhost:3001/api/rpc/api-docs/spec.json`
 		context,
 	});
 	if (apiResult.response) return apiResult.response;

@@ -41,7 +41,6 @@ const getORPCClient = createIsomorphicFn()
 						ratelimiter: standardLimiter,
 					};
 				} catch {
-					// Not in request context (e.g., prefetch), return minimal context
 					return {
 						...(await createContext({ headers: new Headers() })),
 						ratelimiter: standardLimiter,
@@ -65,77 +64,4 @@ const getORPCClient = createIsomorphicFn()
 	});
 
 export const client: RouterClient<typeof appRouter> = getORPCClient();
-
-// oRPC + TanStack Query 集成配置
-// 使用 experimental_defaults 集中管理默认的 toast 提示
-// 注意: 这是实验性 API，可能在未来版本中变化
-export const orpc = createTanstackQueryUtils(client, {
-	experimental_defaults: {
-		organization: {
-			// Mutations - 统一的 toast 提示
-			createOrganization: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Organization created successfully");
-					},
-				},
-			},
-			inviteMember: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Invitation sent successfully");
-					},
-				},
-			},
-			removeMember: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Member removed");
-					},
-				},
-			},
-			updateMemberRole: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Role updated");
-					},
-				},
-			},
-			cancelInvitation: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Invitation cancelled");
-					},
-				},
-			},
-			updateOrganization: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Organization updated successfully");
-					},
-				},
-			},
-			deleteOrganization: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Organization deleted");
-					},
-				},
-			},
-			acceptInvitation: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Invitation accepted successfully");
-					},
-				},
-			},
-			rejectInvitation: {
-				mutationOptions: {
-					onSuccess: () => {
-						toast.success("Invitation rejected");
-					},
-				},
-			},
-		},
-	},
-});
+export const orpc = createTanstackQueryUtils(client);

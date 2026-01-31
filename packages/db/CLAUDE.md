@@ -89,8 +89,3 @@ bun run db:migrate      # Create migration file
 - Schema 更改应该提交，生成的 migrations 被跟踪
 
 ---
-
-## 相关文档
-
-- **Schema 参考文档**: [docs/schema-reference.md](./docs/schema-reference.md)
-- **组织数据模型**: [docs/organization-model.md](../../docs/organization-model.md)

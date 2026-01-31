@@ -21,10 +21,11 @@ docs/
 
 | Task | Location |
 |------|----------|
-| Auth config | index.ts |
-| Plugin setup | index.ts |
-| Session schema | Auto-generated |
-| Permission system design | docs/permission-design.md |
+| Auth config | src/index.ts |
+| Plugin setup | src/index.ts (plugins 数组) |
+| Web App 使用 authClient | apps/web/src/lib/auth-client.ts |
+| Better-Auth OpenAPI 文档访问 | <http://localhost:3001/api/auth/reference> |
+| Better-Auth API 参考文档 | [packages/api/docs/better-auth-api.md](../api/docs/better-auth-api.md) |
 
 ---
 
@@ -42,6 +43,64 @@ docs/
 ### Auth 表
 
 所有 auth 相关表由 Better-Auth **自动生成**，定义在 `packages/db/src/schema/auth.ts`。**不要手动修改**。
+
+---
+
+## Better-Auth 使用方式
+
+### 方式 1: Web App - 使用 `authClient` (推荐)
+
+**位置**: `apps/web/src/lib/auth-client.ts`
+
+**适用场景**: 前端组件中的用户认证操作
+
+```typescript
+import { authClient } from "@/lib/auth-client";
+
+// 登录
+await authClient.signIn.email({
+  email: "user@example.com",
+  password: "password",
+});
+
+// 登出
+await authClient.signOut();
+
+// 获取 session
+const { data: session } = await authClient.getSession();
+```
+
+### 方式 2: API 接口调用 - 使用 Better-Auth OpenAPI
+
+**适用场景**:
+
+- 通过 API 进行认证和组织管理
+- 如mini不支持 `authClient`，则直接调用 Better-Auth API
+
+**文档参考**:
+
+- **基础路径**: `/api/auth`
+- **OpenAPI 文档**: `http://localhost:3001/api/auth/reference`
+- **文档参考**: [packages/api/docs/better-auth-api.md](../api/docs/better-auth-api.md)
+
+### 调用示例
+
+```typescript
+// 直接 fetch 调用
+const response = await fetch('/api/auth/change-password', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  credentials: 'include',
+  body: JSON.stringify({
+    newPassword: 'newPass123',
+    currentPassword: 'currentPass123',
+  }),
+});
+
+const result = await response.json();
+```
 
 ---
 
@@ -69,27 +128,32 @@ docs/
 
 ---
 
-## 权限系统
+## 插件系统
 
-详细权限设计请参考: [docs/permission-design.md](./docs/permission-design.md)
+### 已启用的插件
 
-**默认角色**:
+| 插件 | 功能 |
+|------|------|
+| OpenAPI | 自动生成 OpenAPI 3.1.1 规范，并提供Better-Auth的 API 端点 |
+| TanStack Start Cookies | SSR 友好的 cookie 管理 |
+| Organization | 多租户组织管理 + 团队系统 |
 
-- **Owner**: 完全控制，包括删除组织和管理角色
-- **Admin**: 管理成员和团队（除删除组织和管理角色外）
-- **Member**: 只读访问
+#### OpenAPI 插件
+
+**配置**: `src/index.ts`
+
+- **API 调用基础路径**: `/api/auth`
+- **OpenAPI 文档**: `http://localhost:3001/api/auth/reference`
+- **文档参考**: [packages/api/docs/better-auth-api.md](../api/docs/better-auth-api.md)
 
 ---
 
-## 已知类型问题
+## 权限系统
 
-### activeOrganizationId
+分为内置角色与动态自定义角色。
 
-运行时由 Better-Auth 动态添加，但 TypeScript 类型缺失。**始终使用可选链**: `session?.user?.activeOrganizationId`
-
-### Better-Auth 类型不完整
-
-部分 API 返回类型不完整，需要使用 `as any` 并添加 `// biome-ignore lint/suspicious/noExplicitAny: <better-auth>` 注释
+**默认内置角色**: [参考](src/permissions.ts)
+**动态自定义角色**: [参考](https://www.better-auth.com/docs/plugins/organization#dynamic-access-control)
 
 ---
 
@@ -97,7 +161,6 @@ docs/
 
 - **不要修改自动生成的 auth 表** - Better-Auth 管理 schema/auth.ts
 - **不要绕过插件权限** - 使用 Better-Auth API，不要手动修改表
-- **不要忽略 activeOrganizationId 类型问题** - 始终使用可选链
 
 ---
 
@@ -113,15 +176,11 @@ docs/
 
 - Session 在 `packages/api/src/context.ts` 中提取用于 oRPC
 - Organization plugin 启用多租户 SaaS 架构
-- `allowUserToCreateOrganization: false` - 普通用户不能创建组织
 
 ---
 
 ## 相关文档
 
-- **权限系统设计**: [docs/permission-design.md](./docs/permission-design.md)
 - **Better-Auth 插件参考**: [docs/plugin-reference.md](./docs/plugin-reference.md)
-- **认证流程详解**: [docs/authentication.md](../../docs/authentication.md)
-- **组织数据模型**: [docs/organization-model.md](../../docs/organization-model.md)
 - **API 权限工具**: [/packages/api/CLAUDE.md](/packages/api/CLAUDE.md)
 - **前端路由守卫**: [/apps/web/src/CLAUDE.md](/apps/web/CLAUDE.md)

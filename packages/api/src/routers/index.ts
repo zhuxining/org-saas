@@ -1,7 +1,6 @@
 import type { RouterClient } from "@orpc/server";
-
 import { protectedProcedure, publicProcedure } from "../index";
-import { organizationRouter } from "./organization";
+import { betterAuthOpenAPIDocsRouter } from "./better-auth-openapi-docs";
 
 export const appRouter = {
 	healthCheck: publicProcedure.handler(() => {
@@ -13,7 +12,7 @@ export const appRouter = {
 			user: context.session?.user,
 		};
 	}),
-	organization: organizationRouter,
+	betterAuthOpenAPIDocs: betterAuthOpenAPIDocsRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

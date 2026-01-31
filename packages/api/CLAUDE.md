@@ -10,12 +10,11 @@
 
 ```
 src/
-├── index.ts              # 主路由导出
-├── context.ts            # oRPC 上下文，包含 session 提取
-└── routers/              # API 端点定义
-    ├── index.ts          # 基础过程导出
-    ├── admin.ts          # Admin API (15 endpoints)
-    └── organization.ts   # Organization API (28 endpoints)
+├── index.ts                         # 主路由导出
+├── context.ts                       # oRPC 上下文，包含 session 提取
+└── routers/                         # API 端点定义
+    ├── index.ts                     # 根路由导出
+    └── better-auth-openapi-docs.ts  # Better-Auth OpenAPI Schema 端点
 ```
 
 ---
@@ -55,7 +54,7 @@ protectedProcedure.handler(({ context }) => {
 
 | API | 文档 |
 |-----|------|
-| Organization API | [org-api.md](./docs/org-api.md) |
+| Better-Auth API | [better-auth-api.md](./docs/better-auth-api.md) ,OpenAPI 文档访问 <http://localhost:3001/api/auth/reference> |
 
 ---
 
@@ -78,5 +77,4 @@ protectedProcedure.handler(({ context }) => {
 ## 相关文档
 
 - **权限检查详解**: [docs/authentication.md#权限检查模式](../../docs/authentication.md#权限检查模式)
-- **组织上下文规则**: [docs/organization-model.md#组织上下文规则](../../docs/organization-model.md#组织上下文规则)
 - **错误处理模式**: [docs/authentication.md#错误处理模式](../../docs/authentication.md#错误处理模式)

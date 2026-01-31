@@ -62,13 +62,3 @@ export const rateLimitedProcedure = protectedProcedure.use(
 
 // 导出 logger 供外部使用
 export { logger, getLogger };
-
-// 导出权限工具函数
-export {
-	checkPermission,
-	checkPermissions,
-	isOrganizationOwner,
-	type PermissionCheckResult,
-	requireOrganizationOwner,
-	requirePermission,
-} from "./lib/permissions";

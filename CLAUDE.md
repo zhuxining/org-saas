@@ -73,6 +73,7 @@ bun run db:migrate       # 创建迁移文件 (生产环境)
 
 ```bash
 bun run check            # 格式化和 lint (Biome)
+bun run check-types      # 类型检查  
 ```
 
 ## 架构概览
@@ -90,7 +91,6 @@ bun run check            # 格式化和 lint (Biome)
 
 - **类型安全**: oRPC 提供端到端类型安全，无需手动定义 API 类型
 - **同构处理**: 相同代码在 SSR 和客户端运行
-- **权限分层**: Admin (全局) → Organization (租户) → Member (用户)
 - **多租户**: 用户可属于多个组织，通过 `activeOrganizationId` 切换
 
 ## 代码规范
@@ -121,15 +121,11 @@ import { db } from "@org-sass/db";     // 跨包导入
 
 ### 常见陷阱
 
-1. **oRPC 查询选项类型**: 运行时直接传递对象即可，类型警告不影响功能
-2. **路由未识别**: 运行 `bun run dev` 触发路由树生成
-3. **Session 类型**: 使用可选链 `session?.user?.activeOrganizationId || ""`
-4. **数据库连接**: 确保 `apps/web/.env` 中配置了正确的 PostgreSQL 连接字符串
+1. **路由未识别**: 运行 `bun run dev` 触发路由树生成
 
 ## Git 工作流
 
 - **Pre-commit hook**: 自动运行 Biome 格式化和 lint
-- **分支策略**: `main` 为生产分支，`dev` 为开发分支
 - **提交规范**: 建议使用 conventional commits（`feat:`, `fix:`, `refactor:` 等）
 
 ## 开发提示
@@ -137,13 +133,15 @@ import { db } from "@org-sass/db";     // 跨包导入
 - **端口**: Web 应用运行在 `http://localhost:3001`
 - **HMR**: Vite 提供热模块替换，代码更改自动刷新
 - **数据库 Studio**: 运行 `bun run db:studio` 打开可视化数据库管理界面
-- **React DevTools**: 已集成，可通过浏览器插件查看组件树
-- **TanStack DevTools**: 右下角显示路由和查询状态（开发模式）
 
 ## 相关资源
 
-- [Better-T-Stack 文档](https://github.com/AmanVarshney01/create-better-t-stack)
+- [TanStack Start 文档](https://tanstack.com/start/latest)
 - [TanStack Router 文档](https://tanstack.com/router/latest)
+- [TanStack Query 文档](https://tanstack.com/query/latest)
+- [TanStack Table 文档](https://tanstack.com/table/latest)
+- [TanStack Form 文档](https://tanstack.com/form/latest)
 - [oRPC 文档](https://orpc.unnoq.com/)
 - [Drizzle ORM 文档](https://orm.drizzle.team/)
 - [Better-Auth 文档](https://www.better-auth.com/docs)
+- [Shadcn/ui 文档(使用Base UI)](https://ui.shadcn.com/llms.txt)
