@@ -55,7 +55,7 @@ src/routes/
 | `(public)/` | 公开访问 | 无 | - |
 | `(auth)/` | 登录后访问 | `requireSession` | → /sign-in |
 | `admin/*` | 仅 Admin | `requireAdmin` | → /org/dashboard |
-| `org/*` | 有活跃组织 | `requireActiveOrg` | → /org/create |
+| `org/*` | 有活跃组织 | `requireActiveOrganization` | → /org |
 
 ### 路由分组说明
 
@@ -63,6 +63,16 @@ src/routes/
 - **`(auth)/`**: 认证流程 (`/sign-in` - 支持 `invitationId` 和 `redirect` 参数)
 - **`admin/`**: 管理员界面（仪表板、组织管理、用户管理）
 - **`org/`**: 组织成员界面（仪表板、成员管理、团队管理、设置）
+
+### 组织角色层级
+
+| 角色 | 权限 | 权重 |
+|------|------|------|
+| `owner` | 组织所有者，完全控制权 | 3 |
+| `admin` | 组织管理员，可以管理成员、团队、邀请 | 2 |
+| `member` | 普通成员，只读访问 | 1 |
+
+**注意**: `requireAdmin` 使用 `minimumRole: true`，所以 admin 和 owner 都可以访问。`requireOwner` 只允许 owner 访问。
 
 ### 登录后重定向优先级
 
@@ -77,34 +87,49 @@ src/routes/
 ### 守卫函数使用
 
 ```typescript
-import { requireSession, requireActiveOrg, requireAdmin } from '@/utils/route-guards'
+import { requireSession, requireActiveOrganization, requireAdmin, requireOwner } from '@/utils/guards'
 
 // 要求已登录
 export const Route = createFileRoute('/profile')({
-  beforeLoad: requireSession,
+  beforeLoad: async ({ context, location }) => {
+    await requireSession({ context, location })
+  },
   component: Profile,
 })
 
 // 要求有活跃组织
 export const Route = createFileRoute('/org/dashboard/')({
-  beforeLoad: requireActiveOrg,
+  beforeLoad: async ({ context, location }) => {
+    await requireActiveOrganization({ context, location })
+  },
   component: OrgDashboard,
 })
 
-// 要求管理员权限
-export const Route = createFileRoute('/admin/dashboard/')({
-  beforeLoad: requireAdmin,
-  component: AdminDashboard,
+// 要求管理员权限（admin 或 owner）
+export const Route = createFileRoute('/org/members/')({
+  beforeLoad: async ({ context, location }) => {
+    await requireAdmin({ context, location })
+  },
+  component: MembersPage,
+})
+
+// 要求 owner 权限
+export const Route = createFileRoute('/org/settings/dangerous/')({
+  beforeLoad: async ({ context, location }) => {
+    await requireOwner({ context, location })
+  },
+  component: DangerousZone,
 })
 ```
 
 ### 守卫行为
 
-| 守卫函数 | 条件 | 重定向目标 |
-|----------|------|------------|
-| `requireSession` | 未登录 | `/sign-in` |
-| `requireActiveOrg` | 无活跃组织 | `/org/create` |
-| `requireAdmin` | 非 Admin | `/org/dashboard` |
+| 守卫函数 | 条件 | 行为 |
+|----------|------|------|
+| `requireSession` | 未登录 | 抛出 `UnauthorizedError` |
+| `requireActiveOrganization` | 无活跃组织 | 重定向到 `/org` |
+| `requireAdmin` | 非 admin/owner | 抛出 `ForbiddenError` |
+| `requireOwner` | 非 owner | 抛出 `ForbiddenError` |
 
 ---
 
@@ -116,57 +141,91 @@ export const Route = createFileRoute('/admin/dashboard/')({
 import { createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { orpc } from '@/utils/orpc'
-import { requireActiveOrg } from '@/utils/route-guards'
+import { authClient } from '@/lib/auth-client'
+import { requireActiveOrganization } from '@/utils/guards'
 
 export const Route = createFileRoute('/org/dashboard/')({
   // 路由级权限守卫
-  beforeLoad: requireActiveOrg,
+  beforeLoad: async ({ context, location }) => {
+    const { activeOrganizationId } = await requireActiveOrganization({
+      context,
+      location,
+    })
+    return { activeOrganizationId }
+  },
 
   // 服务端预加载数据
-  loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData(orpc.privateData.queryOptions()),
-      context.queryClient.ensureQueryData(
-        orpc.organization.listMembers.queryOptions({ input: {} })
-      ),
-    ])
+  loader: async ({ context, preloadDate }) => {
+    // 预加载 session
+    await context.queryClient.ensureQueryData(
+      orpc.privateData.queryOptions()
+    )
+
+    // 组织相关数据在客户端组件中按需获取
+    //（避免在 loader 中调用 authClient，因为它依赖浏览器上下文）
   },
 
   component: OrgDashboard,
 })
 
 function OrgDashboard() {
-  // 数据已在缓存中，无 loading 状态检查
-  const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions())
-  const { data: members } = useSuspenseQuery(
-    orpc.organization.listMembers.queryOptions({ input: {} })
+  // Session 查询（使用 orpc.privateData）
+  const { data: session } = useSuspenseQuery(
+    orpc.privateData.queryOptions()
   )
+
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
+
+  // 组织成员查询（使用 authClient）
+  const { data: membersData } = useSuspenseQuery({
+    queryKey: ['organization', 'members', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return { members: [] }
+      return authClient.organization.listMembers({
+        query: { organizationId },
+      })
+    },
+  })
+
+  const members = (membersData as unknown as
+    { members?: unknown[] } | null
+  )?.members ?? []
 
   return <div>...</div>
 }
 ```
 
-### oRPC 参数传递规范
+### 客户端 vs 服务端数据获取
 
-```typescript
-// ✅ 正确 - oRPC v2 使用 { input: {...} } 包装
-orpc.organization.listMembers.queryOptions({ input: {} })
+| 数据类型 | 客户端 | 服务端 |
+|----------|--------|--------|
+| **Session** | `useSuspenseQuery(orpc.privateData.queryOptions())` | `await auth.api.getSession({ headers })` 或 `await getSession()` |
+| **组织列表** | `authClient.organization.list()` | - |
+| **成员列表** | `authClient.organization.listMembers({ query: { organizationId } })` | - |
+| **团队列表** | `authClient.organization.listTeams({ query: { organizationId } })` | - |
 
-// ❌ 错误（旧方式）
-orpc.organization.listMembers.queryOptions()
-```
+**注意**: Better-Auth 的 `authClient` 主要用于客户端，组织相关数据应在组件内按需获取。
 
 ### 查询失效规范
 
 ```typescript
-// ✅ 推荐 - 使用 .key() 方法
+import { orpc } from '@/utils/orpc'
+
+// ✅ 失效 Session 查询
 queryClient.invalidateQueries({
-  queryKey: orpc.organization.listMembers.key(),
+  queryKey: orpc.privateData.queryOptions().queryKey,
 })
 
-// ❌ 不推荐
+// ✅ 失效组织成员查询
 queryClient.invalidateQueries({
-  queryKey: orpc.organization.listMembers.queryOptions({ input: {} }).queryKey,
+  queryKey: ['organization', 'members', organizationId],
+})
+
+// ✅ 失效所有组织相关查询
+queryClient.invalidateQueries({
+  queryKey: ['organization'],
 })
 ```
 

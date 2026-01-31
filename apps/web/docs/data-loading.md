@@ -8,54 +8,86 @@
 
 ## 基础查询
 
-### 定义查询选项
+### 获取 Session
+
+#### 客户端（推荐）
 
 ```typescript
-import { orpc } from "@/utils/orpc";
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { orpc } from '@/utils/orpc'
 
-// 可复用的查询选项
-const getTeamsOptions = (organizationId: string) =>
-  orpc.organization.listTeams.queryOptions({ organizationId });
+function MyComponent() {
+  const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions())
 
-// 带参数的查询选项
-const getMembersOptions = (orgId: string, search?: string) =>
-  orpc.organization.listMembers.queryOptions({
-    organizationId: orgId,
-    search,
-  });
+  if (!session) return <div>Not authenticated</div>
+
+  const user = session.user
+  const orgId = (user as { activeOrganizationId?: string | null })
+    ?.activeOrganizationId || ''
+
+  return <div>Welcome {user.name}</div>
+}
 ```
 
-### 在组件中使用
+#### 服务端
 
 ```typescript
-import { useQuery } from "@tanstack/react-query";
+import { auth } from '@org-sass/auth'
+import { getRequestHeaders } from '@tanstack/react-start/server'
+
+export const loader = async () => {
+  const session = await auth.api.getSession({
+    headers: (await getRequestHeaders()) as Headers,
+  })
+
+  return { session }
+}
+```
+
+### 组织相关查询
+
+```typescript
+import { authClient } from '@/lib/auth-client'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { orpc } from '@/utils/orpc'
 
 function TeamsList() {
-  const { data: session } = useSession();
-  const orgId = session?.user?.activeOrganizationId || "";
+  const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions())
 
-  const { data, isLoading, error, refetch } = useQuery(
-    getTeamsOptions(orgId)
-  );
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
 
-  // 加载状态
-  if (isLoading) {
-    return <TeamsSkeleton />;
-  }
+  // 列出团队
+  const { data: teamsData } = useSuspenseQuery({
+    queryKey: ['organization', 'teams', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return { teams: [] }
+      return authClient.organization.listTeams({
+        query: { organizationId },
+      })
+    },
+  })
 
-  // 错误状态
-  if (error) {
-    return <ErrorDisplay error={error} onRetry={() => refetch()} />;
-  }
+  // 列出成员
+  const { data: membersData } = useQuery({
+    queryKey: ['organization', 'members', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return { members: [] }
+      return authClient.organization.listMembers({
+        query: { organizationId },
+      })
+    },
+    enabled: !!organizationId,
+  })
 
-  // 成功状态
-  return (
-    <div className="grid gap-4">
-      {data?.map((team) => (
-        <TeamCard key={team.id} team={team} />
-      ))}
-    </div>
-  );
+  // 类型断言处理 Better-Auth 返回类型
+  const teams = (teamsData as unknown as { teams?: unknown[] } | null)
+    ?.teams ?? []
+  const members = (membersData as unknown as { members?: unknown[] } | null)
+    ?.members ?? []
+
+  return <div>...</div>
 }
 ```
 
@@ -66,58 +98,38 @@ function TeamsList() {
 ### 在路由 loader 中预加载数据
 
 ```typescript
-import { createFileRoute, defer } from "@tanstack/react-router";
-import { queryClient } from "@/lib/query-client";
-import { orpc } from "@/utils/orpc";
+import { createFileRoute, defer } from '@tanstack/react-router'
+import { queryClient } from '@/lib/query-client'
+import { orpc } from '@/utils/orpc'
 
-export const Route = createFileRoute("/org/dashboard")({
+export const Route = createFileRoute('/org/dashboard/')({
   loader: async ({ context }) => {
-    const session = await requireAuth({ context });
-    const orgId = session?.user?.activeOrganizationId || "";
+    // 获取 session
+    const session = await queryClient.fetchQuery(
+      orpc.privateData.queryOptions()
+    )
 
-    // 预加载数据
-    const teams = queryClient.ensureQueryData(
-      orpc.organization.listTeams.queryOptions({ organizationId: orgId })
-    );
+    const organizationId = (session?.user as {
+      activeOrganizationId?: string | null
+    })?.activeOrganizationId
+
+    // 预加载团队成员数据
+    const members = queryClient.ensureQueryData({
+      queryKey: ['organization', 'members', organizationId],
+      queryFn: async () => {
+        if (!organizationId) return { members: [] }
+        return authClient.organization.listMembers({
+          query: { organizationId },
+        })
+      },
+    })
 
     return defer({
-      session,
-      teams,
-    });
+      members,
+    })
   },
   component: OrgDashboard,
-});
-```
-
-### 在组件中使用预加载的数据
-
-```typescript
-import { useLoaderData } from "@tanstack/react-router";
-
-function OrgDashboard() {
-  const { teams } = useLoaderData({
-    from: "/org/dashboard",
-  });
-
-  // 使用 Await 组件处理 deferred 数据
-  return (
-    <Suspense fallback={<TeamsSkeleton />}>
-      <TeamsAwait teams={teams} />
-    </Suspense>
-  );
-}
-
-function TeamsAwait({ teams }: { teams: Promise<Team[]> }) {
-  const data = use(teams);
-
-  return (
-    <div>
-      {data.map((team) => (
-        <TeamCard key={team.id} team={team} />
-      ))}
-    </div>
-  );
-}
+})
 ```
 
 ---
@@ -127,7 +139,7 @@ function TeamsAwait({ teams }: { teams: Promise<Team[]> }) {
 ### Skeleton 模式 (推荐)
 
 ```typescript
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/components/ui/skeleton'
 
 function TeamsSkeleton() {
   return (
@@ -142,34 +154,35 @@ function TeamsSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 // 使用
 if (isLoading) {
-  return <TeamsSkeleton />;
+  return <TeamsSkeleton />
 }
 ```
 
-### Loader 组件模式
+### 使用 useSuspenseQuery（推荐用于已知数据）
 
 ```typescript
-import { Loader } from "@/components/loader";
+import { useSuspenseQuery } from '@tanstack/react-query'
 
-if (isLoading) {
-  return <Loader />;
-}
-```
+function TeamsList() {
+  const { data: teamsData } = useSuspenseQuery({
+    queryKey: ['organization', 'teams', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return { teams: [] }
+      return authClient.organization.listTeams({
+        query: { organizationId },
+      })
+    },
+  })
 
-### 全屏加载模式
+  const teams = (teamsData as unknown as { teams?: unknown[] } | null)
+    ?.teams ?? []
 
-```typescript
-if (isLoading) {
-  return (
-    <div className="flex h-96 items-center justify-center">
-      <Loader />
-    </div>
-  );
+  return <div>{teams.map(...)}</div>
 }
 ```
 
@@ -180,10 +193,14 @@ if (isLoading) {
 ### 错误状态显示
 
 ```typescript
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { AlertCircle from 'lucide-react'
 
-function ErrorDisplay({ error, onRetry }: { error: Error; onRetry: () => void }) {
+function ErrorDisplay({ error, onRetry }: {
+  error: Error
+  onRetry: () => void
+}) {
   return (
     <Alert variant="destructive">
       <AlertCircle className="h-4 w-4" />
@@ -195,23 +212,13 @@ function ErrorDisplay({ error, onRetry }: { error: Error; onRetry: () => void })
         </Button>
       </AlertDescription>
     </Alert>
-  );
+  )
 }
 
 // 使用
 if (error) {
-  return <ErrorDisplay error={error} onRetry={() => refetch()} />;
+  return <ErrorDisplay error={error} onRetry={() => refetch()} />
 }
-```
-
-### 错误重试
-
-```typescript
-const { data, isLoading, error, refetch } = useQuery({
-  ...queryOptions,
-  retry: 3,              // 自动重试 3 次
-  retryDelay: 1000,      // 重试间隔 1 秒
-});
 ```
 
 ---
@@ -221,18 +228,18 @@ const { data, isLoading, error, refetch } = useQuery({
 ### 手动刷新
 
 ```typescript
-const { data, refetch } = useQuery(queryOptions);
+const { data, refetch } = useQuery(queryOptions)
 
 // 手动触发刷新
 const handleRefresh = () => {
-  refetch();
-};
+  refetch()
+}
 
 return (
   <div>
     <Button onClick={handleRefresh}>Refresh</Button>
   </div>
-);
+)
 ```
 
 ### 自动刷新
@@ -240,163 +247,109 @@ return (
 ```typescript
 const { data } = useQuery({
   ...queryOptions,
-  refetchInterval: 5000,  // 每 5 秒自动刷新
+  refetchInterval: 5000,              // 每 5 秒自动刷新
   refetchIntervalInBackground: true,  // 后台也刷新
-});
-```
-
-### 窗口聚焦刷新
-
-```typescript
-const { data } = useQuery({
-  ...queryOptions,
-  refetchOnWindowFocus: true,  // 窗口聚焦时刷新 (默认)
-});
+})
 ```
 
 ---
 
 ## 变更操作
 
-### Default Options 集中管理
-
-使用 `experimental_defaults` 集中管理默认的行为（Toast 提示、错误处理等）：
-
-```typescript
-export const orpc = createTanstackQueryUtils(client, {
-  experimental_defaults: {
-    organization: {
-      inviteMember: {
-        mutationOptions: {
-          onSuccess: () => {
-            // Toast 提示已在 experimental_defaults 中统一配置
-            queryClient.invalidateQueries({
-              queryKey: orpc.organization.listInvitations.key(),
-            });
-          },
-        },
-      },
-      // ... 其他 mutations
-    },
-  },
-});
-```
-
-**注意**: `experimental_defaults` 是实验性 API。详细的 Toast 模式说明 → [ui-patterns.md](./ui-patterns.md#toast-通知模式)
-
 ### 创建数据
 
 ```typescript
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
+import { orpc } from '@/utils/orpc'
+import { toast } from 'sonner'
 
 function CreateTeamForm() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
+  const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions())
 
-  // ✅ 简化后 - 只需要组件特定的逻辑
-  const createMutation = useMutation(
-    orpc.organization.createTeam.mutationOptions({
-      onSuccess: () => {
-        setIsOpen(false);
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listTeams.key(),
-        });
-      },
-    })
-  );
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
 
-  const handleSubmit = (data: { name: string }) => {
-    const orgId = session?.user?.activeOrganizationId || "";
-    createMutation.mutate({
-      organizationId: orgId,
-      ...data,
-    });
-  };
+  const createMutation = useMutation({
+    mutationFn: async (name: string) => {
+      if (!organizationId) throw new Error('No active organization')
+      return authClient.organization.createTeam({
+        name,
+        organizationId,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Team created successfully')
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'teams', organizationId],
+      })
+    },
+    onError: (error) => {
+      toast.error(error.error.message || 'Failed to create team')
+    },
+  })
 
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* 表单字段 */}
-    </form>
-  );
+  const handleSubmit = (name: string) => {
+    createMutation.mutate(name)
+  }
+
+  return <form onSubmit={handleSubmit}>...</form>
 }
 ```
 
 ### 更新数据
 
-**何时使用**: 需要立即反馈用户体验的场景
-**何时不使用**: 数据一致性要求高、操作复杂
-
 ```typescript
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
+import { toast } from 'sonner'
+
 const updateMutation = useMutation({
-  mutationFn: orpc.organization.updateTeam.mutate,
-  onMutate: async (variables) => {
-    // 乐观更新
-    await queryClient.cancelQueries({
-      queryKey: orpc.organization.listTeams.key(),
-    });
-
-    const previousTeams = queryClient.getQueryData(
-      orpc.organization.listTeams.key()
-    );
-
-    // 更新缓存
-    queryClient.setQueryData(
-      orpc.organization.listTeams.key(),
-      (old: Team[] | undefined) =>
-        old?.map((team) =>
-          team.id === variables.teamId
-            ? { ...team, ...variables }
-            : team
-        )
-    );
-
-    return { previousTeams };
-  },
-  onError: (error, variables, context) => {
-    // 回滚
-    if (context?.previousTeams) {
-      queryClient.setQueryData(
-        orpc.organization.listTeams.key(),
-        context.previousTeams
-      );
-    }
-    toast.error(`Failed: ${error.message}`);
+  mutationFn: async ({ teamId, name }: { teamId: string; name: string }) => {
+    return authClient.organization.updateTeam({
+      teamId,
+      data: { name },
+    })
   },
   onSuccess: () => {
-    toast.success("Updated successfully");
-  },
-  onSettled: () => {
-    // 无论成功失败都刷新
+    toast.success('Team updated successfully')
     queryClient.invalidateQueries({
-      queryKey: orpc.organization.listTeams.key(),
-    });
+      queryKey: ['organization', 'teams'],
+    })
   },
-});
+  onError: (error) => {
+    toast.error(error.error.message || 'Failed to update team')
+  },
+})
 ```
 
 ### 删除数据
 
 ```typescript
-const deleteMutation = useMutation(
-  orpc.organization.removeTeam.mutationOptions({
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: orpc.organization.listTeams.key(),
-      });
-    },
-  })
-);
+const deleteMutation = useMutation({
+  mutationFn: async (teamId: string) => {
+    return fetch('/api/organization/delete-team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teamId }),
+    })
+  },
+  onSuccess: () => {
+    toast.success('Team deleted successfully')
+    queryClient.invalidateQueries({
+      queryKey: ['organization', 'teams'],
+    })
+  },
+})
 
 const handleDelete = (teamId: string) => {
-  if (confirm("Are you sure?")) {
-    deleteMutation.mutate({
-      teamId,
-      organizationId: orgId,
-    });
+  if (confirm('Are you sure?')) {
+    deleteMutation.mutate(teamId)
   }
-};
+}
 ```
-
-**注意**: `experimental_defaults` 是实验性 API，可能在未来版本中变化。
 
 ---
 
@@ -406,54 +359,76 @@ const handleDelete = (teamId: string) => {
 
 ```typescript
 const { data } = useQuery({
-  ...queryOptions,
+  queryKey: ['organization', 'teams', organizationId],
+  queryFn: async () => {
+    return authClient.organization.listTeams({
+      query: { organizationId },
+    })
+  },
   staleTime: 5 * 60 * 1000,      // 5 分钟内认为数据是新的
-  gcTime: 10 * 60 * 1000,        // 10 分钟后垃圾回收 (默认)
-});
+  gcTime: 10 * 60 * 1000,        // 10 分钟后垃圾回收
+})
 ```
 
 ### 缓存失效
 
 ```typescript
-// 失效单个查询 - 使用 .key() 方法
-queryClient.invalidateQueries({
-  queryKey: orpc.organization.listTeams.key(),
-});
+import { orpc } from '@/utils/orpc'
 
-// 失效多个查询 - 匹配前缀
+// 失效特定查询
 queryClient.invalidateQueries({
-  queryKey: orpc.organization.listTeams.key().slice(0, 1),
-});
+  queryKey: ['organization', 'teams', organizationId],
+})
 
-// 失效所有查询
-queryClient.invalidateQueries();
+// 失效相关前缀查询
+queryClient.invalidateQueries({
+  queryKey: ['organization'],
+})
+
+// 失效 Session 相关查询
+queryClient.invalidateQueries({
+  queryKey: orpc.privateData.queryOptions().queryKey,
+})
 ```
-
-### 关键 Helper 方法
-
-| 方法 | 用途 | 示例 |
-|------|------|------|
-| `.key()` | 部分匹配，用于失效查询 | `orpc.organization.listMembers.key()` |
-| `.queryKey()` | 完整匹配，用于特定查询 | `orpc.organization.find.queryKey({ input: { id: 1 } })` |
-| `.mutationOptions()` | 获取 mutation 配置 | `orpc.organization.create.mutationOptions()` |
 
 ### 设置查询数据
 
 ```typescript
 // 直接设置数据
 queryClient.setQueryData(
-  orpc.organization.listTeams.key(),
-  newTeams
-);
+  ['organization', 'teams', organizationId],
+  { teams: newTeams }
+)
+```
 
-// 使用函数更新
-queryClient.setQueryData(
-  orpc.organization.listTeams.key(),
-  (oldTeams) => [
-    ...oldTeams,
-    newTeam,
-  ]
-);
+---
+
+## 类型断言说明
+
+由于 Better-Auth 返回类型为 `Data<T>` 包装器，需要进行类型断言：
+
+```typescript
+import { authClient } from '@/lib/auth-client'
+
+// 列出成员（带类型断言）
+const { data: membersData } = useQuery({
+  queryKey: ['organization', 'members', organizationId],
+  queryFn: async () => {
+    if (!organizationId) return { members: [] }
+    return authClient.organization.listMembers({
+      query: { organizationId },
+    })
+  },
+})
+
+// 类型断言
+const members = (membersData as unknown as
+  { members?: unknown[] } | null
+)?.members ?? []
+
+const orgs = (orgsData as unknown as
+  { id: string; name: string }[] | null
+) ?? null
 ```
 
 ---
@@ -463,110 +438,100 @@ queryClient.setQueryData(
 ### 分页查询
 
 ```typescript
-const getTeamsOptions = (orgId: string, page: number, limit: number) =>
-  orpc.organization.listTeams.queryOptions({
-    organizationId: orgId,
-    offset: (page - 1) * limit,
-    limit,
-  });
+function MembersList() {
+  const [page, setPage] = useState(1)
+  const limit = 20
 
-function TeamsList() {
-  const [page, setPage] = useState(1);
-  const limit = 20;
+  const { data } = useQuery({
+    queryKey: ['organization', 'members', organizationId, page, limit],
+    queryFn: async () => {
+      if (!organizationId) return { members: [] }
+      return authClient.organization.listMembers({
+        query: { organizationId, limit, offset: (page - 1) * limit },
+      })
+    },
+  })
 
-  const { data, isLoading } = useQuery(getTeamsOptions(orgId, page, limit));
-
-  const totalPages = Math.ceil((data?.total || 0) / limit);
+  const members = (data as unknown as { members?: unknown[] } | null)?.members ?? []
 
   return (
     <div>
-      {/* 数据列表 */}
+      {members.map((member: unknown) => {
+        const m = member as { id: string; user: { name: string } }
+        return <div key={m.id}>{m.user.name}</div>
+      })}
       <Pagination
         currentPage={page}
-        totalPages={totalPages}
+        totalPages={Math.ceil((data?.total || 0) / limit)}
         onPageChange={setPage}
       />
     </div>
-  );
-}
-```
-
-### 无限滚动
-
-```typescript
-import { useInfiniteQuery } from "@tanstack/react-query";
-
-const getTeamsInfiniteOptions = (orgId: string) =>
-  orpc.organization.listTeams.queryOptions({
-    organizationId: orgId,
-    limit: 20,
-  });
-
-function TeamsInfiniteList() {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      ...getTeamsInfiniteOptions(orgId),
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    });
-
-  return (
-    <div>
-      {data?.pages.map((page) =>
-        page.items.map((team) => (
-          <TeamCard key={team.id} team={team} />
-        ))
-      )}
-
-      {hasNextPage && (
-        <Button
-          onClick={() => fetchNextPage()}
-          disabled={isFetchingNextPage}
-        >
-          {isFetchingNextPage ? "Loading..." : "Load More"}
-        </Button>
-      )}
-    </div>
-  );
+  )
 }
 ```
 
 ---
 
-## Session 获取
+## Session 获取（完整模式）
 
-### 使用 authClient Hook
-
-```typescript
-import { authClient } from "@/lib/auth-client";
-
-function MyComponent() {
-  const { data: session, isPending } = authClient.useSession();
-
-  if (isPending) return <Loader />;
-  if (!session) return <div>Not authenticated</div>;
-
-  const user = session.user;
-  const orgId = user?.activeOrganizationId || "";
-
-  return <div>Welcome {user.name}</div>;
-}
-```
-
-### 使用 oRPC
+### 客户端（Client）- 推荐用于组件
 
 ```typescript
-import { orpc } from "@/utils/orpc";
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { orpc } from '@/utils/orpc'
 
 function MyComponent() {
-  const { data: session } = useQuery(
+  const { data: session } = useSuspenseQuery(
     orpc.privateData.queryOptions()
-  );
+  )
 
-  if (!session) return <div>Not authenticated</div>;
+  if (!session) return <div>Not authenticated</div>
 
-  return <div>Welcome {session.user.name}</div>;
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
+
+  return <div>Welcome {session.user.name}</div>
 }
 ```
+
+### 服务端（Server）- 推荐用于 loader
+
+**方法 1**: 使用 `auth.api.getSession()`
+
+```typescript
+import { auth } from '@org-sass/auth'
+import { getRequestHeaders } from '@tanstack/react-start/server'
+
+export const loader = async () => {
+  const session = await auth.api.getSession({
+    headers: (await getRequestHeaders()) as Headers,
+  })
+
+  return { session }
+}
+```
+
+**方法 2**: 使用 `getSession()` server function
+
+```typescript
+import { getSession } from '@/functions/get-session'
+
+export const loader = async () => {
+  const session = await getSession()
+
+  return { session }
+}
+```
+
+---
+
+## 反模式
+
+- **不要使用 `authClient.useSession()`** - 此方法不存在，应使用 `orpc.privateData.queryOptions()`
+- **不要忽略类型断言** - Better-Auth 返回 `Data<T>` 类型，需要使用类型断言访问数据
+- **不要在查询参数中忽略 `query` 包装** - 使用 `{ query: { organizationId } }` 而不是 `{ organizationId }`
+- **不要手动调用 `auth.api.*`** - 服务端 API 只能在服务端使用
 
 ---
 
@@ -575,5 +540,6 @@ function MyComponent() {
 - **路由系统详解**: [docs/routing.md](./routing.md)
 - **认证流程详解**: [docs/authentication.md](./authentication.md)
 - **CRUD 模式**: [docs/crud-patterns.md](./crud-patterns.md)
+- **UI 交互模式**: [docs/ui-patterns.md](./ui-patterns.md)
 - [TanStack Query 文档](https://tanstack.com/query/latest)
 - [@orpc/tanstack-query 文档](https://orpc.unnoq.com/docs/integrations/tanstack-query)

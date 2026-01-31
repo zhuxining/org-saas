@@ -18,16 +18,12 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query'
 import { orpc } from '@/utils/orpc'
-import { requireActiveOrg } from '@/utils/route-guards'
+import { authClient } from '@/lib/auth-client'
+import { requireActiveOrganization } from '@/utils/guards'
 
 export const Route = createFileRoute('/org/members/')({
-  beforeLoad: requireActiveOrg,
-  loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData(
-        orpc.organization.listMembers.queryOptions({ input: {} })
-      ),
-    ])
+  beforeLoad: async ({ context, location }) => {
+    await requireActiveOrganization({ context, location })
   },
   component: MembersList,
 })
@@ -35,27 +31,46 @@ export const Route = createFileRoute('/org/members/')({
 function MembersList() {
   const queryClient = useQueryClient()
 
-  // 数据已在 loader 中预取，无加载状态
-  const { data: membersData } = useSuspenseQuery(
-    orpc.organization.listMembers.queryOptions({ input: {} })
+  // 获取 session 和组织 ID
+  const { data: session } = useSuspenseQuery(
+    orpc.privateData.queryOptions()
   )
 
-  const members = membersData?.members || []
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
+
+  // 成员列表查询
+  const { data: membersData, refetch: refetchMembers } = useSuspenseQuery({
+    queryKey: ['organization', 'members', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return { members: [] }
+      return authClient.organization.listMembers({
+        query: { organizationId },
+      })
+    },
+  })
+
+  // 类型断言处理 Better-Auth 返回类型
+  const members = (membersData as unknown as
+    { members?: unknown[] } | null
+  )?.members ?? []
 
   // 删除 mutation
-  const removeMember = useMutation(
-    orpc.organization.removeMember.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listMembers.key(),
-        })
-      },
-    })
-  )
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      return authClient.organization.removeMember({
+        memberIdOrEmail: memberId,
+      })
+    },
+    onSuccess: () => {
+      refetchMembers()
+    },
+  })
 
   const handleDelete = (memberId: string) => {
     if (confirm('Are you sure?')) {
-      removeMember.mutate({ memberId })
+      removeMember.mutate(memberId)
     }
   }
 
@@ -76,27 +91,34 @@ function MembersList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {members.map((member) => (
-            <TableRow key={member.id}>
-              <TableCell>{member.user.name}</TableCell>
-              <TableCell>{member.user.email}</TableCell>
-              <TableCell>
-                <Badge>{member.role}</Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <EditButton member={member} />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(member.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+          {members.map((member: unknown) => {
+            const m = member as {
+              id: string
+              user: { name: string; email: string }
+              role: string
+            }
+            return (
+              <TableRow key={m.id}>
+                <TableCell>{m.user.name}</TableCell>
+                <TableCell>{m.user.email}</TableCell>
+                <TableCell>
+                  <Badge>{m.role}</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <EditButton member={m} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(m.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </div>
@@ -108,14 +130,49 @@ function MembersList() {
 
 ```typescript
 function MembersList() {
+  const { data: session } = useSuspenseQuery(
+    orpc.privateData.queryOptions()
+  )
+
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
+
   const [search, setSearch] = useState('')
   const [role, setRole] = useState<'all' | 'admin' | 'member'>('all')
 
-  const { data: membersData } = useSuspenseQuery(
-    orpc.organization.listMembers.queryOptions({
-      input: { search, role: role === 'all' ? undefined : role },
-    })
-  )
+  const { data: membersData } = useSuspenseQuery({
+    queryKey: ['organization', 'members', organizationId, { search, role }],
+    queryFn: async () => {
+      if (!organizationId) return { members: [] }
+      const result = await authClient.organization.listMembers({
+        query: { organizationId },
+      })
+
+      // 客户端过滤（Better-Auth API 不支持搜索参数）
+      let members = (result as unknown as { members?: unknown[] } | null)
+        ?.members ?? []
+
+      if (search) {
+        members = members.filter((m: unknown) => {
+          const member = m as { user: { name?: string; email?: string } }
+          return (
+            member.user.name?.toLowerCase().includes(search.toLowerCase()) ||
+            member.user.email?.toLowerCase().includes(search.toLowerCase())
+          )
+        })
+      }
+
+      if (role !== 'all') {
+        members = members.filter((m: unknown) => {
+          const member = m as { role: string }
+          return member.role === role
+        })
+      }
+
+      return { members }
+    },
+  })
 
   return (
     <div className="space-y-4">
@@ -154,20 +211,39 @@ function MembersList() {
 **何时使用**: 需要收集用户输入来创建新资源
 
 ```typescript
+import { toast } from 'sonner'
+
 function CreateMemberDialog() {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
-
-  const createMember = useMutation(
-    orpc.organization.inviteMember.mutationOptions({
-      onSuccess: () => {
-        setIsOpen(false)  // 成功后关闭对话框
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listMembers.key(),
-        })
-      },
-    })
+  const { data: session } = useSuspenseQuery(
+    orpc.privateData.queryOptions()
   )
+
+  const organizationId = (session?.user as {
+    activeOrganizationId?: string | null
+  })?.activeOrganizationId
+
+  const inviteMember = useMutation({
+    mutationFn: async (data: { email: string; role: string }) => {
+      if (!organizationId) throw new Error('No active organization')
+      return authClient.organization.inviteMember({
+        email: data.email,
+        role: data.role as 'admin' | 'member',
+        organizationId,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Invitation sent successfully')
+      setIsOpen(false)
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'members', organizationId],
+      })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to send invitation')
+    },
+  })
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -184,8 +260,8 @@ function CreateMemberDialog() {
 
         {/* 表单组件 */}
         <MemberForm
-          onSubmit={(data) => createMember.mutate(data)}
-          isSubmitting={createMember.isPending}
+          onSubmit={(data) => inviteMember.mutate(data)}
+          isSubmitting={inviteMember.isPending}
         />
       </DialogContent>
     </Dialog>
@@ -202,20 +278,36 @@ function CreateMemberDialog() {
 ### 行内编辑
 
 ```typescript
-function EditableMemberRow({ member }: { member: Member }) {
+import { toast } from 'sonner'
+
+function EditableMemberRow({
+  member,
+  organizationId,
+}: {
+  member: { id: string; user: { name: string; email: string }; role: string }
+  organizationId: string
+}) {
   const [isEditing, setIsEditing] = useState(false)
   const queryClient = useQueryClient()
 
-  const updateRole = useMutation(
-    orpc.organization.updateMemberRole.mutationOptions({
-      onSuccess: () => {
-        setIsEditing(false)
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listMembers.key(),
-        })
-      },
-    })
-  )
+  const updateRole = useMutation({
+    mutationFn: async (role: string) => {
+      return authClient.organization.updateMemberRole({
+        memberId: member.id,
+        role: role as 'admin' | 'member',
+      })
+    },
+    onSuccess: () => {
+      toast.success('Role updated successfully')
+      setIsEditing(false)
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'members', organizationId],
+      })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update role')
+    },
+  })
 
   if (isEditing) {
     return (
@@ -225,9 +317,7 @@ function EditableMemberRow({ member }: { member: Member }) {
         <TableCell>
           <Select
             value={member.role}
-            onValueChange={(role) =>
-              updateRole.mutate({ memberId: member.id, role })
-            }
+            onValueChange={(role) => updateRole.mutate(role)}
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -275,20 +365,36 @@ function EditableMemberRow({ member }: { member: Member }) {
 ### 对话框编辑
 
 ```typescript
-function EditMemberDialog({ member }: { member: Member }) {
+import { toast } from 'sonner'
+
+function EditMemberDialog({
+  member,
+  organizationId,
+}: {
+  member: { id: string; user: { name: string; email: string }; role: string }
+  organizationId: string
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
 
-  const updateMember = useMutation(
-    orpc.organization.updateMember.mutationOptions({
-      onSuccess: () => {
-        setIsOpen(false)
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listMembers.key(),
-        })
-      },
-    })
-  )
+  const updateMember = useMutation({
+    mutationFn: async (data: { role: string }) => {
+      return authClient.organization.updateMemberRole({
+        memberId: member.id,
+        role: data.role as 'admin' | 'member',
+      })
+    },
+    onSuccess: () => {
+      toast.success('Member updated successfully')
+      setIsOpen(false)
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'members', organizationId],
+      })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update member')
+    },
+  })
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -304,7 +410,7 @@ function EditMemberDialog({ member }: { member: Member }) {
 
         <MemberForm
           defaultValues={member}
-          onSubmit={(data) => updateMember.mutate({ memberId: member.id, data })}
+          onSubmit={(data) => updateMember.mutate(data)}
           isSubmitting={updateMember.isPending}
         />
       </DialogContent>
@@ -322,22 +428,39 @@ function EditMemberDialog({ member }: { member: Member }) {
 **何时使用**: 快速删除非关键数据
 
 ```typescript
-function DeleteButton({ memberId, memberName }: { memberId: string; memberName: string }) {
+import { toast } from 'sonner'
+
+function DeleteButton({
+  memberId,
+  memberName,
+  organizationId,
+}: {
+  memberId: string
+  memberName: string
+  organizationId: string
+}) {
   const queryClient = useQueryClient()
 
-  const removeMember = useMutation(
-    orpc.organization.removeMember.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listMembers.key(),
-        })
-      },
-    })
-  )
+  const removeMember = useMutation({
+    mutationFn: async (id: string) => {
+      return authClient.organization.removeMember({
+        memberIdOrEmail: id,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Member removed successfully')
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'members', organizationId],
+      })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to remove member')
+    },
+  })
 
   const handleDelete = () => {
     if (confirm(`Remove ${memberName}?`)) {
-      removeMember.mutate({ memberId })
+      removeMember.mutate(memberId)
     }
   }
 
@@ -370,19 +493,33 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 
-function DeleteConfirmButton({ member }: { member: Member }) {
+function DeleteConfirmButton({
+  member,
+  organizationId,
+}: {
+  member: { id: string; user: { name: string } }
+  organizationId: string
+}) {
   const queryClient = useQueryClient()
 
-  const removeMember = useMutation(
-    orpc.organization.removeMember.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.organization.listMembers.key(),
-        })
-      },
-    })
-  )
+  const removeMember = useMutation({
+    mutationFn: async (id: string) => {
+      return authClient.organization.removeMember({
+        memberIdOrEmail: id,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Member removed successfully')
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'members', organizationId],
+      })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to remove member')
+    },
+  })
 
   return (
     <AlertDialog>
@@ -395,13 +532,14 @@ function DeleteConfirmButton({ member }: { member: Member }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Remove Member</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to remove {member.user.name}? This action cannot be undone.
+            Are you sure you want to remove {member.user.name}? This action
+            cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => removeMember.mutate({ memberId: member.id })}
+            onClick={() => removeMember.mutate(member.id)}
             className="bg-destructive text-destructive-foreground"
           >
             Remove
@@ -420,20 +558,29 @@ function DeleteConfirmButton({ member }: { member: Member }) {
 ### 查询失效策略
 
 ```typescript
-// 失效单个查询
+import { orpc } from '@/utils/orpc'
+
+// 失效单个查询（成员列表）
 queryClient.invalidateQueries({
-  queryKey: orpc.organization.listMembers.key(),
+  queryKey: ['organization', 'members', organizationId],
 })
 
-// 失效多个相关查询
+// 失效多个相关查询（所有组织相关）
 queryClient.invalidateQueries({
-  queryKey: orpc.organization.key(), // 匹配所有 organization 查询
+  queryKey: ['organization'],
+})
+
+// 失效 Session 查询
+queryClient.invalidateQueries({
+  queryKey: orpc.privateData.queryOptions().queryKey,
 })
 
 // 设置查询数据（乐观更新）
 queryClient.setQueryData(
-  orpc.organization.listMembers.key(),
-  (old) => [...old, newMember]
+  ['organization', 'members', organizationId],
+  (old: { members: unknown[] } | undefined) => ({
+    members: [...(old?.members ?? []), newMember],
+  })
 )
 ```
 
@@ -444,40 +591,50 @@ queryClient.setQueryData(
 
 ```typescript
 const removeMember = useMutation({
-  mutationFn: orpc.organization.removeMember.mutate,
-  onMutate: async (variables) => {
+  mutationFn: async (memberId: string) => {
+    return authClient.organization.removeMember({
+      memberIdOrEmail: memberId,
+    })
+  },
+  onMutate: async (memberId) => {
     // 取消相关查询
     await queryClient.cancelQueries({
-      queryKey: orpc.organization.listMembers.key(),
+      queryKey: ['organization', 'members', organizationId],
     })
 
     // 保存当前数据
-    const previousMembers = queryClient.getQueryData(
-      orpc.organization.listMembers.key()
+    const previousData = queryClient.getQueryData(
+      ['organization', 'members', organizationId]
     )
 
     // 乐观更新
     queryClient.setQueryData(
-      orpc.organization.listMembers.key(),
-      (old: Member[] | undefined) =>
-        old?.filter((m) => m.id !== variables.memberId)
+      ['organization', 'members', organizationId],
+      (old: unknown) => {
+        const data = old as { members?: unknown[] } | null
+        return {
+          members: data?.members?.filter(
+            (m: unknown) => (m as { id: string }).id !== memberId
+          ) ?? [],
+        }
+      }
     )
 
-    return { previousMembers }
+    return { previousData }
   },
-  onError: (error, variables, context) => {
+  onError: (error, memberId, context) => {
     // 回滚
-    if (context?.previousMembers) {
+    if (context?.previousData) {
       queryClient.setQueryData(
-        orpc.organization.listMembers.key(),
-        context.previousMembers
+        ['organization', 'members', organizationId],
+        context.previousData
       )
     }
   },
   onSettled: () => {
     // 无论成功失败都刷新
     queryClient.invalidateQueries({
-      queryKey: orpc.organization.listMembers.key(),
+      queryKey: ['organization', 'members', organizationId],
     })
   },
 })

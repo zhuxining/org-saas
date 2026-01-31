@@ -10,34 +10,69 @@
 
 ### 获取 Session
 
-```typescript
-import { authClient } from '@/lib/auth-client'
+#### 客户端（Client）
 
-function MyComponent() {
-  const { data: session, isPending } = authClient.useSession()
-
-  if (isPending) return <Loader />
-  if (!session) return <div>Not authenticated</div>
-
-  const user = session.user
-  const orgId = user?.activeOrganizationId || ''
-
-  return <div>Welcome {user.name}</div>
-}
-```
-
-### 使用 oRPC 获取 Session
+**项目推荐**: 使用 `orpc.privateData.queryOptions()` 配合 TanStack Query
 
 ```typescript
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { orpc } from '@/utils/orpc'
-import { useQuery } from '@tanstack/react-query'
 
 function MyComponent() {
-  const { data: session } = useQuery(orpc.privateData.queryOptions())
+  const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions())
 
   if (!session) return <div>Not authenticated</div>
 
   return <div>Welcome {session.user.name}</div>
+}
+```
+
+**Better-Auth 原生方式**: 使用 `authClient.getSession()`
+
+```typescript
+import { authClient } from '@/lib/auth-client'
+import { useQuery } from '@tanstack/react-query'
+
+function MyComponent() {
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: () => authClient.getSession(),
+  })
+
+  if (!session) return <div>Not authenticated</div>
+
+  return <div>Welcome {session.user.name}</div>
+}
+```
+
+**说明**: 项目选择 `orpc.privateData.queryOptions()` 是因为它与 TanStack Query 的缓存、Suspense 和 SSR 预加载更紧密集成。如果使用 `authClient.getSession()`，需要手动管理缓存和刷新策略。
+
+#### 服务端（Server）
+
+**方法 1**: 使用 `auth.api.getSession()`
+
+```typescript
+import { auth } from '@org-sass/auth'
+import { getRequestHeaders } from '@tanstack/react-start/server'
+
+export const loader = async () => {
+  const session = await auth.api.getSession({
+    headers: (await getRequestHeaders()) as Headers,
+  })
+
+  return { session }
+}
+```
+
+**方法 2**: 使用 `getSession()` server function
+
+```typescript
+import { getSession } from '@/functions/get-session'
+
+export const loader = async () => {
+  const session = await getSession()
+
+  return { session }
 }
 ```
 
@@ -75,29 +110,30 @@ const orgId = session.user.activeOrganizationId
 ```typescript
 import { authClient } from '@/lib/auth-client'
 import { useNavigate } from '@tanstack/react-router'
+import { useForm } from '@tanstack/react-form'
 
 function SignInForm() {
   const navigate = useNavigate()
 
-  const handleSignIn = async (email: string, password: string) => {
-    const response = await authClient.signIn.email({
-      email,
-      password,
-    })
+  const form = useForm({
+    defaultValues: { email: '', password: '' },
+    onSubmit: async ({ value }) => {
+      await authClient.signIn.email(
+        { email: value.email, password: value.password },
+        {
+          onSuccess: () => {
+            toast.success('Signed in successfully')
+            navigate({ to: '/org/dashboard' })
+          },
+          onError: (error) => {
+            toast.error(error.error.message || error.error.statusText)
+          },
+        },
+      )
+    },
+  })
 
-    if (response.error) {
-      toast.error(response.error.message)
-      return
-    }
-
-    toast.success('Signed in successfully')
-
-    // 登录后重定向
-    const redirect = searchParams.get('redirect')
-    navigate({ to: redirect || '/org/dashboard' })
-  }
-
-  return <Form onSubmit={handleSignIn} />
+  return <Form onSubmit={form.handleSubmit} />
 }
 ```
 
@@ -105,11 +141,19 @@ function SignInForm() {
 
 ```typescript
 import { authClient } from '@/lib/auth-client'
+import { useNavigate } from '@tanstack/react-router'
 
 function SignOutButton() {
+  const navigate = useNavigate()
+
   const handleSignOut = async () => {
-    await authClient.signOut()
-    window.location.href = '/' // 强制刷新以清除状态
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          navigate({ to: '/' })
+        },
+      },
+    })
   }
 
   return <Button onClick={handleSignOut}>Sign Out</Button>
@@ -125,38 +169,76 @@ function SignOutButton() {
 
 ## 组织切换
 
+### 列出组织
+
+```typescript
+import { useQuery } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
+
+function OrganizationSwitcher() {
+  const { data: orgsData } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => authClient.organization.list(),
+  })
+
+  const orgs = (orgsData as unknown as
+    { id: string; name: string; slug: string }[] | null) ?? null
+
+  if (!orgs) return <div>Loading organizations...</div>
+
+  return (
+    <Select>
+      {orgs.map((org) => (
+        <SelectItem key={org.id} value={org.id}>
+          {org.name}
+        </SelectItem>
+      ))}
+    </Select>
+  )
+}
+```
+
 ### 切换活跃组织
 
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
 import { orpc } from '@/utils/orpc'
 
 function OrganizationSwitcher() {
   const queryClient = useQueryClient()
 
-  const { data: session } = useQuery(orpc.privateData.queryOptions())
-  const { data: organizations } = useQuery(
-    orpc.organization.listOrganizations.queryOptions({ input: {} })
-  )
+  const { data: session } = useSuspenseQuery(orpc.privateData.queryOptions())
+  const { data: orgsData } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => authClient.organization.list(),
+  })
 
   const setActiveOrg = useMutation({
-    mutationFn: authClient.organization.setActive,
+    mutationFn: async (organizationId: string) => {
+      return authClient.organization.setActive({ organizationId })
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orpc.privateData.key() })
+      queryClient.invalidateQueries({
+        queryKey: orpc.privateData.queryOptions().queryKey,
+      })
       toast.success('Organization switched')
     },
   })
 
+  const orgs = (orgsData as unknown as
+    { id: string; name: string }[] | null) ?? null
+
   return (
     <Select
       value={session?.user?.activeOrganizationId}
-      onValueChange={(orgId) => setActiveOrg.mutate({ organizationId: orgId })}
+      onValueChange={(orgId) => orgId && setActiveOrg.mutate(orgId)}
     >
       <SelectTrigger>
         <SelectValue placeholder="Select organization" />
       </SelectTrigger>
       <SelectContent>
-        {organizations?.map((org) => (
+        {orgs?.map((org) => (
           <SelectItem key={org.id} value={org.id}>
             {org.name}
           </SelectItem>
@@ -171,39 +253,50 @@ function OrganizationSwitcher() {
 
 ## 权限检查
 
-### 组织权限检查
-
-```typescript
-// 获取用户在组织中的角色
-function getOrgRole(session: Session | null, orgId: string): string {
-  if (!session?.user?.activeOrganizationId) return 'guest'
-  // 从组织成员列表中查找角色
-  return 'member' // 或 'admin', 'owner'
-}
-
-// 检查是否为组织管理员
-function isOrgAdmin(session: Session | null): boolean {
-  const role = getOrgRole(session, session?.user?.activeOrganizationId || '')
-  return ['admin', 'owner'].includes(role)
-}
-```
-
 ### 路由级权限守卫
 
 ```typescript
-// utils/route-guards.ts
-import { createFileRoute, redirect } from '@tanstack/react-router'
+// utils/guards.ts
+import { auth } from '@org-sass/auth'
+import { getRequestHeaders } from '@tanstack/react-start/server'
+import { ForbiddenError, UnauthorizedError } from '@/utils/errors'
 
-export const requireActiveOrg = async ({ context }: { context: any }) => {
-  const session = await context.queryClient.fetchQuery({
-    queryKey: ['privateData'],
-    queryFn: () => orpc.privateData.query(),
+export async function requireAdmin({
+  context,
+  location,
+}: {
+  context: RouterAppContext
+  location?: { href: string }
+}) {
+  // 获取活跃成员信息
+  const member = await auth.api.getActiveMember({
+    headers: (await getRequestHeaders()) as Headers,
   })
 
-  if (!session?.user?.activeOrganizationId) {
-    throw redirect({ to: '/org/create' })
+  if (!member) {
+    throw new UnauthorizedError('您需要登录才能访问此页面')
   }
+
+  if (member.role !== 'admin' && member.role !== 'owner') {
+    throw new ForbiddenError('您没有权限访问此资源')
+  }
+
+  return { member }
 }
+```
+
+### 在路由中使用守卫
+
+```typescript
+import { createFileRoute } from '@tanstack/react-router'
+import { requireAdmin } from '@/utils/guards'
+
+export const Route = createFileRoute('/org/members/')({
+  beforeLoad: async ({ context, location }) => {
+    await requireAdmin({ context, location })
+  },
+  component: MembersPage,
+})
 ```
 
 ---
@@ -214,69 +307,49 @@ export const requireActiveOrg = async ({ context }: { context: any }) => {
 
 ```typescript
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
+import { authClient } from '@/lib/auth-client'
 
 function InvitationAcceptPage({ invitationId }: { invitationId: string }) {
   const navigate = useNavigate()
 
-  const acceptInvitation = useMutation(
-    orpc.organization.acceptInvitation.mutationOptions({
-      onSuccess: () => {
-        toast.success('Invitation accepted successfully')
-        navigate({ to: '/org/dashboard' })
-      },
-    })
-  )
+  const acceptInvitation = useMutation({
+    mutationFn: async () => {
+      return authClient.organization.acceptInvitation({
+        invitationId,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Invitation accepted successfully')
+      navigate({ to: '/org/dashboard' })
+    },
+    onError: (error) => {
+      toast.error(error.error.message || 'Failed to accept invitation')
+    },
+  })
 
-  const rejectInvitation = useMutation(
-    orpc.organization.rejectInvitation.mutationOptions({
-      onSuccess: () => {
-        toast.success('Invitation rejected')
-        navigate({ to: '/' })
-      },
-    })
-  )
+  const rejectInvitation = useMutation({
+    mutationFn: async () => {
+      return authClient.organization.rejectInvitation({
+        invitationId,
+      })
+    },
+    onSuccess: () => {
+      toast.success('Invitation rejected')
+      navigate({ to: '/' })
+    },
+  })
 
   return (
     <div>
-      <Button onClick={() => acceptInvitation.mutate({ invitationId })}>
+      <Button onClick={() => acceptInvitation.mutate()}>
         Accept Invitation
       </Button>
-      <Button variant="outline" onClick={() => rejectInvitation.mutate({ invitationId })}>
+      <Button variant="outline" onClick={() => rejectInvitation.mutate()}>
         Decline
       </Button>
     </div>
   )
-}
-```
-
-### 未登录用户处理
-
-```typescript
-// 检查用户是否登录，未登录则跳转到登录页
-function InvitationAcceptPage({ invitationId }: { invitationId: string }) {
-  const { data: session } = useQuery(orpc.privateData.queryOptions())
-
-  if (!session) {
-    // 未登录，跳转到登录页
-    return (
-      <Button
-        onClick={() =>
-          navigate({
-            to: '/sign-in',
-            search: {
-              invitationId,
-              redirect: '/invitations/accept/$invitationId',
-            },
-          })
-        }
-      >
-        Sign In to Accept
-      </Button>
-    )
-  }
-
-  // 已登录，显示邀请详情
-  return <InvitationDetails invitationId={invitationId} />
 }
 ```
 
@@ -296,17 +369,55 @@ function InvitationAcceptPage({ invitationId }: { invitationId: string }) {
 
 ## 团队系统
 
+### 列出团队
+
+```typescript
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
+
+function TeamsList() {
+  const organizationId = session?.user?.activeOrganizationId
+
+  const { data: teamsData } = useSuspenseQuery({
+    queryKey: ['organization', 'teams', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return { teams: [] }
+      return authClient.organization.listTeams({
+        query: { organizationId },
+      })
+    },
+  })
+
+  const teams = (teamsData as unknown as { teams?: unknown[] } | null)?.teams ?? []
+
+  return (
+    <div>
+      {teams.map((team: unknown) => {
+        const t = team as { id: string; name: string }
+        return <div key={t.id}>{t.name}</div>
+      })}
+    </div>
+  )
+}
+```
+
 ### 切换活跃团队
 
 ```typescript
-const setActiveTeam = useMutation(
-  orpc.organization.setActiveTeam.mutationOptions({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: orpc.privateData.key() })
-      toast.success('Active team updated')
-    },
-  })
-)
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
+
+const setActiveTeam = useMutation({
+  mutationFn: async (teamId: string) => {
+    return authClient.organization.setActiveTeam({ teamId })
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: orpc.privateData.queryOptions().queryKey,
+    })
+    toast.success('Active team updated')
+  },
+})
 ```
 
 ### 团队权限
@@ -320,9 +431,11 @@ const setActiveTeam = useMutation(
 
 ## 反模式
 
-- **不要绕过 Better-Auth API** - 使用 authClient，不要手动修改 auth 表
-- **不要忽略 activeOrganizationId 类型问题** - 始终使用可选链
+- **不要混用多种 Session 获取方式** - 在项目中统一使用 `orpc.privateData.queryOptions()`，保持一致性
+- **不要绕过 Better-Auth API** - 使用 `authClient`，不要手动修改 auth 表或直接调用数据库
+- **不要忽略 activeOrganizationId 类型问题** - 始终使用可选链和类型断言
 - **不要在客户端直接检查密码** - 所有认证逻辑通过 Better-Auth
+- **不要在 loader 中使用 `authClient.getSession()`** - 服务端应使用 `auth.api.getSession()` 或 `getSession()` server function
 
 ---
 
@@ -330,5 +443,6 @@ const setActiveTeam = useMutation(
 
 - **Auth Package**: [packages/auth/CLAUDE.md](../../../packages/auth/CLAUDE.md)
 - **路由系统详解**: [docs/routing.md](./routing.md)
+- **数据获取详解**: [docs/data-loading.md](./data-loading.md)
 - **CRUD 模式**: [docs/crud-patterns.md](./crud-patterns.md)
 - [Better-Auth 文档](https://www.better-auth.com/docs)
