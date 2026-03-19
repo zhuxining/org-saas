@@ -1,5 +1,6 @@
 ---
-paths: "**/*.{ts,tsx,js,jsx}"
+paths:
+- "**/*.{ts,tsx,js,jsx}"
 ---
 
 ## Quick Reference
