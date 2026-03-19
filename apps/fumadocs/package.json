@@ -30,7 +30,6 @@
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "catalog:",
 		"tailwindcss": "catalog:",
-		"typescript": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"typescript": "catalog:"
 	}
 }

@@ -55,7 +55,6 @@
 		"jsdom": "^29.0.0",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"web-vitals": "^5.1.0"
 	}
 }
