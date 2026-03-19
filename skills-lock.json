@@ -1,16 +1,6 @@
 {
 	"version": 1,
 	"skills": {
-		"better-auth-best-practices": {
-			"source": "better-auth/skills",
-			"sourceType": "github",
-			"computedHash": "a4c830509e85557b59339d8d93a4e243e9e59c686e7678854d39230e12c2a6dc"
-		},
-		"better-auth-security-best-practices": {
-			"source": "better-auth/skills",
-			"sourceType": "github",
-			"computedHash": "5717187bba9c22030c7174c74012f01c359f21e2ce87e0eb80e24244d8b8c915"
-		},
 		"email-and-password-best-practices": {
 			"source": "better-auth/skills",
 			"sourceType": "github",
@@ -26,10 +16,25 @@
 			"sourceType": "github",
 			"computedHash": "507f011a70e8b3ae242bdc0bb5b39fd91a1d4049a0f3c281991ccf84973d591c"
 		},
-		"two-factor-authentication-best-practices": {
-			"source": "better-auth/skills",
+		"tanstack-form": {
+			"source": "tanstack-skills/tanstack-skills",
 			"sourceType": "github",
-			"computedHash": "7e297aaf887e11fdc03e52bdbf44974e161e8f7c393170ced7dc66cace4f6d46"
+			"computedHash": "1eb9f9fc43ab2777f586f916b2234c5340ed98f296a98b22c75cbbafcbd29b86"
+		},
+		"tanstack-integration-best-practices": {
+			"source": "deckardger/tanstack-agent-skills",
+			"sourceType": "github",
+			"computedHash": "f8454d0835f04539c0d90a5a481937bc0e1cd7e31ac8610f302abd3421f3d24a"
+		},
+		"tanstack-start": {
+			"source": "tanstack-skills/tanstack-skills",
+			"sourceType": "github",
+			"computedHash": "e9d8355fe3e47b118e739081f1123c52aa0ecde57da840722177e1ad5caf9908"
+		},
+		"tanstack-table": {
+			"source": "tanstack-skills/tanstack-skills",
+			"sourceType": "github",
+			"computedHash": "d5ac71bd795696cd3310165c3ea0e435c310a0ac3c4e9dd45b39ed91b8dbcbb1"
 		}
 	}
 }
