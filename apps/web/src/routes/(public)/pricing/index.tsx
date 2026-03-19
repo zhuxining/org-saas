@@ -1,14 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@org-sass/ui/components/badge";
+import { Button } from "@org-sass/ui/components/button";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
+} from "@org-sass/ui/components/card";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/(public)/pricing/")({
 	component: PricingPage,

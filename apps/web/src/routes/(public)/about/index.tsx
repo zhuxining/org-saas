@@ -1,7 +1,12 @@
+import { Button } from "@org-sass/ui/components/button";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@org-sass/ui/components/card";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/(public)/about/")({
 	component: AboutPage,

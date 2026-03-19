@@ -1,7 +1,7 @@
+import { Button } from "@org-sass/ui/components/button";
+import { Card, CardContent } from "@org-sass/ui/components/card";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Lock, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/(public)/landing/")({
 	component: LandingPage,

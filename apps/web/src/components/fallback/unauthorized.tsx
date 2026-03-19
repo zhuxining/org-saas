@@ -1,13 +1,13 @@
-import { useRouter } from "@tanstack/react-router";
-import { LogIn, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@org-sass/ui/components/button";
 import {
 	Card,
 	CardContent,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
+} from "@org-sass/ui/components/card";
+import { useRouter } from "@tanstack/react-router";
+import { LogIn, Shield } from "lucide-react";
 import type { UnauthorizedError } from "@/utils/errors";
 
 interface UnauthorizedPageProps {

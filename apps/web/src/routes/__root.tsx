@@ -1,3 +1,4 @@
+import { Toaster } from "@org-sass/ui/components/sonner";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { FormDevtoolsPanel } from "@tanstack/react-form-devtools";
 import type { QueryClient } from "@tanstack/react-query";
@@ -13,7 +14,6 @@ import { ThemeProvider } from "next-themes";
 import { ForbiddenPage } from "@/components/fallback/forbidden";
 import { NotFoundPage } from "@/components/fallback/not-found";
 import { UnauthorizedPage } from "@/components/fallback/unauthorized";
-import { Toaster } from "@/components/ui/sonner";
 import {
 	ForbiddenError,
 	NotFoundError,

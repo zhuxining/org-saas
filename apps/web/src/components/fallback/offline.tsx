@@ -1,7 +1,4 @@
-import { useRouter } from "@tanstack/react-router";
-import { RefreshCw, Wifi, WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@org-sass/ui/components/button";
 import {
 	Card,
 	CardContent,
@@ -9,7 +6,10 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
+} from "@org-sass/ui/components/card";
+import { useRouter } from "@tanstack/react-router";
+import { RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function OfflinePage() {
 	const router = useRouter();

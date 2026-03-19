@@ -12,11 +12,11 @@
 	},
 	"iconLibrary": "lucide",
 	"aliases": {
-		"components": "@/components",
-		"utils": "@/lib/utils",
-		"ui": "@/components/ui",
-		"lib": "@/lib",
-		"hooks": "@/hooks"
+		"components": "@org-sass/ui/components",
+		"utils": "@org-sass/ui/lib/utils",
+		"ui": "@org-sass/ui/components",
+		"lib": "@org-sass/ui/lib",
+		"hooks": "@org-sass/ui/hooks"
 	},
 	"menuColor": "default",
 	"menuAccent": "subtle",

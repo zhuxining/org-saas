@@ -1,6 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
+import { Button } from "@org-sass/ui/components/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -9,8 +7,10 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@org-sass/ui/components/dropdown-menu";
+import { Skeleton } from "@org-sass/ui/components/skeleton";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
