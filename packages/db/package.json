@@ -21,13 +21,13 @@
 		"@org-sass/env": "workspace:*",
 		"dotenv": "catalog:",
 		"drizzle-orm": "^0.45.1",
-		"pg": "^8.18.0",
+		"pg": "^8.20.0",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@types/pg": "^8.16.0",
+		"@types/pg": "^8.18.0",
 		"@org-sass/config": "workspace:*",
-		"drizzle-kit": "^0.31.8",
+		"drizzle-kit": "^0.31.10",
 		"typescript": "catalog:"
 	}
 }

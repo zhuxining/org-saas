@@ -13,9 +13,9 @@
 	"dependencies": {
 		"@tanstack/react-router": "catalog:",
 		"@tanstack/react-start": "catalog:",
-		"fumadocs-core": "^16.5.0",
-		"fumadocs-mdx": "^14.2.6",
-		"fumadocs-ui": "^16.5.0",
+		"fumadocs-core": "^16.6.17",
+		"fumadocs-mdx": "^14.2.10",
+		"fumadocs-ui": "^16.6.17",
 		"lucide-react": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",

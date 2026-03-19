@@ -15,8 +15,8 @@
 	},
 	"dependencies": {
 		"@orpc/client": "catalog:",
-		"@orpc/experimental-pino": "^1.13.4",
-		"@orpc/experimental-ratelimit": "^1.13.4",
+		"@orpc/experimental-pino": "catalog:",
+		"@orpc/experimental-ratelimit": "catalog:",
 		"@orpc/openapi": "catalog:",
 		"@orpc/server": "catalog:",
 		"@orpc/zod": "catalog:",
@@ -24,7 +24,7 @@
 		"@org-sass/db": "workspace:*",
 		"@org-sass/env": "workspace:*",
 		"dotenv": "catalog:",
-		"pino": "^10.3.0",
+		"pino": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
