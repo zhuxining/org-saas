@@ -5,17 +5,17 @@
 	"tsx": true,
 	"tailwind": {
 		"config": "",
-		"css": "src/index.css",
+		"css": "src/styles/globals.css",
 		"baseColor": "neutral",
 		"cssVariables": true,
 		"prefix": ""
 	},
 	"iconLibrary": "lucide",
 	"aliases": {
-		"components": "@/components",
-		"hooks": "@/hooks",
-		"lib": "@/lib",
+		"components": "@org-sass/ui/components",
 		"utils": "@org-sass/ui/lib/utils",
+		"hooks": "@org-sass/ui/hooks",
+		"lib": "@org-sass/ui/lib",
 		"ui": "@org-sass/ui/components"
 	},
 	"menuColor": "default",
