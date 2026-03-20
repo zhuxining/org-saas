@@ -7,11 +7,11 @@
 		"./globals.css": "./src/styles/globals.css",
 		"./lib/*": "./src/lib/*.ts",
 		"./components/*": "./src/components/*.tsx",
-		"./hooks/*": "./src/hooks/*.tsx",
-		"./postcss.config": "./postcss.config.mjs"
+		"./hooks/*": "./src/hooks/*.tsx"
 	},
 	"scripts": {
-		"check-types": "tsc --noEmit"
+		"check-types": "tsgo --noEmit",
+		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
 	},
 	"dependencies": {
 		"@base-ui/react": "catalog:",
