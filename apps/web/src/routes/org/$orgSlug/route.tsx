@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { UserAvatar } from "@/components/user-avatar";
-import { resolveOrgBySlug } from "@/functions/auth.server";
+import { resolveOrgBySlug } from "@/functions/auth.fn";
 import { authClient } from "@/lib/auth-client";
 import { OrgContext, type OrgContextValue } from "@/lib/org-context";
 import { ForbiddenError } from "@/utils/errors";

@@ -65,7 +65,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
 	return (
-		<html lang="zh">
+		<html lang="zh" suppressHydrationWarning>
 			<head>
 				<HeadContent />
 			</head>

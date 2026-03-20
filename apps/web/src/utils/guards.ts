@@ -1,5 +1,5 @@
 import type { auth } from "@org-sass/auth";
-import { getSession } from "@/functions/auth.server";
+import { getSession } from "@/functions/auth.fn";
 import type { RouterAppContext } from "@/routes/__root";
 import { ForbiddenError, UnauthorizedError } from "@/utils/errors";
 

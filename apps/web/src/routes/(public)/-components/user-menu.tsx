@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@org-sass/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { getSession } from "@/functions/auth.server";
+import { getSession } from "@/functions/auth.fn";
 import { authClient } from "@/lib/auth-client";
 
 export function UserMenu() {
