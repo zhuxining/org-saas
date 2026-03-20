@@ -11,5 +11,8 @@ export default defineConfig({
 	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
 	server: {
 		port: 3001,
+		warmup: {
+			clientFiles: ["./src/routes/**/*.tsx"],
+		},
 	},
 });

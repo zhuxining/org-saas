@@ -10,8 +10,10 @@ export default defineConfig({
 	},
 	server: {
 		port: 3000,
+		warmup: {
+			clientFiles: ["./src/**/*.mdx"],
+		},
 	},
-	optimizeDeps: {},
 	plugins: [
 		mdx(await import("./source.config")),
 		tailwindcss(),
