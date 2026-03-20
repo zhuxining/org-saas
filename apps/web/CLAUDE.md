@@ -41,5 +41,6 @@ apps/web/src/
 ## 文件命名
 
 - 路由文件: `route.tsx`, `index.tsx`, `$param.tsx`
-- 组件文件: PascalCase (`UserProfile.tsx`)
+- 组件文件: kebab-case (`user-profile.tsx`)，与 shadcn/ui 保持一致
 - 组件目录: `-components/`（dash 前缀）
+- 组件导出名保持 PascalCase（`export function UserProfile`）

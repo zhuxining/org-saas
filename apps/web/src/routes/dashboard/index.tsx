@@ -9,7 +9,7 @@ import { Skeleton } from "@org-sass/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Plus } from "lucide-react";
-import { UserAvatar } from "@/components/UserAvatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/dashboard/")({

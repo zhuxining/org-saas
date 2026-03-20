@@ -17,12 +17,12 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
-import { RoleBadge } from "@/components/RoleBadge";
-import { UserAvatar } from "@/components/UserAvatar";
+import { RoleBadge } from "@/components/role-badge";
+import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
 import { orgFullQueryOptions } from "@/lib/query-options";
-import { RoleSelect } from "./RoleSelect";
+import { RoleSelect } from "./role-select";
 
 interface MemberTableProps {
 	members: Array<{

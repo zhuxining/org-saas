@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Building2, ChevronsUpDown, Plus } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { UserAvatar } from "./UserAvatar";
+import { UserAvatar } from "./user-avatar";
 
 export function OrgSwitcher({ activeOrgSlug }: { activeOrgSlug?: string }) {
 	const navigate = useNavigate();

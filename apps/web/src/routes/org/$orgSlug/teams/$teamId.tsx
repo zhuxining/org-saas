@@ -17,7 +17,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { UserAvatar } from "@/components/UserAvatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";

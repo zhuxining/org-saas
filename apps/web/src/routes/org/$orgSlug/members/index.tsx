@@ -6,8 +6,8 @@ import { useState } from "react";
 import { usePermission } from "@/hooks/use-permission";
 import { useOrgContext } from "@/lib/org-context";
 import { orgFullQueryOptions } from "@/lib/query-options";
-import { InviteMemberDialog } from "./-components/InviteMemberDialog";
-import { MemberTable } from "./-components/MemberTable";
+import { InviteMemberDialog } from "./-components/invite-member-dialog";
+import { MemberTable } from "./-components/member-table";
 
 export const Route = createFileRoute("/org/$orgSlug/members/")({
 	loader: async ({ context }) => {

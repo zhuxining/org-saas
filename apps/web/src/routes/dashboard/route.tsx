@@ -15,8 +15,8 @@ import {
 	useNavigate,
 } from "@tanstack/react-router";
 import { Home, LogOut, Settings, User } from "lucide-react";
-import { OrgSwitcher } from "@/components/OrgSwitcher";
-import { UserAvatar } from "@/components/UserAvatar";
+import { OrgSwitcher } from "@/components/org-switcher";
+import { UserAvatar } from "@/components/user-avatar";
 import { authClient } from "@/lib/auth-client";
 import { requireSession } from "@/utils/guards";
 

@@ -12,7 +12,7 @@ import { useState } from "react";
 import { usePermission } from "@/hooks/use-permission";
 import { useOrgContext } from "@/lib/org-context";
 import { orgFullQueryOptions } from "@/lib/query-options";
-import { CreateTeamDialog } from "./-components/CreateTeamDialog";
+import { CreateTeamDialog } from "./-components/create-team-dialog";
 
 export const Route = createFileRoute("/org/$orgSlug/teams/")({
 	loader: async ({ context }) => {

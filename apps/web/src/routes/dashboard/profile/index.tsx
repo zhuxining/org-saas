@@ -12,7 +12,7 @@ import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { z } from "zod";
-import { UserAvatar } from "@/components/UserAvatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/profile/")({
