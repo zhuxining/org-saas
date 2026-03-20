@@ -7,7 +7,7 @@ export const authMiddleware = createMiddleware().server(
 			headers: request.headers,
 		});
 		return next({
-			context: { session },
+			context: { session, headers: request.headers },
 		});
 	},
 );

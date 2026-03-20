@@ -9,18 +9,39 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as publicRouteRouteImport } from './routes/(public)/route'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
+import { Route as OrgOrgSlugRouteRouteImport } from './routes/org/$orgSlug/route'
+import { Route as OrgOrgSlugIndexRouteImport } from './routes/org/$orgSlug/index'
+import { Route as DashboardProfileIndexRouteImport } from './routes/dashboard/profile/index'
 import { Route as publicPricingIndexRouteImport } from './routes/(public)/pricing/index'
 import { Route as publicLandingIndexRouteImport } from './routes/(public)/landing/index'
 import { Route as publicAboutIndexRouteImport } from './routes/(public)/about/index'
+import { Route as DashboardOrgsNewRouteImport } from './routes/dashboard/orgs/new'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as authInviteTokenRouteImport } from './routes/(auth)/invite/$token'
+import { Route as OrgOrgSlugTeamsIndexRouteImport } from './routes/org/$orgSlug/teams/index'
+import { Route as OrgOrgSlugSettingsIndexRouteImport } from './routes/org/$orgSlug/settings/index'
+import { Route as OrgOrgSlugMembersIndexRouteImport } from './routes/org/$orgSlug/members/index'
+import { Route as OrgOrgSlugTeamsTeamIdRouteImport } from './routes/org/$orgSlug/teams/$teamId'
 
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const publicRouteRoute = publicRouteRouteImport.update({
   id: '/(public)',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const publicIndexRoute = publicIndexRouteImport.update({
   id: '/',
@@ -31,6 +52,21 @@ const authLoginRoute = authLoginRouteImport.update({
   id: '/(auth)/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrgOrgSlugRouteRoute = OrgOrgSlugRouteRouteImport.update({
+  id: '/org/$orgSlug',
+  path: '/org/$orgSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgOrgSlugIndexRoute = OrgOrgSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrgOrgSlugRouteRoute,
+} as any)
+const DashboardProfileIndexRoute = DashboardProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const publicPricingIndexRoute = publicPricingIndexRouteImport.update({
   id: '/pricing/',
@@ -47,6 +83,11 @@ const publicAboutIndexRoute = publicAboutIndexRouteImport.update({
   path: '/about/',
   getParentRoute: () => publicRouteRoute,
 } as any)
+const DashboardOrgsNewRoute = DashboardOrgsNewRouteImport.update({
+  id: '/orgs/new',
+  path: '/orgs/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -57,82 +98,186 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authInviteTokenRoute = authInviteTokenRouteImport.update({
+  id: '/(auth)/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgOrgSlugTeamsIndexRoute = OrgOrgSlugTeamsIndexRouteImport.update({
+  id: '/teams/',
+  path: '/teams/',
+  getParentRoute: () => OrgOrgSlugRouteRoute,
+} as any)
+const OrgOrgSlugSettingsIndexRoute = OrgOrgSlugSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => OrgOrgSlugRouteRoute,
+} as any)
+const OrgOrgSlugMembersIndexRoute = OrgOrgSlugMembersIndexRouteImport.update({
+  id: '/members/',
+  path: '/members/',
+  getParentRoute: () => OrgOrgSlugRouteRoute,
+} as any)
+const OrgOrgSlugTeamsTeamIdRoute = OrgOrgSlugTeamsTeamIdRouteImport.update({
+  id: '/teams/$teamId',
+  path: '/teams/$teamId',
+  getParentRoute: () => OrgOrgSlugRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/org/$orgSlug': typeof OrgOrgSlugRouteRouteWithChildren
   '/login': typeof authLoginRoute
   '/': typeof publicIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/invite/$token': typeof authInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/orgs/new': typeof DashboardOrgsNewRoute
   '/about/': typeof publicAboutIndexRoute
   '/landing/': typeof publicLandingIndexRoute
   '/pricing/': typeof publicPricingIndexRoute
+  '/dashboard/profile/': typeof DashboardProfileIndexRoute
+  '/org/$orgSlug/': typeof OrgOrgSlugIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof OrgOrgSlugTeamsTeamIdRoute
+  '/org/$orgSlug/members/': typeof OrgOrgSlugMembersIndexRoute
+  '/org/$orgSlug/settings/': typeof OrgOrgSlugSettingsIndexRoute
+  '/org/$orgSlug/teams/': typeof OrgOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof authLoginRoute
   '/': typeof publicIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/invite/$token': typeof authInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/orgs/new': typeof DashboardOrgsNewRoute
   '/about': typeof publicAboutIndexRoute
   '/landing': typeof publicLandingIndexRoute
   '/pricing': typeof publicPricingIndexRoute
+  '/dashboard/profile': typeof DashboardProfileIndexRoute
+  '/org/$orgSlug': typeof OrgOrgSlugIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof OrgOrgSlugTeamsTeamIdRoute
+  '/org/$orgSlug/members': typeof OrgOrgSlugMembersIndexRoute
+  '/org/$orgSlug/settings': typeof OrgOrgSlugSettingsIndexRoute
+  '/org/$orgSlug/teams': typeof OrgOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(public)': typeof publicRouteRouteWithChildren
+  '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/org/$orgSlug': typeof OrgOrgSlugRouteRouteWithChildren
   '/(auth)/login': typeof authLoginRoute
   '/(public)/': typeof publicIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/(auth)/invite/$token': typeof authInviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/orgs/new': typeof DashboardOrgsNewRoute
   '/(public)/about/': typeof publicAboutIndexRoute
   '/(public)/landing/': typeof publicLandingIndexRoute
   '/(public)/pricing/': typeof publicPricingIndexRoute
+  '/dashboard/profile/': typeof DashboardProfileIndexRoute
+  '/org/$orgSlug/': typeof OrgOrgSlugIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof OrgOrgSlugTeamsTeamIdRoute
+  '/org/$orgSlug/members/': typeof OrgOrgSlugMembersIndexRoute
+  '/org/$orgSlug/settings/': typeof OrgOrgSlugSettingsIndexRoute
+  '/org/$orgSlug/teams/': typeof OrgOrgSlugTeamsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/dashboard'
+    | '/org/$orgSlug'
     | '/login'
     | '/'
+    | '/dashboard/'
+    | '/invite/$token'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/orgs/new'
     | '/about/'
     | '/landing/'
     | '/pricing/'
+    | '/dashboard/profile/'
+    | '/org/$orgSlug/'
+    | '/org/$orgSlug/teams/$teamId'
+    | '/org/$orgSlug/members/'
+    | '/org/$orgSlug/settings/'
+    | '/org/$orgSlug/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/'
+    | '/dashboard'
+    | '/invite/$token'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/orgs/new'
     | '/about'
     | '/landing'
     | '/pricing'
+    | '/dashboard/profile'
+    | '/org/$orgSlug'
+    | '/org/$orgSlug/teams/$teamId'
+    | '/org/$orgSlug/members'
+    | '/org/$orgSlug/settings'
+    | '/org/$orgSlug/teams'
   id:
     | '__root__'
     | '/(public)'
+    | '/dashboard'
+    | '/org/$orgSlug'
     | '/(auth)/login'
     | '/(public)/'
+    | '/dashboard/'
+    | '/(auth)/invite/$token'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/orgs/new'
     | '/(public)/about/'
     | '/(public)/landing/'
     | '/(public)/pricing/'
+    | '/dashboard/profile/'
+    | '/org/$orgSlug/'
+    | '/org/$orgSlug/teams/$teamId'
+    | '/org/$orgSlug/members/'
+    | '/org/$orgSlug/settings/'
+    | '/org/$orgSlug/teams/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   publicRouteRoute: typeof publicRouteRouteWithChildren
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  OrgOrgSlugRouteRoute: typeof OrgOrgSlugRouteRouteWithChildren
   authLoginRoute: typeof authLoginRoute
+  authInviteTokenRoute: typeof authInviteTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(public)': {
       id: '/(public)'
       path: ''
       fullPath: ''
       preLoaderRoute: typeof publicRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/(public)/': {
       id: '/(public)/'
@@ -147,6 +292,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof authLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/org/$orgSlug': {
+      id: '/org/$orgSlug'
+      path: '/org/$orgSlug'
+      fullPath: '/org/$orgSlug'
+      preLoaderRoute: typeof OrgOrgSlugRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/$orgSlug/': {
+      id: '/org/$orgSlug/'
+      path: '/'
+      fullPath: '/org/$orgSlug/'
+      preLoaderRoute: typeof OrgOrgSlugIndexRouteImport
+      parentRoute: typeof OrgOrgSlugRouteRoute
+    }
+    '/dashboard/profile/': {
+      id: '/dashboard/profile/'
+      path: '/profile'
+      fullPath: '/dashboard/profile/'
+      preLoaderRoute: typeof DashboardProfileIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/(public)/pricing/': {
       id: '/(public)/pricing/'
@@ -169,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicAboutIndexRouteImport
       parentRoute: typeof publicRouteRoute
     }
+    '/dashboard/orgs/new': {
+      id: '/dashboard/orgs/new'
+      path: '/orgs/new'
+      fullPath: '/dashboard/orgs/new'
+      preLoaderRoute: typeof DashboardOrgsNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
@@ -182,6 +355,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/invite/$token': {
+      id: '/(auth)/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof authInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/$orgSlug/teams/': {
+      id: '/org/$orgSlug/teams/'
+      path: '/teams'
+      fullPath: '/org/$orgSlug/teams/'
+      preLoaderRoute: typeof OrgOrgSlugTeamsIndexRouteImport
+      parentRoute: typeof OrgOrgSlugRouteRoute
+    }
+    '/org/$orgSlug/settings/': {
+      id: '/org/$orgSlug/settings/'
+      path: '/settings'
+      fullPath: '/org/$orgSlug/settings/'
+      preLoaderRoute: typeof OrgOrgSlugSettingsIndexRouteImport
+      parentRoute: typeof OrgOrgSlugRouteRoute
+    }
+    '/org/$orgSlug/members/': {
+      id: '/org/$orgSlug/members/'
+      path: '/members'
+      fullPath: '/org/$orgSlug/members/'
+      preLoaderRoute: typeof OrgOrgSlugMembersIndexRouteImport
+      parentRoute: typeof OrgOrgSlugRouteRoute
+    }
+    '/org/$orgSlug/teams/$teamId': {
+      id: '/org/$orgSlug/teams/$teamId'
+      path: '/teams/$teamId'
+      fullPath: '/org/$orgSlug/teams/$teamId'
+      preLoaderRoute: typeof OrgOrgSlugTeamsTeamIdRouteImport
+      parentRoute: typeof OrgOrgSlugRouteRoute
     }
   }
 }
@@ -204,9 +412,48 @@ const publicRouteRouteWithChildren = publicRouteRoute._addFileChildren(
   publicRouteRouteChildren,
 )
 
+interface DashboardRouteRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardOrgsNewRoute: typeof DashboardOrgsNewRoute
+  DashboardProfileIndexRoute: typeof DashboardProfileIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardOrgsNewRoute: DashboardOrgsNewRoute,
+  DashboardProfileIndexRoute: DashboardProfileIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
+interface OrgOrgSlugRouteRouteChildren {
+  OrgOrgSlugIndexRoute: typeof OrgOrgSlugIndexRoute
+  OrgOrgSlugTeamsTeamIdRoute: typeof OrgOrgSlugTeamsTeamIdRoute
+  OrgOrgSlugMembersIndexRoute: typeof OrgOrgSlugMembersIndexRoute
+  OrgOrgSlugSettingsIndexRoute: typeof OrgOrgSlugSettingsIndexRoute
+  OrgOrgSlugTeamsIndexRoute: typeof OrgOrgSlugTeamsIndexRoute
+}
+
+const OrgOrgSlugRouteRouteChildren: OrgOrgSlugRouteRouteChildren = {
+  OrgOrgSlugIndexRoute: OrgOrgSlugIndexRoute,
+  OrgOrgSlugTeamsTeamIdRoute: OrgOrgSlugTeamsTeamIdRoute,
+  OrgOrgSlugMembersIndexRoute: OrgOrgSlugMembersIndexRoute,
+  OrgOrgSlugSettingsIndexRoute: OrgOrgSlugSettingsIndexRoute,
+  OrgOrgSlugTeamsIndexRoute: OrgOrgSlugTeamsIndexRoute,
+}
+
+const OrgOrgSlugRouteRouteWithChildren = OrgOrgSlugRouteRoute._addFileChildren(
+  OrgOrgSlugRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   publicRouteRoute: publicRouteRouteWithChildren,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  OrgOrgSlugRouteRoute: OrgOrgSlugRouteRouteWithChildren,
   authLoginRoute: authLoginRoute,
+  authInviteTokenRoute: authInviteTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

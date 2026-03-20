@@ -32,9 +32,9 @@ export default function SignUpForm({
 				{
 					onSuccess: () => {
 						navigate({
-							to: "/",
+							to: "/dashboard",
 						});
-						toast.success("注册成功！请联系系统管理员创建组织");
+						toast.success("注册成功！");
 					},
 					onError: (error) => {
 						toast.error(error.error.message || error.error.statusText);

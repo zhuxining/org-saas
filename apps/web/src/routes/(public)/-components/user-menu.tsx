@@ -9,22 +9,23 @@ import {
 	DropdownMenuTrigger,
 } from "@org-sass/ui/components/dropdown-menu";
 import { Skeleton } from "@org-sass/ui/components/skeleton";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { getSession } from "@/functions/auth.server";
 import { authClient } from "@/lib/auth-client";
-import { orpc } from "@/utils/orpc";
 
 export function UserMenu() {
 	const navigate = useNavigate();
-	const { data: session, isPending } = useSuspenseQuery(
-		orpc.privateData.queryOptions(),
-	);
+	const { data: session, isPending } = useQuery({
+		queryKey: ["session"],
+		queryFn: () => getSession(),
+	});
 
 	if (isPending) {
 		return <Skeleton className="h-9 w-24" />;
 	}
 
-	if (!session) {
+	if (!session?.user) {
 		return (
 			<Link to="/login" search={{ redirect: undefined }}>
 				<Button variant="outline">Sign In</Button>
@@ -42,6 +43,10 @@ export function UserMenu() {
 					<DropdownMenuLabel>My Account</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+					<DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
+						Dashboard
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						variant="destructive"
 						onClick={() => {

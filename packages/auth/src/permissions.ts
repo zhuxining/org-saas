@@ -26,10 +26,5 @@ const owner = ac.newRole({
 	...adminAc.statements,
 });
 
-const myCustomRole = ac.newRole({
-	project: ["create", "update", "delete"],
-	organization: ["update"],
-});
-
 export { ac };
-export const roles = { owner, admin, member, myCustomRole };
+export const roles = { owner, admin, member };
