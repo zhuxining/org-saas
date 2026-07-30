@@ -18,17 +18,18 @@ export default defineConfig({
   // 更新策略：patch | minor | major | ignore | latest
   packageMode: {
     "*": "minor",
-    typescript: "patch",
-    vue: "minor",
-    // 正则匹配包名
-    "/@types/": "patch",
-    webpack: "ignore",
+    typescript: "minor",
+    "/^@types\\//": "minor",
   },
-
-  // 忽略目录
-  ignorePaths: ["**/dist", "**/.turbo", "**/node_modules"],
-
-  exclude: [
-    // 写死不更新的包
+  // 忽略升级的包
+  exclude: [],
+  // 忽略目录（含 fumadocs 生成目录）
+  ignorePaths: [
+    "**/dist",
+    "**/.turbo",
+    "**/node_modules",
+    "**/.source",
+    "**/.tanstack",
+    "**/.output",
   ],
 });

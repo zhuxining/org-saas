@@ -4,7 +4,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "dev": "vp dev --port=4000",
+    "dev": "vp dev",
     "build": "vp build",
     "start": "node .output/server/index.mjs",
     "postinstall": "fumadocs-mdx"

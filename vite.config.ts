@@ -11,7 +11,7 @@ export default defineConfig({
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
-    plugins: ["react", "import", "promise", "vitest", "promise", "node"],
+    plugins: ["react", "import", "promise", "vitest", "node"],
   },
   resolve: { tsconfigPaths: true },
 });

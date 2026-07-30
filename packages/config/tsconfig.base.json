@@ -29,7 +29,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "types": ["node"]
+    "noImplicitOverride": true
   }
 }
