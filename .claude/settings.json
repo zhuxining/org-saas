@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run check && bun run check-types",
+            "command": "vp check --fix",
             "timeout": 30
           }
         ]

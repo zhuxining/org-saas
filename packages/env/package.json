@@ -11,7 +11,7 @@
     "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
-    "@t3-oss/env-core": "^latest",
+    "@t3-oss/env-core": "^0.13.11",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },

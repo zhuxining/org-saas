@@ -13,13 +13,12 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "fumadocs-core": "^16.13.0",
-    "fumadocs-mdx": "^14.3.2",
+    "fumadocs-mdx": "^15.2.0",
     "fumadocs-ui": "^16.13.0",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "catalog:",
-    "vite": "catalog:"
+    "tailwind-merge": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
@@ -30,6 +29,7 @@
     "@vitejs/plugin-react": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vite-plus": "catalog:"
   }
 }
