@@ -69,10 +69,10 @@ org-saas/
 
 | 主题             | 文档                                               |
 | ---------------- | -------------------------------------------------- |
-| **Web App 开发** | [apps/web/CLAUDE.md](apps/web/CLAUDE.md)           |
-| **API 开发**     | [packages/api/CLAUDE.md](packages/api/CLAUDE.md)   |
-| **认证流程**     | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
-| **数据库**       | [packages/db/CLAUDE.md](packages/db/CLAUDE.md)     |
+| **Web App 开发** | [apps/web/CLAUDE.md](apps/web/AGENTS.md)           |
+| **API 开发**     | [packages/api/CLAUDE.md](packages/api/AGENTS.md)   |
+| **认证流程**     | [packages/auth/CLAUDE.md](packages/auth/AGENTS.md) |
+| **数据库**       | [packages/db/CLAUDE.md](packages/db/AGENTS.md)     |
 
 ## 常用命令
 

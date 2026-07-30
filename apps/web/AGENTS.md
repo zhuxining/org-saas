@@ -22,7 +22,7 @@ apps/web/src/
 ```
 
 > UI 组件（shadcn）位于 `packages/ui/`，通过 `@org-sass/ui` 导入。
-> 权限系统（RBAC）见 [packages/auth/CLAUDE.md](../../packages/auth/CLAUDE.md)。
+> 权限系统（RBAC）见 [packages/auth/CLAUDE.md](../../packages/auth/AGENTS.md)。
 
 ## 路由系统
 

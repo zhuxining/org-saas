@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 ## 项目概述
 
@@ -15,11 +15,11 @@
 
 | 层级        | 技术                              | 文档                                               |
 | ----------- | --------------------------------- | -------------------------------------------------- |
-| **Web App** | TanStack Start (SSR) + React 19   | [apps/web/CLAUDE.md](apps/web/CLAUDE.md)           |
-| **API**     | oRPC (端到端类型安全)             | [packages/api/CLAUDE.md](packages/api/CLAUDE.md)   |
-| **认证**    | Better-Auth (Organization + RBAC) | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
-| **数据库**  | PostgreSQL + Drizzle ORM          | [packages/db/CLAUDE.md](packages/db/CLAUDE.md)     |
-| **UI**      | shadcn/ui (Base UI，非 Radix)     | [packages/ui/CLAUDE.md](packages/ui/CLAUDE.md)     |
+| **Web App** | TanStack Start (SSR) + React 19   | [apps/web/CLAUDE.md](apps/web/AGENTS.md)           |
+| **API**     | oRPC (端到端类型安全)             | [packages/api/CLAUDE.md](packages/api/AGENTS.md)   |
+| **认证**    | Better-Auth (Organization + RBAC) | [packages/auth/CLAUDE.md](packages/auth/AGENTS.md) |
+| **数据库**  | PostgreSQL + Drizzle ORM          | [packages/db/CLAUDE.md](packages/db/AGENTS.md)     |
+| **UI**      | shadcn/ui (Base UI，非 Radix)     | [packages/ui/CLAUDE.md](packages/ui/AGENTS.md)     |
 
 **关键概念**: oRPC 端到端类型安全 | SSR/客户端同构 | 多租户通过 `activeOrganizationId` 切换
 
