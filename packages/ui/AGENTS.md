@@ -22,3 +22,8 @@ bunx shadcn@latest add button
 - **不要直接编辑 `src/components/` 中的文件** - 使用 shadcn CLI 重新生成
 - **不要使用 `asChild`** - Base UI 不支持，改用 `render` prop
 - **不要安装 `@radix-ui/*`** - 本包已使用 Base UI 替代
+
+## 样式与图标
+
+- 视觉样式统一用 shadcn 组件 + Tailwind Token，禁止自定义 CSS class 加视觉属性（见根 `AGENTS.md › 项目约束 › 样式红线`）。
+- 图标统一 `lucide-react`，禁止内联 `<svg>` 或引入其他图标库（见根 `AGENTS.md › 项目约束 › 图标红线`）。

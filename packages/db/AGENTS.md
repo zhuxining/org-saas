@@ -28,4 +28,4 @@ Auth 相关表（`src/schema/auth.ts`）由 Better-Auth 自动生成。
 
 - **不要修改 `schema/auth.ts`** - Better-Auth 自动管理
 - **不要跳过关系定义** - 始终使用 Drizzle `relations()` 获得类型安全查询
-- **不要使用原始 SQL** - 使用 Drizzle query builder
+- **不要使用原始 SQL** - 使用 Drizzle query builder（数据库内置函数例外）

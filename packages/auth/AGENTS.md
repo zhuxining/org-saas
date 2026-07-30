@@ -36,3 +36,8 @@ const canUpdate = await authClient.organization.hasPermission({
 ```
 
 **动态角色**: 可通过 API 动态创建自定义角色，无需修改代码。
+
+## oRPC 会话校验
+
+- 服务端会话校验经 oRPC 中间件注入 `context.session`，在 `protectedProcedure` 中保证非空；未登录抛 `ORPCError('UNAUTHORIZED')`（见 `packages/api`）。
+- **禁止绕过 Better-Auth 自实现认证 / Session**：所有鉴权统一走 Better-Auth，不要手搓 cookie / token 解析。
