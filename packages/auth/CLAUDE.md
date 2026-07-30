@@ -8,18 +8,18 @@
 
 **资源与操作**（`src/permissions.ts`）：
 
-| 资源 | 操作 |
-|------|------|
-| `project` | `create` / `update` / `delete` / `share` |
-| `organization` | `update`（来自 adminAc）|
+| 资源           | 操作                                     |
+| -------------- | ---------------------------------------- |
+| `project`      | `create` / `update` / `delete` / `share` |
+| `organization` | `update`（来自 adminAc）                 |
 
 **内置角色权限**：
 
-| 角色 | project 权限 |
-|------|-------------|
-| `member` | `create` |
-| `admin` | `create`、`update` |
-| `owner` | `create`、`update`、`delete` |
+| 角色           | project 权限                                         |
+| -------------- | ---------------------------------------------------- |
+| `member`       | `create`                                             |
+| `admin`        | `create`、`update`                                   |
+| `owner`        | `create`、`update`、`delete`                         |
 | `myCustomRole` | `create`、`update`、`delete` + `organization.update` |
 
 ## 使用方式

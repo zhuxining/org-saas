@@ -6,12 +6,12 @@
 
 ### 职责分层
 
-| 层级 | 职责 | 关键约束 |
-|------|------|---------|
-| **路由层** | 页面组织、布局嵌套、导航守卫 | 文件系统路由，路由守卫在 `beforeLoad` 中执行 |
-| **Auth 层** | 认证、组织 CRUD、成员/邀请/团队管理、RBAC | 写操作和标准查询直接走 Better-Auth 客户端 |
-| **API 层 (oRPC)** | 仅处理 Better-Auth 不提供的自定义业务逻辑 | 尽量精简，避免重复封装 Auth 已有能力 |
-| **数据层** | Schema 定义、关系映射 | Auth 相关表由 Better-Auth 管理，不手动修改 |
+| 层级              | 职责                                      | 关键约束                                     |
+| ----------------- | ----------------------------------------- | -------------------------------------------- |
+| **路由层**        | 页面组织、布局嵌套、导航守卫              | 文件系统路由，路由守卫在 `beforeLoad` 中执行 |
+| **Auth 层**       | 认证、组织 CRUD、成员/邀请/团队管理、RBAC | 写操作和标准查询直接走 Better-Auth 客户端    |
+| **API 层 (oRPC)** | 仅处理 Better-Auth 不提供的自定义业务逻辑 | 尽量精简，避免重复封装 Auth 已有能力         |
+| **数据层**        | Schema 定义、关系映射                     | Auth 相关表由 Better-Auth 管理，不手动修改   |
 
 ---
 
@@ -60,12 +60,12 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 
 ### 路由分区
 
-| 分区 | 路径前缀 | 布局 | 认证要求 |
-|------|---------|------|---------|
-| 公开页 | `(public)/*` | Header + Footer | 无 |
-| 认证流 | `(auth)/*` | 居中卡片 | 无（半认证） |
-| 个人中心 | `/dashboard/*` | 侧边栏 | 登录 |
-| 组织管理 | `/org/$orgSlug/*` | 组织侧边栏 | 登录 + 组织成员 |
+| 分区     | 路径前缀          | 布局            | 认证要求        |
+| -------- | ----------------- | --------------- | --------------- |
+| 公开页   | `(public)/*`      | Header + Footer | 无              |
+| 认证流   | `(auth)/*`        | 居中卡片        | 无（半认证）    |
+| 个人中心 | `/dashboard/*`    | 侧边栏          | 登录            |
+| 组织管理 | `/org/$orgSlug/*` | 组织侧边栏      | 登录 + 组织成员 |
 
 ### 布局嵌套
 
@@ -101,10 +101,10 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 
 `auth.api.getSession()`（Better-Auth 底层 API）是唯一的 session 提取入口，仅在两处被直接调用：
 
-| # | 位置 | 场景 |
-|---|------|------|
-| 1 | `middleware/auth.ts` — `authMiddleware` | TanStack Start server functions（SSR / beforeLoad） |
-| 2 | `packages/api/src/context.ts` — `createContext()` | oRPC procedures（独立运行时） |
+| #   | 位置                                              | 场景                                                |
+| --- | ------------------------------------------------- | --------------------------------------------------- |
+| 1   | `middleware/auth.ts` — `authMiddleware`           | TanStack Start server functions（SSR / beforeLoad） |
+| 2   | `packages/api/src/context.ts` — `createContext()` | oRPC procedures（独立运行时）                       |
 
 `authMiddleware` 调用 `auth.api.getSession()` 后，将 `{ session, headers }` 注入 context。下游 server function 从 context 中读取，不再重复调用底层 API。
 
@@ -118,9 +118,9 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 
 **注意**: 下表中的 server function 本身不调用 `auth.api.getSession()`，session 由 `authMiddleware` 统一提取并通过 context 传递。
 
-| Server Function | 用途 |
-|----------------|------|
-| `getSession()`（`functions/auth.server.ts`） | 读取 `context.session` 返回登录态（`requireSession` 守卫、`user-menu` 的 useQuery） |
+| Server Function                                        | 用途                                                                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `getSession()`（`functions/auth.server.ts`）           | 读取 `context.session` 返回登录态（`requireSession` 守卫、`user-menu` 的 useQuery）                     |
 | `resolveOrgBySlug(slug)`（`functions/auth.server.ts`） | 用 `context.headers` 调用 `auth.api.setActiveOrganization` 等（`org/$orgSlug/route.tsx` 的 beforeLoad） |
 
 #### 通道 B: `authClient.organization.*` 查询（通过 queryOptions）
@@ -129,10 +129,10 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 
 **适用**: Better-Auth 内置查询，配合 loader + useSuspenseQuery 范式
 
-| queryOptions | queryKey | 页面 |
-|-------------|----------|------|
-| `orgListQueryOptions()` | `["organizations"]` | dashboard、OrgSwitcher |
-| `orgFullQueryOptions(orgId)` | `["org-full", orgId]` | members、teams |
+| queryOptions                 | queryKey              | 页面                   |
+| ---------------------------- | --------------------- | ---------------------- |
+| `orgListQueryOptions()`      | `["organizations"]`   | dashboard、OrgSwitcher |
+| `orgFullQueryOptions(orgId)` | `["org-full", orgId]` | members、teams         |
 
 #### 通道 C: `authClient.organization.*` 在事件处理 / mutation 中
 
@@ -148,10 +148,10 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 
 **适用**: Better-Auth 不提供的自定义业务逻辑（多表聚合、复杂查询）
 
-| Procedure | 用途 |
-|-----------|------|
+| Procedure                 | 用途                             |
+| ------------------------- | -------------------------------- |
 | `orpc.dashboard.orgStats` | 组织统计（成员数/团队数/邀请数） |
-| `orpc.user.updateProfile` | 更新用户名/头像 |
+| `orpc.user.updateProfile` | 更新用户名/头像                  |
 
 ### 通道选择决策树
 
@@ -179,9 +179,7 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 ```typescript
 export const Route = createFileRoute("/org/$orgSlug/members/")({
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(
-      orgFullQueryOptions(context.org.id),
-    );
+    await context.queryClient.ensureQueryData(orgFullQueryOptions(context.org.id));
   },
   component: MembersPage,
 });
@@ -238,11 +236,11 @@ queryClient.invalidateQueries(orgFullQueryOptions(orgId));
 
 ### 角色体系
 
-| 角色 | 组织管理 | 成员管理 | 邀请 | 团队 | 自定义资源 |
-|------|---------|---------|------|------|-----------|
-| **owner** | 更新/删除 | 全部 | 创建/取消 | 全部 | create/update/delete |
-| **admin** | 更新 | 创建/更新/删除 | 创建/取消 | 全部 | create/update |
-| **member** | — | — | — | — | create |
+| 角色       | 组织管理  | 成员管理       | 邀请      | 团队 | 自定义资源           |
+| ---------- | --------- | -------------- | --------- | ---- | -------------------- |
+| **owner**  | 更新/删除 | 全部           | 创建/取消 | 全部 | create/update/delete |
+| **admin**  | 更新      | 创建/更新/删除 | 创建/取消 | 全部 | create/update        |
+| **member** | —         | —              | —         | —    | create               |
 
 ### 资源与权限声明
 
@@ -283,11 +281,11 @@ queryClient.invalidateQueries(orgFullQueryOptions(orgId));
 
 ### 错误类型
 
-| 错误类 | 状态码 | 触发场景 | UI 表现 |
-|--------|--------|---------|--------|
-| `UnauthorizedError` | 401 | 未登录访问受保护页面 | UnauthorizedPage |
-| `ForbiddenError` | 403 | 角色/成员身份不满足 | ForbiddenPage |
-| `NotFoundError` | 404 | 资源不存在 | NotFoundPage |
+| 错误类              | 状态码 | 触发场景             | UI 表现          |
+| ------------------- | ------ | -------------------- | ---------------- |
+| `UnauthorizedError` | 401    | 未登录访问受保护页面 | UnauthorizedPage |
+| `ForbiddenError`    | 403    | 角色/成员身份不满足  | ForbiddenPage    |
+| `NotFoundError`     | 404    | 资源不存在           | NotFoundPage     |
 
 ### 错误捕获链
 

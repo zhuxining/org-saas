@@ -1,13 +1,13 @@
 {
-	"extends": "@org-sass/config/tsconfig.base.json",
-	"include": ["**/*.ts", "**/*.tsx"],
-	"compilerOptions": {
-		"types": ["vite/client"],
-		"allowImportingTsExtensions": true,
-		"allowJs": true,
-		"paths": {
-			"@/*": ["./src/*"],
-			"fumadocs-mdx:collections/*": ["./.source/*"]
-		}
-	}
+  "extends": "@org-sass/config/tsconfig.base.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "fumadocs-mdx:collections/*": ["./.source/*"]
+    }
+  }
 }

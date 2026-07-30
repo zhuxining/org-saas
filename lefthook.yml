@@ -1,9 +1,0 @@
-# Lefthook configuration
-# https://github.com/evilmartians/lefthook
-
-pre-commit:
-  parallel: true
-  jobs:
-    # 代码格式化和检查
-    - run: bun biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
-      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,html,css}"

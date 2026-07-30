@@ -10,7 +10,9 @@ Drizzle ORM + PostgreSQL，认证表由 Better-Auth adapter 自动生成。
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const example = pgTable("example", {
-  id: text("id").primaryKey().default(sql`uuidv7()`),
+  id: text("id")
+    .primaryKey()
+    .default(sql`uuidv7()`),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

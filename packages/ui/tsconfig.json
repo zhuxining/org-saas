@@ -1,10 +1,10 @@
 {
-	"extends": "@org-sass/config/tsconfig.base.json",
-	"compilerOptions": {
-		"paths": {
-			"@org-sass/ui/*": ["./src/*"]
-		}
-	},
-	"include": ["src/**/*.ts", "src/**/*.tsx"],
-	"exclude": ["node_modules", "src/components"]
+  "extends": "@org-sass/config/tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@org-sass/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "src/components"]
 }

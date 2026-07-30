@@ -1,12 +1,12 @@
 {
-	"extends": "@org-sass/config/tsconfig.base.json",
-	"include": ["**/*.ts", "**/*.tsx"],
-	"compilerOptions": {
-		"types": ["vite/client"],
-		"allowImportingTsExtensions": true,
-		"noUncheckedSideEffectImports": true,
-		"paths": {
-			"@/*": ["./src/*"]
-		}
-	}
+  "extends": "@org-sass/config/tsconfig.base.json",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "allowImportingTsExtensions": true,
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

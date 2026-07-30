@@ -13,13 +13,13 @@
 
 ## 架构与文档索引
 
-| 层级 | 技术 | 文档 |
-|------|------|------|
-| **Web App** | TanStack Start (SSR) + React 19 | [apps/web/CLAUDE.md](apps/web/CLAUDE.md) |
-| **API** | oRPC (端到端类型安全) | [packages/api/CLAUDE.md](packages/api/CLAUDE.md) |
-| **认证** | Better-Auth (Organization + RBAC) | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
-| **数据库** | PostgreSQL + Drizzle ORM | [packages/db/CLAUDE.md](packages/db/CLAUDE.md) |
-| **UI** | shadcn/ui (Base UI，非 Radix) | [packages/ui/CLAUDE.md](packages/ui/CLAUDE.md) |
+| 层级        | 技术                              | 文档                                               |
+| ----------- | --------------------------------- | -------------------------------------------------- |
+| **Web App** | TanStack Start (SSR) + React 19   | [apps/web/CLAUDE.md](apps/web/CLAUDE.md)           |
+| **API**     | oRPC (端到端类型安全)             | [packages/api/CLAUDE.md](packages/api/CLAUDE.md)   |
+| **认证**    | Better-Auth (Organization + RBAC) | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
+| **数据库**  | PostgreSQL + Drizzle ORM          | [packages/db/CLAUDE.md](packages/db/CLAUDE.md)     |
+| **UI**      | shadcn/ui (Base UI，非 Radix)     | [packages/ui/CLAUDE.md](packages/ui/CLAUDE.md)     |
 
 **关键概念**: oRPC 端到端类型安全 | SSR/客户端同构 | 多租户通过 `activeOrganizationId` 切换
 
@@ -67,8 +67,8 @@ bun run check-types      # 类型检查
 **导入规范**:
 
 ```typescript
-import { orpc } from "@/utils/orpc";  // 内部导入
-import { db } from "@org-sass/db";     // 跨包导入
+import { orpc } from "@/utils/orpc"; // 内部导入
+import { db } from "@org-sass/db"; // 跨包导入
 ```
 
 ## 反模式

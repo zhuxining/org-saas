@@ -6,11 +6,11 @@
 
 多组织 SaaS 平台，支持三种用户角色和访问端点：
 
-| 端点 | 说明 | 权限 |
-|------|------|------|
-| **Admin** | 系统管理员管理所有组织和用户 | 全局权限 |
-| **Org** | 组织成员管理团队、成员、邀请 | Owner/Admin/Member 三级权限 |
-| **Public** | 公开访问页面（落地页、关于） | 无需认证 |
+| 端点       | 说明                         | 权限                        |
+| ---------- | ---------------------------- | --------------------------- |
+| **Admin**  | 系统管理员管理所有组织和用户 | 全局权限                    |
+| **Org**    | 组织成员管理团队、成员、邀请 | Owner/Admin/Member 三级权限 |
+| **Public** | 公开访问页面（落地页、关于） | 无需认证                    |
 
 ## 技术栈
 
@@ -67,12 +67,12 @@ org-saas/
 
 ## 详细文档
 
-| 主题 | 文档 |
-|------|------|
-| **Web App 开发** | [apps/web/CLAUDE.md](apps/web/CLAUDE.md) |
-| **API 开发** | [packages/api/CLAUDE.md](packages/api/CLAUDE.md) |
-| **认证流程** | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
-| **数据库** | [packages/db/CLAUDE.md](packages/db/CLAUDE.md) |
+| 主题             | 文档                                               |
+| ---------------- | -------------------------------------------------- |
+| **Web App 开发** | [apps/web/CLAUDE.md](apps/web/CLAUDE.md)           |
+| **API 开发**     | [packages/api/CLAUDE.md](packages/api/CLAUDE.md)   |
+| **认证流程**     | [packages/auth/CLAUDE.md](packages/auth/CLAUDE.md) |
+| **数据库**       | [packages/db/CLAUDE.md](packages/db/CLAUDE.md)     |
 
 ## 常用命令
 

@@ -13,66 +13,66 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { toast } from "sonner";
 
 export const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 60 * 1000, // 1 分钟，避免挂载时立即重新获取
-		},
-	},
-	queryCache: new QueryCache({
-		onError: (error, query) => {
-			toast.error(`Error: ${error.message}`, {
-				action: {
-					label: "retry",
-					onClick: query.invalidate,
-				},
-			});
-		},
-	}),
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 分钟，避免挂载时立即重新获取
+    },
+  },
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      toast.error(`Error: ${error.message}`, {
+        action: {
+          label: "retry",
+          onClick: query.invalidate,
+        },
+      });
+    },
+  }),
 });
 
 const getORPCClient = createIsomorphicFn()
-	.server(() =>
-		createRouterClient(appRouter, {
-			context: async () => {
-				try {
-					const headers = getRequestHeaders();
+  .server(() =>
+    createRouterClient(appRouter, {
+      context: async () => {
+        try {
+          const headers = getRequestHeaders();
 
-					return {
-						...(await createContext({ headers })),
-						ratelimiter: standardLimiter,
-					};
-				} catch {
-					return {
-						...(await createContext({ headers: new Headers() })),
-						ratelimiter: standardLimiter,
-					};
-				}
-			},
-		}),
-	)
-	.client((): RouterClient<typeof appRouter> => {
-		const link = new RPCLink({
-			url: `${window.location.origin}/api/rpc`,
-			plugins: [
-				new RetryAfterPlugin({
-					condition: (response, _options) => {
-						// Override condition to determine if a request should be retried
-						return response.status === 429 || response.status === 503;
-					},
-					maxAttempts: 5, // Maximum retry attempts
-					timeout: 5 * 60 * 1000, // Maximum time to spend retrying (ms)
-				}),
-			],
-			fetch(url, options) {
-				return fetch(url, {
-					...options,
-					credentials: "include",
-				});
-			},
-		});
+          return {
+            ...(await createContext({ headers })),
+            ratelimiter: standardLimiter,
+          };
+        } catch {
+          return {
+            ...(await createContext({ headers: new Headers() })),
+            ratelimiter: standardLimiter,
+          };
+        }
+      },
+    }),
+  )
+  .client((): RouterClient<typeof appRouter> => {
+    const link = new RPCLink({
+      url: `${window.location.origin}/api/rpc`,
+      plugins: [
+        new RetryAfterPlugin({
+          condition: (response, _options) => {
+            // Override condition to determine if a request should be retried
+            return response.status === 429 || response.status === 503;
+          },
+          maxAttempts: 5, // Maximum retry attempts
+          timeout: 5 * 60 * 1000, // Maximum time to spend retrying (ms)
+        }),
+      ],
+      fetch(url, options) {
+        return fetch(url, {
+          ...options,
+          credentials: "include",
+        });
+      },
+    });
 
-		return createORPCClient(link);
-	});
+    return createORPCClient(link);
+  });
 
 export const client: RouterClient<typeof appRouter> = getORPCClient();
 export const orpc = createTanstackQueryUtils(client);

@@ -1,34 +1,34 @@
 {
-	"name": "@org-sass/api",
-	"type": "module",
-	"exports": {
-		".": {
-			"default": "./src/index.ts"
-		},
-		"./*": {
-			"default": "./src/*.ts"
-		}
-	},
-	"scripts": {
-		"check-types": "tsgo --noEmit",
-		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
-	},
-	"dependencies": {
-		"@orpc/client": "catalog:",
-		"@orpc/experimental-pino": "catalog:",
-		"@orpc/experimental-ratelimit": "catalog:",
-		"@orpc/openapi": "catalog:",
-		"@orpc/server": "catalog:",
-		"@orpc/zod": "catalog:",
-		"@org-sass/auth": "workspace:*",
-		"@org-sass/db": "workspace:*",
-		"@org-sass/env": "workspace:*",
-		"dotenv": "catalog:",
-		"pino": "catalog:",
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@org-sass/config": "workspace:*",
-		"typescript": "catalog:"
-	}
+  "name": "@org-sass/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsgo --noEmit",
+    "clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
+  },
+  "dependencies": {
+    "@org-sass/auth": "workspace:*",
+    "@org-sass/db": "workspace:*",
+    "@org-sass/env": "workspace:*",
+    "@orpc/client": "catalog:",
+    "@orpc/experimental-pino": "catalog:",
+    "@orpc/experimental-ratelimit": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/zod": "catalog:",
+    "dotenv": "catalog:",
+    "pino": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@org-sass/config": "workspace:*",
+    "typescript": "catalog:"
+  }
 }

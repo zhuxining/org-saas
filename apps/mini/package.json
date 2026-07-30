@@ -1,11 +1,11 @@
 {
-	"name": "org-sass",
-	"version": "0.2.0",
-	"description": "",
-	"main": "app.js",
-	"scripts": {},
-	"dependencies": {
-		"dayjs": "^1.11.20",
-		"tdesign-miniprogram": "^1.13.0"
-	}
+  "name": "org-sass",
+  "version": "0.2.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {},
+  "dependencies": {
+    "dayjs": "^1.11.20",
+    "tdesign-miniprogram": "^1.13.0"
+  }
 }

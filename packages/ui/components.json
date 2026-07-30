@@ -1,24 +1,24 @@
 {
-	"$schema": "https://ui.shadcn.com/schema.json",
-	"style": "base-vega",
-	"rsc": false,
-	"tsx": true,
-	"tailwind": {
-		"config": "",
-		"css": "src/styles/globals.css",
-		"baseColor": "neutral",
-		"cssVariables": true,
-		"prefix": ""
-	},
-	"iconLibrary": "lucide",
-	"aliases": {
-		"components": "@org-sass/ui/components",
-		"utils": "@org-sass/ui/lib/utils",
-		"hooks": "@org-sass/ui/hooks",
-		"lib": "@org-sass/ui/lib",
-		"ui": "@org-sass/ui/components"
-	},
-	"menuColor": "default",
-	"menuAccent": "subtle",
-	"registries": {}
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-vega",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@org-sass/ui/components",
+    "utils": "@org-sass/ui/lib/utils",
+    "hooks": "@org-sass/ui/hooks",
+    "lib": "@org-sass/ui/lib",
+    "ui": "@org-sass/ui/components"
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
 }

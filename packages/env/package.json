@@ -1,24 +1,24 @@
 {
-	"name": "@org-sass/env",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		"./server": "./src/server.ts",
-		"./web": "./src/web.ts"
-	},
-	"scripts": {
-		"check-types": "tsgo --noEmit",
-		"clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
-	},
-	"dependencies": {
-		"@t3-oss/env-core": "^latest",
-		"dotenv": "catalog:",
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:",
-		"@org-sass/config": "workspace:*",
-		"typescript": "catalog:"
-	}
+  "name": "@org-sass/env",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./web": "./src/web.ts"
+  },
+  "scripts": {
+    "check-types": "tsgo --noEmit",
+    "clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^latest",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@org-sass/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
 }

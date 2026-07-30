@@ -28,17 +28,19 @@ protectedProcedure.handler(({ context }) => {
 export const memberRouter = router({
   list: protectedProcedure
     .input(z.object({ orgId: z.string() }))
-    .handler(async ({ context, input }) => { /* ... */ }),
+    .handler(async ({ context, input }) => {
+      /* ... */
+    }),
 });
 ```
 
 ## API 端点
 
-| API | 访问方式 |
-|-----|---------|
-| Better-Auth API | `http://localhost:3001/api/auth/*` |
-| OpenAPI 文档 | `http://localhost:3001/api/auth/reference` |
-| oRPC 端点 | `http://localhost:3001/api/rpc/*` |
+| API             | 访问方式                                   |
+| --------------- | ------------------------------------------ |
+| Better-Auth API | `http://localhost:3001/api/auth/*`         |
+| OpenAPI 文档    | `http://localhost:3001/api/auth/reference` |
+| oRPC 端点       | `http://localhost:3001/api/rpc/*`          |
 
 ## 反模式
 
