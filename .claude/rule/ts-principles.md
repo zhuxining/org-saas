@@ -5,10 +5,7 @@ paths:
 
 ## Quick Reference
 
-- **Format code**: `bun run fix --unsafe`
-- **Check for issues**: `bun run check`
-
-Biome (the underlying engine) provides robust linting and formatting. Most issues are automatically fixable.
+- **Check for issues**: `vp check --fix`
 
 ---
 
@@ -100,17 +97,11 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Don't use `.only` or `.skip` in committed code
 - Keep test suites reasonably flat - avoid excessive `describe` nesting
 
-## When Biome Can't Help
+## Focus your attention on:
 
-Biome's linter will catch most issues automatically. Focus your attention on:
-
-1. **Business logic correctness** - Biome can't validate your algorithms
+1. **Business logic correctness** - Oxc can't validate your algorithms
 2. **Meaningful naming** - Use descriptive names for functions, variables, and types
 3. **Architecture decisions** - Component structure, data flow, and API design
 4. **Edge cases** - Handle boundary conditions and error states
 5. **User experience** - Accessibility, performance, and usability considerations
 6. **Documentation** - Add comments for complex logic, but prefer self-documenting code
-
----
-
-Most formatting and common issues are automatically fixed by Biome. Run `bun run fix --unsafe` before committing to ensure compliance.

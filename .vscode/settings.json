@@ -1,5 +1,4 @@
 {
-  "biome.enabled": true,
   "editor.formatOnSave": true,
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
