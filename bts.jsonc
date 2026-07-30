@@ -10,7 +10,7 @@
   "backend": "self",
   "runtime": "none",
   "frontend": ["tanstack-start"],
-  "addons": ["biome", "fumadocs", "lefthook", "turborepo"],
+  "addons": ["fumadocs", "vite-plus", "oxlint"],
   "examples": [],
   "auth": "better-auth",
   "payments": "none",

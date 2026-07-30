@@ -14,8 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
-    "check-types": "tsgo --noEmit",
-    "clean": "git clean -xdf node_modules .turbo .dist .output .tanstack .wrangler"
+    "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
     "@org-sass/env": "workspace:*",

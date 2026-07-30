@@ -2,14 +2,14 @@
 
 ## 项目概述
 
-基于 Better-T-Stack 技术栈构建的多组织 SaaS 平台，采用 Turborepo 管理的 Monorepo 架构。
+基于 Better-T-Stack 技术栈构建的多组织 SaaS 平台，采用 Bun Workspaces 管理的 Monorepo 架构。
 
 **核心定位**:
 
 - **Org 端**: 组织成员管理团队、成员、邀请（Owner/Admin/Member 三级权限）
 - **Public 端**: 公开访问页面（落地页、关于）
 
-**技术栈**: TanStack Start + TanStack Router + React 19 | TailwindCSS 4 + shadcn/ui (Base UI) | oRPC + Better-Auth | PostgreSQL + Drizzle ORM | Turborepo + Bun
+**技术栈**: TanStack Start + TanStack Router + React 19 | TailwindCSS 4 + shadcn/ui (Base UI) | oRPC + Better-Auth | PostgreSQL + Drizzle ORM | Bun (Workspaces)
 
 ## 架构与文档索引
 
@@ -56,13 +56,12 @@ bun run db:generate      # 生成 schema 类型
 bun run db:migrate       # 创建迁移文件 (生产环境)
 
 # 代码质量
-bun run check            # 格式化和 lint (Biome)
-bun run check-types      # 类型检查
+bun run check            # 代码检查 lint/格式化/类型检查 (vp check)
 ```
 
 ## 代码规范
 
-**Biome 格式化**: Tab 缩进 | 双引号 | 自动导入排序 | Tailwind 类名排序
+**代码格式化 (vp check)**: Tab 缩进 | 双引号 | 自动导入排序 | Tailwind 类名排序
 
 **导入规范**:
 
@@ -79,7 +78,7 @@ import { db } from "@org-sass/db"; // 跨包导入
 
 ## Git 工作流
 
-- **Pre-commit hook** (Lefthook): 自动运行 Biome 格式化和 lint
+- **Pre-commit hook** (vite-plus): 自动运行 vp check --fix（lint/格式化/类型检查）
 - **提交规范**: conventional commits（`feat:`, `fix:`, `refactor:` 等）
 
 ## 相关资源

@@ -1,6 +1,6 @@
 # Org SaaS
 
-基于 Better-T-Stack 技术栈构建的多组织 SaaS 平台，采用 Turborepo 管理的 Monorepo 架构。
+基于 Better-T-Stack 技术栈构建的多组织 SaaS 平台，采用 Bun Workspaces 管理的 Monorepo 架构。
 
 ## 项目定位
 
@@ -22,8 +22,8 @@
 - **Better-Auth** - 认证系统（Admin + Organization 插件）
 - **Drizzle ORM** - TypeScript-first ORM
 - **PostgreSQL** - 数据库
-- **Biome** - 代码格式化和 Lint
-- **Turborepo** - Monorepo 构建系统
+- **vite-plus (vp check)** - 代码检查 (lint / 格式化 / 类型检查)
+- **Bun Workspaces** - Monorepo 管理
 
 ## 快速开始
 
@@ -96,7 +96,7 @@ bun run db:migrate       # 创建迁移文件 (生产环境)
 ### 代码质量
 
 ```bash
-bun run check            # 格式化和 lint (Biome)
+bun run check            # 代码检查 lint/格式化/类型检查 (vp check)
 ```
 
 ## 核心概念

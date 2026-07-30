@@ -7,7 +7,6 @@
     "dev": "vp dev --port=4000",
     "build": "vp build",
     "start": "node .output/server/index.mjs",
-    "types:check": "fumadocs-mdx && tsgo --noEmit",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
