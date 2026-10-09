@@ -4,10 +4,12 @@ import { env } from "@org-saas/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { openAPI } from "better-auth/plugins";
+import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { ac, roles } from "./permissions";
+import { platformAc, platformRoles } from "./platform-permissions";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -18,11 +20,40 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  session: {
+    additionalFields: {
+      token: {
+        type: "string",
+        required: true,
+        input: false,
+        returned: false,
+      },
+    },
+  },
   plugins: [
+    admin({
+      ac: platformAc,
+      roles: platformRoles,
+      defaultRole: "user",
+      adminRoles: ["platform-admin"],
+    }),
     openAPI(), // `http://localhost:3001/api/auth/reference`
     tanstackStartCookies(),
     organization({
       allowUserToCreateOrganization: true,
+      disableOrganizationDeletion: true,
+      schema: {
+        organization: {
+          additionalFields: {
+            archivedAt: {
+              type: "date",
+              required: false,
+              input: false,
+              returned: false,
+            },
+          },
+        },
+      },
       teams: {
         enabled: true,
         maximumTeams: 10, // Optional: limit teams per organization
