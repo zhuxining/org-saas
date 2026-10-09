@@ -42,6 +42,7 @@ export function getSafeReturnTarget(value: unknown): string | undefined {
   }
 
   if (
+    hasControlCharacters(decodedValue) ||
     decodedValue.startsWith("//") ||
     decodedValue.includes("\\") ||
     target.origin !== APP_BASE_URL ||
