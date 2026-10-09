@@ -7,31 +7,28 @@ import { useState } from "react";
 
 import { usePermission } from "@/hooks/use-permission";
 import { useOrgContext } from "@/lib/org-context";
-import { orgFullQueryOptions } from "@/lib/query-options";
+import { organizationFullQueryOptions } from "@/lib/query-options";
 
 import { CreateTeamDialog } from "./-components/create-team-dialog";
 
-export const Route = createFileRoute("/_authenticated/org/$orgSlug/teams/")({
+export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active/teams/")({
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(orgFullQueryOptions(context.org.id));
+    await context.queryClient.ensureQueryData(
+      organizationFullQueryOptions(context.user.id, context.org.id),
+    );
   },
   component: TeamsPage,
 });
 
 function TeamsPage() {
-  const { org } = useOrgContext();
+  const { org, userId } = useOrgContext();
   const { orgSlug } = Route.useParams();
   const canCreateTeam = usePermission({ team: ["create"] });
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data } = useSuspenseQuery(orgFullQueryOptions(org.id));
+  const { data } = useSuspenseQuery(organizationFullQueryOptions(userId, org.id));
 
-  const teams =
-    (
-      data?.data as {
-        teams?: Array<{ id: string; name: string; createdAt: Date }>;
-      }
-    )?.teams ?? [];
+  const teams = data?.teams ?? [];
 
   return (
     <div className="p-6">

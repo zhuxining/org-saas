@@ -17,12 +17,14 @@ import {
 import { toast } from "@org-saas/ui/components/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, UserMinus, X } from "lucide-react";
+import { useState } from "react";
 
 import { RoleBadge } from "@/components/role-badge";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
-import { orgFullQueryOptions } from "@/lib/query-options";
+import { useOrgContext } from "@/lib/org-context";
+import { organizationQueryKeys } from "@/lib/query-options";
 
 import { RoleSelect } from "./role-select";
 
@@ -44,34 +46,54 @@ interface MemberTableProps {
 }
 
 export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
+  const { userId } = useOrgContext();
   const queryClient = useQueryClient();
-  const canManageMembers = usePermission({ member: ["update", "delete"] });
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const canUpdateMembers = usePermission({ member: ["update"] });
+  const canDeleteMembers = usePermission({ member: ["delete"] });
   const canCancelInvite = usePermission({ invitation: ["cancel"] });
 
-  const invalidateOrg = () => queryClient.invalidateQueries(orgFullQueryOptions(orgId));
+  const invalidateOrg = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, orgId) }),
+      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, orgId) }),
+      queryClient.invalidateQueries({
+        queryKey: organizationQueryKeys.grantableRoles(userId, orgId, "member.update"),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: organizationQueryKeys.grantableRoles(userId, orgId, "invitation.create"),
+      }),
+    ]);
+  };
 
   const handleRemoveMember = async (memberIdOrEmail: string) => {
-    const result = await authClient.organization.removeMember({
-      memberIdOrEmail,
-      organizationId: orgId,
-    });
-    if (result.error) {
-      toast.add({ title: result.error.message ?? "移除失败", type: "error" });
-    } else {
+    setPendingAction(memberIdOrEmail);
+    try {
+      const result = await authClient.organization.removeMember({
+        memberIdOrEmail,
+        organizationId: orgId,
+      });
+      if (result.error) throw new Error(result.error.message ?? "移除失败");
       toast.add({ title: "成员已移除", type: "success" });
-      void invalidateOrg();
+      await invalidateOrg();
+    } catch (error) {
+      toast.add({ title: error instanceof Error ? error.message : "移除失败", type: "error" });
+    } finally {
+      setPendingAction(null);
     }
   };
 
   const handleCancelInvitation = async (invitationId: string) => {
-    const result = await authClient.organization.cancelInvitation({
-      invitationId,
-    });
-    if (result.error) {
-      toast.add({ title: result.error.message ?? "取消失败", type: "error" });
-    } else {
+    setPendingAction(invitationId);
+    try {
+      const result = await authClient.organization.cancelInvitation({ invitationId });
+      if (result.error) throw new Error(result.error.message ?? "取消失败");
       toast.add({ title: "邀请已取消", type: "success" });
-      void invalidateOrg();
+      await invalidateOrg();
+    } catch (error) {
+      toast.add({ title: error instanceof Error ? error.message : "取消失败", type: "error" });
+    } finally {
+      setPendingAction(null);
     }
   };
 
@@ -79,6 +101,11 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
 
   return (
     <div className="space-y-6">
+      {pendingAction && (
+        <p role="status" className="text-muted-foreground text-sm">
+          正在处理组织成员操作…
+        </p>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -100,14 +127,14 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                {canManageMembers ? (
-                  <RoleSelect memberId={m.id} currentRole={m.role} orgId={orgId} />
+                {canUpdateMembers ? (
+                  <RoleSelect memberId={m.id} currentRole={m.role} />
                 ) : (
                   <RoleBadge role={m.role} />
                 )}
               </TableCell>
               <TableCell>
-                {canManageMembers && m.role !== "owner" && (
+                {canDeleteMembers && m.role !== "owner" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
                       <MoreHorizontal className="size-4" />
@@ -115,6 +142,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
                     <DropdownMenuContent className="bg-card" align="end">
                       <DropdownMenuItem
                         variant="destructive"
+                        disabled={pendingAction === m.userId}
                         onClick={() => handleRemoveMember(m.userId)}
                       >
                         <UserMinus className="size-4" />
@@ -156,6 +184,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
                       <Button
                         variant="ghost"
                         size="icon"
+                        disabled={pendingAction === inv.id}
                         onClick={() => handleCancelInvitation(inv.id)}
                       >
                         <X className="size-4" />

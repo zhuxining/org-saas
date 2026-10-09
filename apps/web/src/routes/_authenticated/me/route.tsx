@@ -1,7 +1,9 @@
 import { Button } from "@org-saas/ui/components/button";
 import { Separator } from "@org-saas/ui/components/separator";
+import { toast } from "@org-saas/ui/components/toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { Home, LogOut, Settings, Users } from "lucide-react";
+import { Home, LogOut, Settings, Shield, Users } from "lucide-react";
 
 import { OrgSwitcher } from "@/components/org-switcher";
 import { UserAvatar } from "@/components/user-avatar";
@@ -14,12 +16,16 @@ export const Route = createFileRoute("/_authenticated/me")({
 function PersonalSpaceLayout() {
   const { user } = Route.useRouteContext();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const navItems = [
     { to: "/me", label: "个人首页", icon: Home },
     { to: "/me/organizations", label: "我的组织", icon: Users },
     { to: "/me/settings/profile", label: "个人资料", icon: Settings },
-  ] as const;
+    ...(user.role.split(",").some((role) => role.trim() === "platform-admin")
+      ? [{ to: "/admin/users", label: "平台管理", icon: Shield }]
+      : []),
+  ];
 
   return (
     <div className="flex min-h-screen">
@@ -31,7 +37,7 @@ function PersonalSpaceLayout() {
         </div>
 
         <div className="p-3">
-          <OrgSwitcher />
+          <OrgSwitcher userId={user.id} />
         </div>
 
         <Separator />
@@ -62,7 +68,13 @@ function PersonalSpaceLayout() {
             onClick={() => {
               void authClient.signOut({
                 fetchOptions: {
-                  onSuccess: () => navigate({ to: "/" }),
+                  onSuccess: () => {
+                    queryClient.clear();
+                    void navigate({ to: "/" });
+                  },
+                  onError: (error) => {
+                    toast.add({ title: error.error.message ?? "退出失败", type: "error" });
+                  },
                 },
               });
             }}

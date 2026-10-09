@@ -10,6 +10,14 @@ const organizationStatusOutput = z.object({
   archivedAt: z.string().datetime().nullable(),
 });
 
+const organizationSummaryOutput = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  logo: z.string().nullable(),
+  createdAt: z.string().datetime(),
+});
+
 const effectiveOperationsSchema = z.object({
   organization: z.object({ update: z.boolean(), archive: z.boolean(), restore: z.boolean() }),
   member: z.object({ create: z.boolean(), update: z.boolean(), delete: z.boolean() }),
@@ -23,7 +31,37 @@ const effectiveOperationsSchema = z.object({
   }),
 });
 
+const organizationAccessOutput = z.object({
+  organizationId: z.string(),
+  role: z.string(),
+  isOwner: z.boolean(),
+  status: z.enum(["active", "archived"]),
+  operations: effectiveOperationsSchema,
+});
+
 export const organizationContract = {
+  resolveBySlug: oc
+    .meta(
+      openapi({
+        method: "GET",
+        path: "/organizations/by-slug/{slug}",
+        summary: "解析当前用户可访问的组织上下文",
+        tags: ["组织权限"],
+      }),
+    )
+    .errors({
+      UNAUTHORIZED: { message: "请先登录" },
+      FORBIDDEN: { message: "您无权访问此组织" },
+      NOT_FOUND: { message: "组织不存在" },
+      CONFLICT: { message: "组织所有权状态需要审查" },
+    })
+    .input(z.object({ slug: z.string().min(1).max(200) }))
+    .output(
+      z.object({
+        organization: organizationSummaryOutput,
+        access: organizationAccessOutput,
+      }),
+    ),
   accessContext: oc
     .meta(
       openapi({
@@ -40,15 +78,28 @@ export const organizationContract = {
       CONFLICT: { message: "组织所有权状态需要审查" },
     })
     .input(organizationIdInput)
-    .output(
-      z.object({
-        organizationId: z.string(),
-        role: z.string(),
-        isOwner: z.boolean(),
-        status: z.enum(["active", "archived"]),
-        operations: effectiveOperationsSchema,
+    .output(organizationAccessOutput),
+  grantableRoles: oc
+    .meta(
+      openapi({
+        method: "GET",
+        path: "/organizations/{organizationId}/grantable-roles",
+        summary: "获取当前用户可授予的组织角色名称",
+        tags: ["组织权限"],
       }),
-    ),
+    )
+    .errors({
+      UNAUTHORIZED: { message: "请先登录" },
+      FORBIDDEN: { message: "您无权在此组织授予角色" },
+      NOT_FOUND: { message: "组织不存在" },
+      CONFLICT: { message: "组织所有权状态需要审查" },
+    })
+    .input(
+      organizationIdInput.extend({
+        operation: z.enum(["member.create", "member.update", "invitation.create"]),
+      }),
+    )
+    .output(z.array(z.object({ name: z.string(), custom: z.boolean() }))),
   archive: oc
     .meta(
       openapi({
@@ -108,3 +159,4 @@ export const organizationContract = {
 };
 
 export type EffectiveOrganizationOperations = z.infer<typeof effectiveOperationsSchema>;
+export type OrganizationAccessContext = z.infer<typeof organizationAccessOutput>;
