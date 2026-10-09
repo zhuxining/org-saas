@@ -5,11 +5,11 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { ThemeProvider } from "next-themes";
 
 import { ForbiddenPage } from "@/components/fallback/forbidden";
 import { NotFoundPage } from "@/components/fallback/not-found";
 import { UnauthorizedPage } from "@/components/fallback/unauthorized";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/utils/errors";
 import type { orpc } from "@/utils/orpc";
 
@@ -63,7 +63,7 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider defaultTheme="system" storageKey="theme">
           <div className="min-h-screen">
             <TooltipProvider>
               <Outlet />{" "}
