@@ -1,59 +1,32 @@
-# API 包
+# API 包约定
 
-类型安全的 oRPC 服务器，基于中间件的认证，同构处理器（SSR + 客户端）。
+## 职责与入口
 
-## 结构
+提供业务 oRPC 路由，支持 HTTP 客户端调用与 SSR 服务端直接调用。
 
-```
-src/
-├── index.ts                         # Procedure 导出（publicProcedure、protectedProcedure）
-├── context.ts                       # oRPC 上下文（session 提取）
-└── routers/
-    ├── index.ts                     # 根路由导出
-    └── better-auth-openapi-docs.ts  # Better-Auth OpenAPI Schema 端点
-```
+- `src/context.ts`：从请求 headers 提取 Better Auth 会话。
+- `src/index.ts`：公共 procedure、认证中间件、限流和日志能力。
+- `src/routers/index.ts`：组合业务路由；各子路由实现具体业务。
+- HTTP 接入位于 `apps/web/src/routes/api/rpc.$.ts`；同构客户端位于 `apps/web/src/utils/orpc.ts`。
 
-## 核心用法
+认证配置遵循 [Auth 约定](../auth/AGENTS.md)，数据库访问遵循 [DB 约定](../db/AGENTS.md)。
 
-```typescript
-// 无需认证
-publicProcedure.handler(() => "OK");
+## Procedure 与访问边界
 
-// 需要认证 - context.session 由中间件保证非空
-protectedProcedure.handler(({ context }) => {
-  return { userId: context.session.user.id };
-});
+- 无需登录的接口使用 `publicProcedure`；需要登录的接口使用 `protectedProcedure`；需要用户级限流时使用 `rateLimitedProcedure`。
+- 复用现有 procedure 和中间件。新增公共访问策略时集中定义，不在路由内复制会话解析或绕过 Better Auth。
+- `protectedProcedure` 仅保证会话存在。涉及组织的数据，仍需在服务端验证目标组织的访问资格，并将查询限制在该组织范围内；参考 `src/routers/dashboard.ts`。
+- SSR 与 HTTP 调用使用同一业务处理器，保留相同的输入校验和访问检查。
 
-// 路由定义（输入 Schema 推荐从 DB schema 派生，见「oRPC 约定」；以下为最小示意）
-const memberListInput = z.object({ orgId: z.string() });
+## 输入与错误
 
-export const memberRouter = router({
-  list: protectedProcedure.input(memberListInput).handler(async ({ context, input }) => {
-    /* ... */
-  }),
-});
-```
+- 当前使用 router-first：通过 `.input(zodSchema).handler()` 定义接口，类型由路由推导；参考 `src/routers/user.ts`。
+- 契约优先和从 DB schema 派生输入校验是待确认的设计方向。日常维护和新增接口沿用现有模式；切换为 `implement(contract)` 或统一派生校验前确认架构方案。
+- 输入 schema 表达接口允许的字段和业务限制，不能直接把完整数据库模型作为可写输入。共享 schema 时保持浏览器可用，避免引入服务端依赖。
+- 页面可以复用可共享的输入 schema，但服务端 `.input()` 校验始终保留。
+- 预期业务错误抛 `ORPCError`，使用准确的错误码；未知异常按服务端错误处理。
+- `ORPCError.data` 会返回客户端，仅包含可公开信息，不放 token、凭证、内部查询或敏感数据。
 
-## oRPC 约定
+## 验证
 
-- **契约优先**：`input` 用 `z` 定义 Schema，经 `implement(contract)` 实现；类型自动从合约推导，无需重复声明。DB schema **应**作为校验唯一权威，合约**宜**经 `drizzle-orm/zod` 派生，避免定义漂移。
-- **校验三层**：
-  1. DB 层：表约束（`notNull` / `unique` / 默认值）兜底。
-  2. API 合约层：`createSelectSchema` / `createInsertSchema` / `createUpdateSchema` 派生 + `refine` 补业务规则。INSERT `.omit({ id, createdAt, updatedAt })`；UPDATE 须 `.extend({ id: z.string() })` 还原主键必填（否则推导为可选，`eq(example.id, id)` 推断 `never`）。
-  3. 页面层：表单复用合约 input schema（见 `apps/web` 的 TanStack Form 用法）。
-- **错误处理**：抛 `ORPCError`（`BAD_REQUEST` / `UNAUTHORIZED` / `NOT_FOUND`），非 `ORPCError` 自动转 500。**`ORPCError.data` 原样返回客户端，严禁放敏感信息**。
-
-## API 端点
-
-| API             | 访问方式                                   |
-| --------------- | ------------------------------------------ |
-| Better-Auth API | `http://localhost:3001/api/auth/*`         |
-| OpenAPI 文档    | `http://localhost:3001/api/auth/reference` |
-| oRPC 端点       | `http://localhost:3001/api/rpc/*`          |
-
-## 反模式
-
-- **不要跳过 session 检查** - `protectedProcedure` 已保证 `context.session` 非空
-- **不要创建自定义 procedure** - 仅使用 `publicProcedure` 或 `protectedProcedure`
-- **不要混合认证模式** - 统一依赖 Better-Auth session
-- **不要在组件裸写 `fetch` 调 RPC** - 统一用 `orpc`（由 `apps/web` 的 oRPC 客户端提供）
+新增或修改接口时，检查有效输入、无效输入、未登录及适用的跨组织访问场景；关键逻辑按根约定补充相关测试。

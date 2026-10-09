@@ -1,59 +1,38 @@
-# Web App 开发指南
+# Web 应用约定
 
-## 目录结构
+## 职责与入口
 
-```
-apps/web/src/
-├── routes/              # 文件系统路由（自动生成 routeTree.gen.ts）
-│   ├── (public)/        # 公开页面（落地页、定价、关于）
-│   │   └── -components/ # 公开页共享组件（header、footer、user-menu）
-│   ├── (auth)/          # 认证流程（login）
-│   ├── api/             # API 路由（auth/$.ts、rpc/$.ts）
-│   └── __root.tsx       # 根布局
-├── components/          # 全局共享组件
-│   └── fallback/        # 错误边界页面
-├── lib/auth-client.ts   # Better-Auth 客户端实例
-├── middleware/auth.ts   # 认证中间件
-├── functions/           # Server Functions
-├── utils/
-│   ├── orpc.ts          # oRPC 客户端 + TanStack Query 集成
-│   └── guards.ts        # 路由守卫
-└── types/orpc.d.ts      # oRPC 类型扩展
-```
+主站使用 TanStack Start / Router，承载公开页面、认证流程、个人中心和组织业务。
 
-> UI 组件（shadcn）位于 `packages/ui/`，通过 `@org-saas/ui` 导入。
-> 权限系统（RBAC）见 [packages/auth/AGENTS.md](../../packages/auth/AGENTS.md)。
+| 内容                       | 入口                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| 路由与根布局               | `src/routes/`、`src/routes/__root.tsx`                                         |
+| Router 与 QueryClient 集成 | `src/router.tsx`、`src/utils/orpc.ts`                                          |
+| 认证客户端与服务端会话     | `src/lib/auth-client.ts`、`src/functions/auth.fn.ts`、`src/middleware/auth.ts` |
+| 页面守卫与组织上下文       | `src/utils/guards.ts`、`src/lib/org-context.ts`                                |
+| 组织查询配置               | `src/lib/query-options.ts`                                                     |
+| 共享业务组件与错误页面     | `src/components/`、`src/components/fallback/`                                  |
 
-## 路由系统
+修改认证或权限相关代码前，读取 [Auth 约定](../../packages/auth/AGENTS.md)；修改共享 UI 前，读取 [UI 约定](../../packages/ui/AGENTS.md)。
 
-基于 TanStack Router 的文件系统路由，运行 `bun run dev` 触发路由树生成。
+## 路由与服务端边界
 
-> 数据加载（loader + useSuspenseQuery）和 Mutation 模式详见 `tanstack-integration-best-practices` skill。
+- 路由树由 TanStack 工具生成，修改路由源文件，不手工编辑 `src/routeTree.gen.ts`。
+- 路由专属组件放在同级 `-components/`，避免被识别为路由；跨页面组件放 `src/components/`。组件文件用 kebab-case，导出名用 PascalCase。
+- 保持 SSR / 客户端边界：客户端组件不直接导入数据库、服务端环境变量或认证服务端实现；Server Functions 与同构入口遵循现有组织方式。
+- 页面守卫使用现有 `requireSession`、`requireOrgRole`、`requireAdmin`、`requireOwner`；组织路由入口见 `src/routes/org/$orgSlug/route.tsx` 和 `resolveOrgBySlug`。页面守卫不能替代服务端访问检查。
+- `src/routes/api/` 负责 oRPC / Better Auth 的 HTTP 接入，业务处理放对应共享包。
 
-**权限守卫**（`src/utils/guards.ts`）：`requireSession` | `requireActiveOrganization` | `requireRole(role)` | `requireAdmin` | `requireOwner`
+## 数据交互与表单
 
-## 反模式
+- 业务 RPC 使用 `src/utils/orpc.ts` 提供的 `orpc` / `client`，不在组件中手写 `fetch` 调 RPC；认证及组织插件调用使用 `authClient`。
+- 查询与变更复用现有 query options 和查询键；变更成功后更新或失效对应缓存。涉及组织的数据，查询键应包含组织标识。
+- 用户操作提供明确的等待、成功和失败反馈；适合即时提示的操作使用 `@org-saas/ui/components/toast`，避免重复提示。
+- TanStack Form 的 `validators` 可直接接收 Zod schema。业务 RPC 表单复用可共享的服务端输入 schema；Better Auth 表单遵循对应接口约束。参考 `src/components/sign-in-form.tsx`。
+- TanStack Table 的 `data` 和 `columns` 保持稳定引用，按来源使用组件外常量、缓存数据或 `useMemo`，避免每次渲染重新创建。
 
-- 不要修改 `routeTree.gen.ts` - 自动生成
-- 不要在 `src/routes/` 中创建顶级组件 - 使用 `-components/` 子目录
-- 所有 mutation 必须有 Toast 反馈
+## UI 与验证
 
-## 表单与表格
-
-- **TanStack Form**：`validators` 直接复用 oRPC 合约的 zod input schema（无需额外 adapter），与现有 `example-form.tsx` 保持一致。
-- **TanStack Table**：`data` 和 `columns` 须 `useMemo` 保持引用稳定，否则会无限循环重渲染。
-
-## oRPC 客户端
-
-- 组件内优先用 `orpc`（由 `src/utils/orpc.ts` 提供，已集成 TanStack Query），禁止裸写 `fetch` 调 RPC。查询 / 变更 / 查询键用法见 `orpc-guide`、`tanstack-query` skill。
-
-## 样式与图标
-
-- 视觉样式统一用 shadcn 组件 + Tailwind Token（见根 `AGENTS.md › 项目约束 › 样式红线`）；图标统一 `lucide-react`（见根 `AGENTS.md › 项目约束 › 图标红线`）。
-
-## 文件命名
-
-- 路由文件: `route.tsx`, `index.tsx`, `$param.tsx`
-- 组件文件: kebab-case (`user-profile.tsx`)，与 shadcn/ui 保持一致
-- 组件目录: `-components/`（dash 前缀）
-- 组件导出名保持 PascalCase（`export function UserProfile`）
+- 组件导入、主题、图标及 Base UI 组合方式遵循 [UI 约定](../../packages/ui/AGENTS.md)。业务组件优先组合共享组件，视觉样式使用 Tailwind 语义 token，自定义 CSS class 仅承担结构布局。
+- React 19 使用 `ref` prop；保持语义化元素、表单 label、列表稳定 key 和键盘可操作性。
+- 完成页面改动后检查相关状态与交互；涉及路由、SSR 或客户端边界时，从仓库根运行 `vp run --filter web build`。

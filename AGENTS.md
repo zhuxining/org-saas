@@ -1,150 +1,58 @@
-# AGENTS.md
+# 项目开发约定
 
-## 项目概述
+## 项目与边界
 
-基于 Better-T-Stack 技术栈构建的多组织 SaaS 平台，采用 Bun Workspaces 管理的 Monorepo 架构。
+多组织 SaaS Monorepo，使用 Bun Workspaces。主站采用 TanStack Start / Router、React、oRPC、Better Auth 和 Drizzle / PostgreSQL；共享 UI 使用 shadcn / Base UI。
 
-**核心定位**:
+- `apps/web`：公开页面、认证流程、个人中心和组织业务页面。
+- `apps/fumadocs`：独立文档应用，使用 Fumadocs。
+- `apps/mini`：微信小程序，使用 TDesign、WXML 和 WXSS。
+- `packages/api`、`auth`、`db`、`ui`：共享业务 API、认证、数据访问和 Web UI。
+- `packages/env`：环境变量校验；`packages/config`：共享 TypeScript 配置。
 
-- **Org 端**: 组织成员管理团队、成员、邀请（Owner/Admin/Member 三级权限）
-- **Public 端**: 公开访问页面（落地页、关于）
+本文件适用于整个仓库。子目录文件补充局部约定；React、shadcn、Tailwind 和 Lucide 约定仅适用于对应的 Web 应用及组件库。
 
-**技术栈**: TanStack Start + TanStack Router + React 19 | TailwindCSS 4 + shadcn/ui (Base UI) | oRPC + Better-Auth | PostgreSQL + Drizzle ORM | Bun (Workspaces)
+## 按任务读取
 
-## 架构与文档索引
+开始修改前，读取涉及目录的 `AGENTS.md`；跨包任务组合读取相关文件。
 
-| 层级        | 技术                              | 文档                                               |
-| ----------- | --------------------------------- | -------------------------------------------------- |
-| **Web App** | TanStack Start (SSR) + React 19   | [apps/web/AGENTS.md](apps/web/AGENTS.md)           |
-| **API**     | oRPC (端到端类型安全)             | [packages/api/AGENTS.md](packages/api/AGENTS.md)   |
-| **认证**    | Better-Auth (Organization + RBAC) | [packages/auth/AGENTS.md](packages/auth/AGENTS.md) |
-| **数据库**  | PostgreSQL + Drizzle ORM          | [packages/db/AGENTS.md](packages/db/AGENTS.md)     |
-| **UI**      | shadcn/ui (Base UI，非 Radix)     | [packages/ui/AGENTS.md](packages/ui/AGENTS.md)     |
+| 任务                           | 必读文件                                           |
+| ------------------------------ | -------------------------------------------------- |
+| 主站页面、路由、SSR、数据交互  | [apps/web/AGENTS.md](apps/web/AGENTS.md)           |
+| 业务 RPC、服务端校验和错误处理 | [packages/api/AGENTS.md](packages/api/AGENTS.md)   |
+| 认证、会话、组织插件和权限配置 | [packages/auth/AGENTS.md](packages/auth/AGENTS.md) |
+| 数据模型、关系和数据库变更     | [packages/db/AGENTS.md](packages/db/AGENTS.md)     |
+| 共享组件、Base UI 和主题       | [packages/ui/AGENTS.md](packages/ui/AGENTS.md)     |
+| 文档内容、文档路由和搜索       | [apps/fumadocs/AGENTS.md](apps/fumadocs/AGENTS.md) |
+| 微信小程序页面、组件和样式     | [apps/mini/AGENTS.md](apps/mini/AGENTS.md)         |
 
-**关键概念**: oRPC 端到端类型安全 | SSR/客户端同构 | 多租户通过 `activeOrganizationId` 切换
+框架细节按任务读取已提供的技能：路由用 `tanstack-router`，SSR / Server Functions 用 `tanstack-start`，查询、表单、表格分别用 `tanstack-query`、`tanstack-form`、`tanstack-table`；组件用 `shadcn`，认证用对应 Better Auth 技能。技能不可用时查官方文档，不依赖未提供的技能名称。
 
-## 项目结构
+## 跨包约定
 
-```text
-org-saas/
-├── apps/
-│   ├── web/              # 主站应用 (TanStack Start SSR, 端口 3001)
-│   ├── fumadocs/         # 文档应用 (Fumadocs)
-│   └── mini/             # 微信小程序 (tdesign-miniprogram)
-├── packages/
-│   ├── api/              # oRPC API 层
-│   ├── auth/             # Better-Auth 配置
-│   ├── db/               # 数据库模型和 Drizzle ORM
-│   ├── ui/               # 共享 UI 组件库 (shadcn/Base UI)
-│   ├── config/           # 共享配置
-│   └── env/              # 环境变量类型
-└── .agents/skills/       # AI Agent 技能包（自动加载，无需手动引用）
-```
+- 业务 RPC 使用 oRPC；认证和组织插件接口使用 Better Auth；数据库访问使用 Drizzle。HTTP 入口仅承担协议接入，不承载业务逻辑。
+- 外部输入在对应服务端入口校验，业务 RPC 使用 Zod；页面校验用于反馈，不能替代服务端校验。
+- 跨包通过 `@org-saas/*` 的公开 exports 导入；应用内别名以本应用配置为准，不直接引用其他包的内部文件。
+- 保持现有 TypeScript 严格检查，不通过放宽配置、`any` 或 lint ignore / disable 注释规避问题。误报需说明证据后讨论处理方式。
+- 保留生成文件的生成流程；具体编辑边界见对应子目录约定。
+- 格式、导入排序和 lint 以根 `vite.config.ts` 为准；编译选项以共享及各包 `tsconfig` 为准，不在文档中复制配置清单。
+- 提交使用 Conventional Commits，例如 `feat:`、`fix:`、`refactor:`；暂存检查配置见根 `vite.config.ts`。
 
-## 常用开发命令
+## 工作流程与决策边界
 
-```bash
-# 开发
-bun run dev              # 启动所有应用
-bun run dev:web          # 仅启动 Web 应用 (端口 3001)
-bun run build            # 构建所有应用
+- 目标明确且处于已授权范围的常规改动，说明计划后直接推进。澄清会改变结果的歧义，并给出选项与影响。
+- 架构方向、依赖引入或升级、破坏性操作及影响持久化数据的操作，执行前确认具体方案；已有授权不重复确认，出现新的实质性取舍再讨论。
+- 新依赖说明必要性、体积、维护状态和许可证；复用现有能力优先。
+- 改动只覆盖任务需要的内容；清理本次改动产生的孤儿导入和变量，无关问题记录并告知，不顺手扩大范围。
+- 注释解释不明显的设计原因。说明和交付先给结论，再给改动、影响和验证结果。
 
-# 数据库
-bun run db:push          # 推送 schema (开发环境)
-bun run db:studio        # 打开 Drizzle Studio (端口 5555)
-bun run db:generate      # 生成 schema 类型
-bun run db:migrate       # 创建迁移文件 (生产环境)
+## 验证与交付
 
-# 代码质量
-bun run check            # 代码检查 lint/格式化/类型检查 (vp check)
-```
+命令从仓库根执行；完整脚本以根及目标包 `package.json` 为准。
 
-## 代码规范
-
-**代码格式化 (vp check)**: Tab 缩进 | 双引号 | 自动导入排序 | Tailwind 类名排序
-
-**导入规范**:
-
-```typescript
-import { db } from "@org-saas/db"; // 跨包导入
-
-import { orpc } from "@/utils/orpc"; // 内部导入
-```
-
-## 反模式
-
-各包专属的反模式规则见对应 AGENTS.md。全局规则：
-
-- **不要在开发环境手动创建迁移文件** - 使用 `db:push`
-
-## Git 工作流
-
-- **Pre-commit hook** (vite-plus): 自动运行 vp check --fix（lint/格式化/类型检查）
-- **提交规范**: conventional commits（`feat:`, `fix:`, `refactor:` 等）
-
-## 项目约束
-
-跨包通用红线与编码规范，违反将导致构建失败、安全漏洞或架构腐化。各包专属约束见对应 `AGENTS.md` 的「反模式」段。
-
-### TypeScript
-
-- 已启用 `strict` / `noUnusedLocals` / `noUnusedParameters` / `verbatimModuleSyntax` / `erasableSyntaxOnly` / `noUncheckedIndexedAccess` / `noImplicitOverride`，不要放宽。
-- 禁 `enum` / `namespace`（`erasableSyntaxOnly` 会拒绝）→ 用 `const` 对象 + 类型推导 / ES 模块。
-- 路径别名：应用内 `@/*` → `src/*`，跨包用 `@org-saas/*`（如 `@org-saas/db`）。
-
-### Lint / 格式化 / 类型检查（vite-plus）
-
-- `vp check` 是统一入口，一次性完成格式化 + lint + 类型检查；`--fix` 自动修复可修复项。提交前 pre-commit hook 已自动运行。
-- 禁止用 ignore / disable 注释绕过 lint 规则（oxlint / vite-plus 的禁用注释）。遇告警应正面修复（改写代码、调整依赖、拆分逻辑），不得用 ignore 压制；确属误报时再单独说明，不得默认靠 ignore 过关。
-
-### 外部依赖红线
-
-- 禁止绕过 oRPC 手写业务 RPC（API 路由仅做 oRPC / better-auth 的 HTTP 入口）。
-- 禁止绕过 better-auth 自行实现认证 / Session。
-- 禁止绕过 Drizzle 裸写业务 SQL（数据库内置函数例外）。
-- 禁止绕过 Zod 在 oRPC 合约外做输入校验（所有外部输入经合约 `input(zod)` + `implement` 自动校验）。
-- 引入新依赖前评估必要性、体积、维护活跃度、许可证。
-
-### 样式红线
-
-- 视觉样式（颜色 / 背景 / 边框 / 阴影 / 字号）统一用 shadcn 组件 + Tailwind Token，禁止自定义 CSS class 加视觉属性。
-- 自定义 CSS class 仅用于结构布局（flex / grid / 间距 / 定位 / 尺寸）。
-
-### 图标红线
-
-- 统一 `lucide-react`（如 `<X />`），禁止内联 `<svg>`、导入 SVG 文件或用其他图标库。
-
-### 代码风格（TypeScript / React）
-
-行级编码规范（通用最佳实践，框架标准用法见对应 skill）：
-
-- **类型安全**：显式标注函数参数 / 返回值类型（提升清晰度时）；未知类型用 `unknown` 而非 `any`；用 `as const` 标识不可变值；用类型收窄代替类型断言；避免魔法数字，提取为具名常量。
-- **现代语法**：`const` 优先，`let` 仅在需重赋值时，禁用 `var`；回调用箭头函数；`for...of` 优于 `.forEach()` / 索引 `for`；用 `?.` / `??`、模板字符串、解构。
-- **异步**：async 函数内务必 `await` 并消费返回值；用 `async/await` 优于 promise 链；用 `try-catch` 妥善处理错误。
-- **React / JSX**：只用函数组件；hooks 仅在顶层调用且依赖数组写全；列表元素用唯一 `key`（非数组下标）；不在组件内定义组件；语义化 HTML + ARIA（图片 `alt`、标题层级、表单 `label`、键盘事件配鼠标事件）；React 19 用 `ref` 作 prop 替代 `forwardRef`。
-- **错误处理**：生产代码移除 `console.log` / `debugger` / `alert`；抛 `Error` 对象（带描述）而非字符串；`try-catch` 须有意义（不空 catch 后原样重抛）；错误分支用 early return 减少嵌套。
-- **安全**：链接 `target="_blank"` 加 `rel="noopener"`；避免 `dangerouslySetInnerHTML`；禁用 `eval()` 与直接写 `document.cookie`；校验 / 清洗用户输入。
-- **性能**：循环累加器内避免 spread；正则提到顶层；优先具名导入而非命名空间导入；图片用 shadcn/ui 组件而非原生 `<img>`。
-- **测试纪律**：断言写在 `it()` / `test()` 内；异步测试用 `async/await` 而非 `done` 回调；提交代码禁用 `.only` / `.skip`；测试套件保持扁平，避免过度 `describe` 嵌套。
-
-### 工作规范
-
-- 遇歧义列出几种理解让用户选择，不替用户做假设。当用户指令与最佳实践冲突时，主动提醒并说明取舍建议。
-- 涉及**架构级决策、破坏性变更、数据安全、依赖引入或升级**须确认后再执行。
-- 修改代码后运行 `vp check --fix` 确保无问题；改动触及关键业务逻辑或测试用例本身时再跑 `bun run test`，提交前完整跑一次。
-- Bug 修复优先写能复现的最小测试（失败 → 通过验证修复有效并防回归）；显而易见或复现成本过高的 bug 可直接修复，但修复后应补测试覆盖该场景。
-- 极简精准：每行 diff 对应具体需求条目，不扩展改动范围，不顺手改无关代码；孤儿导入 / 变量顺手清干净；撞见无关死代码只提醒不删。仅对复杂逻辑或非显而易见的设计意图添加注释；避免显而易见的注释或过度注释。
-
-### 沟通原则
-
-- 遵循金字塔原理：先结论后论据，先全局后细节，先结果后过程。
-- 结构化表达时，按互斥且穷尽（MECE）的方式分组，避免内容交叉、重复和跳跃。
-- 撰写 Issue、PR 等说明性内容时，按如下顺序组织：目的 / 结论 → 背景 → 方案或改动点 → 影响与风险 → 验收或验证结果。
-- 如果当前讨论的原始内容结构混乱，主动按金字塔原理重组后再输出。
-- 先输出分析计划，列出关键假设、不确定性和风险点，获得确认后再动手编码。
-
-## 相关资源
-
-TanStack / Better-Auth / shadcn 等技术文档可通过对应 skill 或 `find-docs` skill 即时查询。
-
-- [oRPC](https://orpc.unnoq.com/) | [Drizzle ORM](https://orm.drizzle.team/)
+- 主站开发：`vp run dev:web`；文档开发：`vp run dev:fumadocs`。
+- 修改代码后运行 `vp check --fix`，检查并控制自动修复的 diff 范围。
+- 修复关键逻辑时优先用最小测试复现，再验证修复。测试入口为 `vp test`；当前仓库尚未配置测试文件，运行前先确认相关测试已存在。
+- 仅修改文档时，对修改文件运行 `vp check --fix <文件路径>`，核对本地链接、读取入口和规则一致性。
+- 涉及构建、SSR 或生成流程的改动，运行目标应用的构建或对应生成检查；数据库操作遵循 DB 文件的确认边界。
+- 交付说明实际改动、已执行检查及未完成项。检查失败时区分本次引入的问题与既有问题，不将未执行的检查报告为通过。

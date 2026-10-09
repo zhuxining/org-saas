@@ -30,7 +30,7 @@
 ### 1. 安装依赖
 
 ```bash
-bun install
+vp install
 ```
 
 ### 2. 数据库设置
@@ -40,13 +40,13 @@ bun install
 3. 推送 schema 到数据库：
 
 ```bash
-bun run db:push
+vp run db:push
 ```
 
 ### 3. 启动开发服务器
 
 ```bash
-bun run dev
+vp run dev
 ```
 
 访问 [http://localhost:3001](http://localhost:3001) 查看应用。
@@ -79,24 +79,24 @@ org-saas/
 ### 开发和构建
 
 ```bash
-bun run dev              # 启动所有应用
-bun run dev:web          # 仅启动 Web 应用
-bun run build            # 构建所有应用
+vp run dev              # 启动所有应用
+vp run dev:web          # 仅启动 Web 应用
+vp run build            # 构建所有应用
 ```
 
 ### 数据库操作
 
 ```bash
-bun run db:push          # 推送 schema (开发环境)
-bun run db:studio        # 打开 Drizzle Studio
-bun run db:generate      # 生成 schema 类型
-bun run db:migrate       # 创建迁移文件 (生产环境)
+vp run db:push          # 推送 schema (开发环境)
+vp run db:studio        # 打开 Drizzle Studio
+vp run db:generate      # 生成迁移文件
+vp run db:migrate       # 执行已有迁移
 ```
 
 ### 代码质量
 
 ```bash
-bun run check            # 代码检查 lint/格式化/类型检查 (vp check)
+vp run check            # 代码检查 lint/格式化/类型检查并修复
 ```
 
 ## 核心概念
