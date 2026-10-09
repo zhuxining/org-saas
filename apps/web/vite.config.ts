@@ -8,7 +8,12 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: lazyPlugins(() => [devtools(), tailwindcss(), tanstackStart(), viteReact()]),
+  plugins: lazyPlugins(() => [
+    devtools(),
+    tailwindcss(),
+    tanstackStart(),
+    viteReact({ compiler: true }),
+  ]),
   server: {
     port: 3001,
     warmup: {

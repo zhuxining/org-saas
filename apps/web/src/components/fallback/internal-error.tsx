@@ -42,9 +42,7 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
         <CardContent>
           {errorMessage && (
             <div className="bg-muted rounded-md p-3">
-              <p className="text-muted-foreground text-sm wrap-break-word">
-                {errorMessage}
-              </p>
+              <p className="text-muted-foreground text-sm wrap-break-word">{errorMessage}</p>
             </div>
           )}
         </CardContent>

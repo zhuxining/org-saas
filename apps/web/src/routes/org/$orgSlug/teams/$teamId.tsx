@@ -8,10 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from "@org-saas/ui/components/table";
+import { toast } from "@org-saas/ui/components/toast";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Trash2 } from "lucide-react";
-import { toast } from "@org-saas/ui/components/toast";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";

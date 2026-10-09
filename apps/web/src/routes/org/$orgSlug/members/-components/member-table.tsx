@@ -14,9 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@org-saas/ui/components/table";
+import { toast } from "@org-saas/ui/components/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, UserMinus, X } from "lucide-react";
-import { toast } from "@org-saas/ui/components/toast";
 
 import { RoleBadge } from "@/components/role-badge";
 import { UserAvatar } from "@/components/user-avatar";

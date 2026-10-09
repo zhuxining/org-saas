@@ -15,9 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@org-saas/ui/components/select";
+import { toast } from "@org-saas/ui/components/toast";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";

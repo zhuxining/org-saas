@@ -6,10 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@org-saas/ui/components/card";
+import { toast } from "@org-saas/ui/components/toast";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
-import { toast } from "@org-saas/ui/components/toast";
 
 import { authClient } from "@/lib/auth-client";
 

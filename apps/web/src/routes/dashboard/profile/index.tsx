@@ -8,9 +8,9 @@ import {
 } from "@org-saas/ui/components/card";
 import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
+import { toast } from "@org-saas/ui/components/toast";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
-import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { UserAvatar } from "@/components/user-avatar";
