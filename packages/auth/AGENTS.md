@@ -16,7 +16,7 @@ Better Auth 服务端配置，提供邮箱密码认证、会话、组织与团�
 - `src/session.ts` 中的 getter 供 server-only 入口复用；浏览器代码不得导入该模块。
 - 修改服务端插件时核对客户端插件、[DB schema](../db/AGENTS.md) 及相关调用方，保持配置与数据模型一致。
 - Server Functions 的会话入口见 `apps/web/src/middleware/auth.ts`；业务 RPC 的会话入口见 [API 约定](../api/AGENTS.md)。
-- 组织与角色策略的变更需明确方案后实施；权限模型留待专门讨论，维护时以 `src/permissions.ts` 与 Better Auth 配置为准。
+- 调整组织、角色、权限授予或归档策略前，读取 [权限架构](../../docs/architecture/authorization.md)；落实已确认方案时按 [权限实施计划](../../docs/implementation/permissions.md)推进。目标设计与当前 `src/permissions.ts`、插件配置的实现状态分别核对。
 
 ## 按需参考
 

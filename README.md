@@ -67,13 +67,14 @@ org-saas/
 
 ## 详细文档
 
-| 主题             | 文档                                                        |
-| ---------------- | ----------------------------------------------------------- |
-| **架构设计**     | [服务架构、数据通道与权限设计](docs/design/architecture.md) |
-| **Web App 开发** | [apps/web/CLAUDE.md](apps/web/AGENTS.md)                    |
-| **API 开发**     | [packages/api/CLAUDE.md](packages/api/AGENTS.md)            |
-| **认证流程**     | [packages/auth/CLAUDE.md](packages/auth/AGENTS.md)          |
-| **数据库**       | [packages/db/CLAUDE.md](packages/db/AGENTS.md)              |
+| 主题             | 文档                                                           |
+| ---------------- | -------------------------------------------------------------- |
+| **架构设计**     | [架构文档与阅读导航](docs/architecture/README.md)              |
+| **权限实施计划** | [阶段、改动入口与验收场景](docs/implementation/permissions.md) |
+| **Web App 开发** | [apps/web/AGENTS.md](apps/web/AGENTS.md)                       |
+| **API 开发**     | [packages/api/AGENTS.md](packages/api/AGENTS.md)               |
+| **认证流程**     | [packages/auth/AGENTS.md](packages/auth/AGENTS.md)             |
+| **数据库**       | [packages/db/AGENTS.md](packages/db/AGENTS.md)                 |
 
 ## 常用命令
 

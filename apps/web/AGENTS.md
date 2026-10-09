@@ -13,7 +13,7 @@
 | 组织查询配置               | `src/lib/query-options.ts`                                                     |
 | 共享业务组件与错误页面     | `src/components/`、`src/components/fallback/`                                  |
 
-修改认证或权限相关代码前，读取 [Auth 约定](../../packages/auth/AGENTS.md)；修改共享 UI 前，读取 [UI 约定](../../packages/ui/AGENTS.md)。
+修改认证或权限相关代码前，读取 [Auth 约定](../../packages/auth/AGENTS.md)；修改共享 UI 前，读取 [UI 约定](../../packages/ui/AGENTS.md)。调整页面加载、SSR 或组织上下文时，读取 [请求与数据流](../../docs/architecture/request-data-flow.md)。
 
 ## 路由与服务端边界
 
@@ -27,8 +27,11 @@
 ## 数据交互与表单
 
 - 业务 RPC 使用 `src/utils/orpc.ts` 提供的 `orpc` / `client`，不在组件中手写 `fetch` 调 RPC；认证及组织插件调用使用 `authClient`。
-- 查询与变更复用现有 query options 和查询键；变更成功后更新或失效对应缓存。涉及组织的数据，查询键应包含组织标识。
+- 查询与变更复用现有 query options 和查询键。路由主体数据由 `loader` 使用 `await ensureQueryData(...)` 预取，组件通过 `useSuspenseQuery` 消费同一查询配置；导航等待由路由 `pendingComponent` 处理。
+- 查询配置集中复用；涉及组织的数据，查询键包含组织标识。变更成功后通过 `queryClient.invalidateQueries(...)` 更新受影响查询，避免依赖组件局部 `refetch()` 同步多处消费者。
 - 用户操作提供明确的等待、成功和失败反馈；适合即时提示的操作使用 `@org-saas/ui/components/toast`，避免重复提示。
+- Better Auth 操作检查返回值的 `error`；路由访问错误使用现有错误类型并交给 fallback，业务 RPC 按契约处理错误。
+- 对话框由父级控制 `open` / `onOpenChange`，操作成功通过回调协调关闭与查询失效。
 - TanStack Form 的 `validators` 可直接接收 Zod schema。业务 RPC 表单复用可共享的服务端输入 schema；Better Auth 表单遵循对应接口约束。参考 `src/components/sign-in-form.tsx`。
 - TanStack Table 的 `data` 和 `columns` 保持稳定引用，按来源使用组件外常量、缓存数据或 `useMemo`，避免每次渲染重新创建。
 
