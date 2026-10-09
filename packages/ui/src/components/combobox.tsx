@@ -1,5 +1,3 @@
-"use client";
-
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";
 import { Button } from "@org-saas/ui/components/button";
 import {
@@ -8,7 +6,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@org-saas/ui/components/input-group";
-import { cn } from "@org-saas/ui/lib/utils";
+import { cn } from "cn";
 import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react";
 import * as React from "react";
 

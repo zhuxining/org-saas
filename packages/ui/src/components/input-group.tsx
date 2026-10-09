@@ -1,8 +1,10 @@
+"use client";
+
 import { Button } from "@org-saas/ui/components/button";
 import { Input } from "@org-saas/ui/components/input";
 import { Textarea } from "@org-saas/ui/components/textarea";
-import { cn } from "@org-saas/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import * as React from "react";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {

@@ -1,4 +1,4 @@
-import { cn } from "@org-saas/ui/lib/utils";
+import { cn } from "cn";
 import * as React from "react";
 
 function Card({
@@ -67,7 +67,11 @@ function CardAction({ className, ...props }: React.ComponentProps<"div">) {
 
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div data-slot="card-content" className={cn("px-(--card-spacing)", className)} {...props} />
+    <div
+      data-slot="card-content"
+      className={cn("flex flex-col gap-3 px-(--card-spacing)", className)}
+      {...props}
+    />
   );
 }
 

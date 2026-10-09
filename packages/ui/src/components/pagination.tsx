@@ -1,5 +1,5 @@
 import { Button } from "@org-saas/ui/components/button";
-import { cn } from "@org-saas/ui/lib/utils";
+import { cn } from "cn";
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
 import * as React from "react";
 

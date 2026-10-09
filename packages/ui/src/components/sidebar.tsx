@@ -1,3 +1,5 @@
+"use client";
+
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Button } from "@org-saas/ui/components/button";
@@ -13,8 +15,8 @@ import {
 import { Skeleton } from "@org-saas/ui/components/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@org-saas/ui/components/tooltip";
 import { useIsMobile } from "@org-saas/ui/hooks/use-mobile";
-import { cn } from "@org-saas/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 

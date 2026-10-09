@@ -1,4 +1,4 @@
-import { Toaster } from "@org-saas/ui/components/sonner";
+import { TooltipProvider } from "@org-saas/ui/components/tooltip";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { FormDevtoolsPanel } from "@tanstack/react-form-devtools";
 import type { QueryClient } from "@tanstack/react-query";
@@ -65,9 +65,10 @@ function RootDocument() {
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="min-h-screen">
-            <Outlet />
+            <TooltipProvider>
+              <Outlet />{" "}
+            </TooltipProvider>
           </div>
-          <Toaster richColors />
           <TanStackDevtools
             plugins={[
               {

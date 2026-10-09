@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogContent,
@@ -6,8 +8,8 @@ import {
   DialogTitle,
 } from "@org-saas/ui/components/dialog";
 import { InputGroup, InputGroupAddon } from "@org-saas/ui/components/input-group";
-import { cn } from "@org-saas/ui/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
+import { cn } from "cn";
 import { SearchIcon, CheckIcon } from "lucide-react";
 import * as React from "react";
 

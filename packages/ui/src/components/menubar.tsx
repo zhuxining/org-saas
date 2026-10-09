@@ -1,3 +1,5 @@
+"use client";
+
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { Menubar as MenubarPrimitive } from "@base-ui/react/menubar";
 import {
@@ -15,7 +17,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@org-saas/ui/components/dropdown-menu";
-import { cn } from "@org-saas/ui/lib/utils";
+import { cn } from "cn";
 import { CheckIcon } from "lucide-react";
 import * as React from "react";
 

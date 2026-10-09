@@ -1,6 +1,8 @@
+"use client";
+
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import { Button } from "@org-saas/ui/components/button";
-import { cn } from "@org-saas/ui/lib/utils";
+import { cn } from "cn";
 import {
   XIcon,
   CircleCheckIcon,

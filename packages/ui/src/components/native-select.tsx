@@ -1,4 +1,4 @@
-import { cn } from "@org-saas/ui/lib/utils";
+import { cn } from "cn";
 import { ChevronDownIcon } from "lucide-react";
 import * as React from "react";
 
