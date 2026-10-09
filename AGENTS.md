@@ -66,8 +66,9 @@ bun run check            # 代码检查 lint/格式化/类型检查 (vp check)
 **导入规范**:
 
 ```typescript
-import { orpc } from "@/utils/orpc"; // 内部导入
 import { db } from "@org-sass/db"; // 跨包导入
+
+import { orpc } from "@/utils/orpc"; // 内部导入
 ```
 
 ## 反模式

@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 
+const currentYear = new Date().getFullYear();
+
 export default function Footer() {
   return (
     <footer className="border-border bg-background border-t">
       <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-6 md:flex-row md:py-8">
         <div className="text-muted-foreground text-center text-sm md:text-left">
-          © {new Date().getFullYear()} Org SaaS. All rights reserved.
+          © {currentYear} Org SaaS. All rights reserved.
         </div>
         <nav className="text-muted-foreground flex gap-4 text-sm font-medium">
           <Link to="/" className="hover:text-foreground transition-colors hover:underline">

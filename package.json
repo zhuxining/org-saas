@@ -47,16 +47,16 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "bun run --parallel --filter web --filter fumadocs dev",
-    "dev:web": "bun run --filter web dev",
-    "dev:fumadocs": "bun run --filter fumadocs dev",
-    "build": "bun run --parallel --filter web --filter fumadocs build",
-    "db:push": "bun run --filter @org-sass/db db:push",
-    "db:studio": "bun run --filter @org-sass/db db:studio",
-    "db:generate": "bun run --filter @org-sass/db db:generate",
-    "db:migrate": "bun run --filter @org-sass/db db:migrate",
-    "check": "vp check",
-    "clean": "bun run --workspaces --if-present clean && git clean -xdf node_modules .dist .output .tanstack .wrangler"
+    "dev": "vp run --parallel --filter web --filter fumadocs dev",
+    "dev:web": "vp run --filter web dev",
+    "dev:fumadocs": "vp run --filter fumadocs dev",
+    "build": "vp run --parallel --filter web --filter fumadocs build",
+    "db:push": "vp run --filter @org-sass/db db:push",
+    "db:studio": "vp run --filter @org-sass/db db:studio",
+    "db:generate": "vp run --filter @org-sass/db db:generate",
+    "db:migrate": "vp run --filter @org-sass/db db:migrate",
+    "check": "vp check --fix",
+    "clean": "vp run --workspaces --if-present clean && git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
     "@org-sass/env": "workspace:*"

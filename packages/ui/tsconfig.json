@@ -1,6 +1,9 @@
 {
   "extends": "@org-sass/config/tsconfig.base.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": [],
     "paths": {
       "@org-sass/ui/*": ["./src/*"]
     }

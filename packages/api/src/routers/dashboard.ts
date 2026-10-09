@@ -16,11 +16,13 @@ export const dashboardRouter = {
       const userId = context.session.user.id;
 
       // 验证用户是否为组织成员
-      const membership = await db.query.member.findFirst({
-        where: and(eq(member.organizationId, input.orgId), eq(member.userId, userId)),
-      });
+      const membership = await db
+        .select({ id: member.id })
+        .from(member)
+        .where(and(eq(member.organizationId, input.orgId), eq(member.userId, userId)))
+        .limit(1);
 
-      if (!membership) {
+      if (!membership[0]) {
         throw new ORPCError("FORBIDDEN", { message: "您不是此组织的成员" });
       }
 
