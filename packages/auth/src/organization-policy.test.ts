@@ -484,6 +484,67 @@ describe("organization policy plugin endpoint coverage", () => {
     ).rejects.toThrow("A role assigned to a pending invitation cannot be deleted.");
   });
 
+  it("hides pending invitations from ordinary members on HTTP and auth.api", async () => {
+    const { auth } = createTestAuth();
+    const owner = await signUp(auth, "owner-full-org-visibility@example.test");
+    const ordinaryMember = await signUp(auth, "member-full-org-visibility@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    await auth.api.addMember({
+      body: { organizationId, userId: ordinaryMember.userId, role: "member" },
+      headers: owner.headers,
+    });
+    await auth.api.createInvitation({
+      body: { organizationId, email: "pending-full-org-visibility@example.test", role: "member" },
+      headers: owner.headers,
+    });
+
+    const memberOrganization = await auth.api.getFullOrganization({
+      query: { organizationId },
+      headers: ordinaryMember.headers,
+    });
+    expect(memberOrganization?.invitations).toEqual([]);
+    expect(
+      await auth.api.listInvitations({
+        query: { organizationId },
+        headers: ordinaryMember.headers,
+      }),
+    ).toEqual([]);
+    expect(
+      await auth.api.listInvitations({ query: { organizationId }, headers: owner.headers }),
+    ).toHaveLength(1);
+    await expect(
+      auth.api.listOrgRoles({
+        query: { organizationId },
+        headers: ordinaryMember.headers,
+      }),
+    ).rejects.toThrow("You are not allowed to list a role");
+
+    const ownerOrganization = await auth.api.getFullOrganization({
+      query: { organizationId },
+      headers: owner.headers,
+    });
+    expect(ownerOrganization?.invitations).toHaveLength(1);
+
+    const httpResponse = await auth.handler(
+      new Request(
+        `http://localhost:3000/api/auth/organization/get-full-organization?organizationId=${organizationId}`,
+        { headers: { cookie: ordinaryMember.headers.get("cookie") ?? "" } },
+      ),
+    );
+    expect(httpResponse.ok).toBe(true);
+    const httpOrganization = (await httpResponse.json()) as { invitations?: unknown[] };
+    expect(httpOrganization.invitations).toEqual([]);
+
+    const httpInvitationsResponse = await auth.handler(
+      new Request(
+        `http://localhost:3000/api/auth/organization/list-invitations?organizationId=${organizationId}`,
+        { headers: { cookie: ordinaryMember.headers.get("cookie") ?? "" } },
+      ),
+    );
+    expect(httpInvitationsResponse.ok).toBe(true);
+    await expect(httpInvitationsResponse.json()).resolves.toEqual([]);
+  });
+
   it("blocks accepting an archived organization invitation by invitation ID", async () => {
     const { auth, memoryDb } = createTestAuth();
     const owner = await signUp(auth, "owner-archive-invite@example.test");

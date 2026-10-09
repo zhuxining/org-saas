@@ -21,7 +21,7 @@ export const dashboardContract = {
       z.object({
         memberCount: z.number(),
         teamCount: z.number(),
-        pendingInvitationCount: z.number(),
+        pendingInvitationCount: z.number().nullable(),
       }),
     ),
 };
