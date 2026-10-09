@@ -44,9 +44,7 @@ export function UserMenu() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
-            Dashboard
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate({ to: "/me" })}>个人中心</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"

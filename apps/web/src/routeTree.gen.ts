@@ -14,9 +14,11 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authenticated/dashboard/route'
+import { Route as AuthenticatedMeRouteRouteImport } from './routes/_authenticated/me/route'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as InviteTokenRouteImport } from './routes/invite/$token'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
+import { Route as AuthenticatedMeIndexRouteImport } from './routes/_authenticated/me/index'
 import { Route as AuthenticatedOrgOrgSlugRouteRouteImport } from './routes/_authenticated/org/$orgSlug/route'
 import { Route as PublicAboutIndexRouteImport } from './routes/_public/about/index'
 import { Route as PublicLandingIndexRouteImport } from './routes/_public/landing/index'
@@ -25,7 +27,10 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
 import { Route as AuthenticatedDashboardOrgsNewRouteImport } from './routes/_authenticated/dashboard/orgs/new'
 import { Route as AuthenticatedDashboardProfileIndexRouteImport } from './routes/_authenticated/dashboard/profile/index'
+import { Route as AuthenticatedMeOrganizationsIndexRouteImport } from './routes/_authenticated/me/organizations/index'
+import { Route as AuthenticatedMeOrganizationsNewRouteImport } from './routes/_authenticated/me/organizations/new'
 import { Route as AuthenticatedOrgOrgSlugIndexRouteImport } from './routes/_authenticated/org/$orgSlug/index'
+import { Route as AuthenticatedMeSettingsProfileIndexRouteImport } from './routes/_authenticated/me/settings/profile/index'
 import { Route as AuthenticatedOrgOrgSlugMembersIndexRouteImport } from './routes/_authenticated/org/$orgSlug/members/index'
 import { Route as AuthenticatedOrgOrgSlugSettingsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/settings/index'
 import { Route as AuthenticatedOrgOrgSlugTeamsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/teams/index'
@@ -54,6 +59,11 @@ const AuthenticatedDashboardRouteRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMeRouteRoute = AuthenticatedMeRouteRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -70,6 +80,11 @@ const AuthenticatedDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const AuthenticatedMeIndexRoute = AuthenticatedMeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedMeRouteRoute,
+} as any)
 const AuthenticatedOrgOrgSlugRouteRoute =
   AuthenticatedOrgOrgSlugRouteRouteImport.update({
     id: '/org/$orgSlug',
@@ -113,11 +128,29 @@ const AuthenticatedDashboardProfileIndexRoute =
     path: '/profile/',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const AuthenticatedMeOrganizationsIndexRoute =
+  AuthenticatedMeOrganizationsIndexRouteImport.update({
+    id: '/organizations/',
+    path: '/organizations/',
+    getParentRoute: () => AuthenticatedMeRouteRoute,
+  } as any)
+const AuthenticatedMeOrganizationsNewRoute =
+  AuthenticatedMeOrganizationsNewRouteImport.update({
+    id: '/organizations/new',
+    path: '/organizations/new',
+    getParentRoute: () => AuthenticatedMeRouteRoute,
+  } as any)
 const AuthenticatedOrgOrgSlugIndexRoute =
   AuthenticatedOrgOrgSlugIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
+const AuthenticatedMeSettingsProfileIndexRoute =
+  AuthenticatedMeSettingsProfileIndexRouteImport.update({
+    id: '/settings/profile/',
+    path: '/settings/profile/',
+    getParentRoute: () => AuthenticatedMeRouteRoute,
   } as any)
 const AuthenticatedOrgOrgSlugMembersIndexRoute =
   AuthenticatedOrgOrgSlugMembersIndexRouteImport.update({
@@ -147,19 +180,24 @@ const AuthenticatedOrgOrgSlugTeamsTeamIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
+  '/me': typeof AuthenticatedMeRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/invite/$token': typeof InviteTokenRoute
   '/org/$orgSlug': typeof AuthenticatedOrgOrgSlugRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/me/': typeof AuthenticatedMeIndexRoute
   '/about/': typeof PublicAboutIndexRoute
   '/landing/': typeof PublicLandingIndexRoute
   '/pricing/': typeof PublicPricingIndexRoute
   '/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
+  '/me/organizations/new': typeof AuthenticatedMeOrganizationsNewRoute
   '/dashboard/profile/': typeof AuthenticatedDashboardProfileIndexRoute
+  '/me/organizations/': typeof AuthenticatedMeOrganizationsIndexRoute
   '/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugIndexRoute
   '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  '/me/settings/profile/': typeof AuthenticatedMeSettingsProfileIndexRoute
   '/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
   '/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
   '/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
@@ -171,13 +209,17 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/me': typeof AuthenticatedMeIndexRoute
   '/about': typeof PublicAboutIndexRoute
   '/landing': typeof PublicLandingIndexRoute
   '/pricing': typeof PublicPricingIndexRoute
   '/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
+  '/me/organizations/new': typeof AuthenticatedMeOrganizationsNewRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileIndexRoute
+  '/me/organizations': typeof AuthenticatedMeOrganizationsIndexRoute
   '/org/$orgSlug': typeof AuthenticatedOrgOrgSlugIndexRoute
   '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  '/me/settings/profile': typeof AuthenticatedMeSettingsProfileIndexRoute
   '/org/$orgSlug/members': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
   '/org/$orgSlug/settings': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
   '/org/$orgSlug/teams': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
@@ -188,6 +230,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
+  '/_authenticated/me': typeof AuthenticatedMeRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_public/': typeof PublicIndexRoute
@@ -195,13 +238,17 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_authenticated/me/': typeof AuthenticatedMeIndexRoute
   '/_public/about/': typeof PublicAboutIndexRoute
   '/_public/landing/': typeof PublicLandingIndexRoute
   '/_public/pricing/': typeof PublicPricingIndexRoute
   '/_authenticated/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
+  '/_authenticated/me/organizations/new': typeof AuthenticatedMeOrganizationsNewRoute
   '/_authenticated/dashboard/profile/': typeof AuthenticatedDashboardProfileIndexRoute
+  '/_authenticated/me/organizations/': typeof AuthenticatedMeOrganizationsIndexRoute
   '/_authenticated/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugIndexRoute
   '/_authenticated/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  '/_authenticated/me/settings/profile/': typeof AuthenticatedMeSettingsProfileIndexRoute
   '/_authenticated/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
   '/_authenticated/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
   '/_authenticated/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
@@ -211,19 +258,24 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/me'
     | '/login'
     | '/invite/$token'
     | '/org/$orgSlug'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/dashboard/'
+    | '/me/'
     | '/about/'
     | '/landing/'
     | '/pricing/'
     | '/dashboard/orgs/new'
+    | '/me/organizations/new'
     | '/dashboard/profile/'
+    | '/me/organizations/'
     | '/org/$orgSlug/'
     | '/org/$orgSlug/teams/$teamId'
+    | '/me/settings/profile/'
     | '/org/$orgSlug/members/'
     | '/org/$orgSlug/settings/'
     | '/org/$orgSlug/teams/'
@@ -235,13 +287,17 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/dashboard'
+    | '/me'
     | '/about'
     | '/landing'
     | '/pricing'
     | '/dashboard/orgs/new'
+    | '/me/organizations/new'
     | '/dashboard/profile'
+    | '/me/organizations'
     | '/org/$orgSlug'
     | '/org/$orgSlug/teams/$teamId'
+    | '/me/settings/profile'
     | '/org/$orgSlug/members'
     | '/org/$orgSlug/settings'
     | '/org/$orgSlug/teams'
@@ -251,6 +307,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_public'
     | '/_authenticated/dashboard'
+    | '/_authenticated/me'
     | '/_auth/login'
     | '/invite/$token'
     | '/_public/'
@@ -258,13 +315,17 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/_authenticated/dashboard/'
+    | '/_authenticated/me/'
     | '/_public/about/'
     | '/_public/landing/'
     | '/_public/pricing/'
     | '/_authenticated/dashboard/orgs/new'
+    | '/_authenticated/me/organizations/new'
     | '/_authenticated/dashboard/profile/'
+    | '/_authenticated/me/organizations/'
     | '/_authenticated/org/$orgSlug/'
     | '/_authenticated/org/$orgSlug/teams/$teamId'
+    | '/_authenticated/me/settings/profile/'
     | '/_authenticated/org/$orgSlug/members/'
     | '/_authenticated/org/$orgSlug/settings/'
     | '/_authenticated/org/$orgSlug/teams/'
@@ -316,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/me': {
+      id: '/_authenticated/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AuthenticatedMeRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_public/': {
       id: '/_public/'
       path: '/'
@@ -336,6 +404,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/me/': {
+      id: '/_authenticated/me/'
+      path: '/'
+      fullPath: '/me/'
+      preLoaderRoute: typeof AuthenticatedMeIndexRouteImport
+      parentRoute: typeof AuthenticatedMeRouteRoute
     }
     '/_authenticated/org/$orgSlug': {
       id: '/_authenticated/org/$orgSlug'
@@ -393,12 +468,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardProfileIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
+    '/_authenticated/me/organizations/': {
+      id: '/_authenticated/me/organizations/'
+      path: '/organizations'
+      fullPath: '/me/organizations/'
+      preLoaderRoute: typeof AuthenticatedMeOrganizationsIndexRouteImport
+      parentRoute: typeof AuthenticatedMeRouteRoute
+    }
+    '/_authenticated/me/organizations/new': {
+      id: '/_authenticated/me/organizations/new'
+      path: '/organizations/new'
+      fullPath: '/me/organizations/new'
+      preLoaderRoute: typeof AuthenticatedMeOrganizationsNewRouteImport
+      parentRoute: typeof AuthenticatedMeRouteRoute
+    }
     '/_authenticated/org/$orgSlug/': {
       id: '/_authenticated/org/$orgSlug/'
       path: '/'
       fullPath: '/org/$orgSlug/'
       preLoaderRoute: typeof AuthenticatedOrgOrgSlugIndexRouteImport
       parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
+    }
+    '/_authenticated/me/settings/profile/': {
+      id: '/_authenticated/me/settings/profile/'
+      path: '/settings/profile'
+      fullPath: '/me/settings/profile/'
+      preLoaderRoute: typeof AuthenticatedMeSettingsProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedMeRouteRoute
     }
     '/_authenticated/org/$orgSlug/members/': {
       id: '/_authenticated/org/$orgSlug/members/'
@@ -462,6 +558,25 @@ const AuthenticatedDashboardRouteRouteWithChildren =
     AuthenticatedDashboardRouteRouteChildren,
   )
 
+interface AuthenticatedMeRouteRouteChildren {
+  AuthenticatedMeIndexRoute: typeof AuthenticatedMeIndexRoute
+  AuthenticatedMeOrganizationsNewRoute: typeof AuthenticatedMeOrganizationsNewRoute
+  AuthenticatedMeOrganizationsIndexRoute: typeof AuthenticatedMeOrganizationsIndexRoute
+  AuthenticatedMeSettingsProfileIndexRoute: typeof AuthenticatedMeSettingsProfileIndexRoute
+}
+
+const AuthenticatedMeRouteRouteChildren: AuthenticatedMeRouteRouteChildren = {
+  AuthenticatedMeIndexRoute: AuthenticatedMeIndexRoute,
+  AuthenticatedMeOrganizationsNewRoute: AuthenticatedMeOrganizationsNewRoute,
+  AuthenticatedMeOrganizationsIndexRoute:
+    AuthenticatedMeOrganizationsIndexRoute,
+  AuthenticatedMeSettingsProfileIndexRoute:
+    AuthenticatedMeSettingsProfileIndexRoute,
+}
+
+const AuthenticatedMeRouteRouteWithChildren =
+  AuthenticatedMeRouteRoute._addFileChildren(AuthenticatedMeRouteRouteChildren)
+
 interface AuthenticatedOrgOrgSlugRouteRouteChildren {
   AuthenticatedOrgOrgSlugIndexRoute: typeof AuthenticatedOrgOrgSlugIndexRoute
   AuthenticatedOrgOrgSlugTeamsTeamIdRoute: typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
@@ -490,12 +605,14 @@ const AuthenticatedOrgOrgSlugRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRouteRoute: typeof AuthenticatedDashboardRouteRouteWithChildren
+  AuthenticatedMeRouteRoute: typeof AuthenticatedMeRouteRouteWithChildren
   AuthenticatedOrgOrgSlugRouteRoute: typeof AuthenticatedOrgOrgSlugRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRouteRoute:
     AuthenticatedDashboardRouteRouteWithChildren,
+  AuthenticatedMeRouteRoute: AuthenticatedMeRouteRouteWithChildren,
   AuthenticatedOrgOrgSlugRouteRoute:
     AuthenticatedOrgOrgSlugRouteRouteWithChildren,
 }

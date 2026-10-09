@@ -70,7 +70,7 @@ function OrgLayout() {
       <div className="flex min-h-screen">
         <aside className="border-border bg-card flex w-64 shrink-0 flex-col border-r">
           <div className="border-border flex h-14 items-center gap-2 border-b px-4">
-            <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
+            <Link to="/me" className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="size-4" />
             </Link>
             <span className="truncate font-bold">{org.name}</span>
@@ -112,7 +112,7 @@ function OrgLayout() {
               <DropdownMenuContent className="bg-card w-56" align="start">
                 <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
+                <DropdownMenuItem onClick={() => navigate({ to: "/me" })}>
                   <LayoutDashboard className="size-4" />
                   个人中心
                 </DropdownMenuItem>
