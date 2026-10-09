@@ -8,9 +8,9 @@
 
 ## 已确认的选择性 SSR 策略
 
-目标策略是「公开内容完整 SSR，组织与平台管理后台使用 `data-only`」。保持默认 SSR 开启，在对应后台布局上限制组件渲染；不把主站整体切为 SPA，也不在共享登录层统一关闭 SSR。
+当前策略是「公开内容完整 SSR，组织与平台管理后台使用 `data-only`」。保持默认 SSR 开启，在对应后台布局上限制组件渲染；不把主站整体切为 SPA，也不在共享登录层统一关闭 SSR。
 
-本节是已确认待实施的配置策略。当前源码未显式配置 `ssr` 或 `defaultSsr`，尚未应用后台 `data-only` 设置；配置和回归由 [Web 路由实施计划](../implementation/web-routing.md#选择性-ssr-的实施与验收)跟踪。
+后台 `data-only` 策略已应用并完成回归：`_active` 和 `admin` 由服务端执行 `beforeLoad`／`loader`，组件由浏览器渲染；根、共享登录层、组织身份外层和归档页面保留完整 SSR。浏览器回归确认首个后台 HTML 使用 pending fallback，hydration 后 Query 数据可用。实施状态见 [Web 路由实施计划](../implementation/web-routing.md#选择性-ssr-的实施与验收)。
 
 ### 模式语义
 
@@ -67,7 +67,7 @@ __root                         true
 
 首个 `data-only`／`false` 节点使用其 pendingComponent 或 Router 默认 pending 作为首次服务端 fallback；fallback 不执行浏览器专属能力，页面 hydration 时仍需验证占位及最短显示时间行为。
 
-所有模式都由接口独立校验身份、组织、操作与数据范围。`data-only` 会传递加载结果及上下文，不因为没有完整组件 HTML 就允许输出额外敏感字段。Query 缓存的脱水／水合也需单独验证，选择该模式不会自动完成缓存集成。
+`data-only` 会传递加载结果及上下文，不因为没有完整组件 HTML 就允许输出额外敏感字段。浏览器验收确认组织权限上下文可用，而组织统计与平台用户表格不出现在首个 HTML；页面 hydration 后 Query cache 可用。Query cache 的 SSR 行为以实际请求和客户端状态验证，不从模式选项推断。
 
 ## 浏览器与 SSR 的业务调用
 
@@ -87,7 +87,7 @@ flowchart TB
 
 [HTTP 入口](../../apps/web/src/routes/api/rpc.$.ts)同时挂载 oRPC 与 OpenAPI handler，复用同一业务 router；外部客户端使用 HTTP，也必须经过相同服务端授权。handler 负责协议接入，具体业务位于共享 API 包。
 
-当前公共处理器与受保护处理器分别从 `publicImplementer` 和 `protectedImplementer` 实现。后者仅保证登录；组织成员资格、目标资源范围由业务进一步检查，已确认的完整操作权限和归档策略尚待实施。
+当前公共处理器与受保护处理器分别从 `publicImplementer` 和 `protectedImplementer` 实现。受保护处理器先检查登录；组织业务再按明确的组织 ID 检查成员资格、动态权限和归档状态，平台操作独立检查平台管理员角色。归档、恢复及角色操作使用相应服务端契约；页面布局不会改变 API 的协议和授权入口。
 
 ## 请求级 Session 提取
 
@@ -122,26 +122,24 @@ Better Auth 查询参与 SSR 预取时，应核对当前请求凭证的传递；
 
 需要导航前准备的数据，由 loader 使用共享 query options 预取，组件消费对应缓存。Loader 与组件引用同一查询配置，避免数据来源和缓存键不一致；具体编码规则在 Web 约定维护。
 
-当前 Router 使用意图预加载，并将预加载数据的新鲜度判断交给 Query。SSR 预取结果向浏览器缓存的传递应按实际集成验证，不能把仅存在 QueryClientProvider 当作缓存脱水／水合已完成的证据；本次文档迁移没有修改该集成。
+当前浏览器验收对组织首页及平台用户页执行完整刷新：服务端返回 pending fallback，不包含统计卡片或用户表格；页面水合后相应 Query 查询处于成功状态，UI 显示数据。组织首页的性能记录未见 `/api/rpc` 或 `/api/auth` 重复请求。该验证覆盖了当前页面和数据流，不代表所有新增 query 都已验证。
 
 ## 组织上下文与切换
 
-当前组织父路由在 `beforeLoad` 中调用 [resolveOrgBySlug](../../apps/web/src/functions/auth.fn.ts)：
+当前组织父路由在 `beforeLoad` 中用用户 ID 和显式 slug 调用 `organizationContextBySlugQueryOptions`；该查询调用 [resolveBySlug API](../../packages/api/src/routers/organization.ts)，服务端以该 slug 查询组织，再以当前会话用户 ID 和目标组织 ID 加载成员、状态及操作权限：
 
-1. 从 getter 读取当前用户会话。
-2. 通过 slug 调用 `auth.api.setActiveOrganization`，传入请求 headers。
-3. 使用 `getActiveMember` 获取当前组织成员角色。
-4. 将 user、org、role 交给 Router context，再由布局提供 OrgContext。
+1. 共享认证路由提供当前会话用户。
+2. `resolveBySlug` 查询目标 slug，不读取或设置 Better Auth 的 active-organization 状态。
+3. `loadOrganizationAccess(organizationId, userId)` 按成员关系校验身份，并输出 owner、归档状态和动态操作权限。
+4. 路由将用户、目标组织和访问上下文交给子路由，`OrgContext` 再提供页面消费。
 
-成员及团队查询使用显式 orgId，缓存键包含组织标识。组织切换通过导航进入对应 slug，并再次解析组织上下文。
+查询和业务操作使用显式 orgId；缓存键按当前用户及组织划分。切换 slug 后重新解析服务端上下文，并移除该用户其他组织的业务缓存。
 
-`activeOrganizationId` 属于共享 session 状态。多个标签页进入不同组织时会改变 active 状态，因此请求目标组织尽量明确传入，服务端重新检查成员资格；不能以 active 值代替访问授权。当前按 active member 解析角色的过程也需在后续权限改造中核对多标签页竞态。
-
-组织切换后尚有旧页面时，不依赖界面切换证明授权已改变；真正访问仍以本次请求的目标组织及服务端检查为准。
+Better Auth 的 active organization 可被其他标准客户端功能使用，但路由授权不把它作为目标组织或成员资格的事实来源。多标签页进入不同组织时，服务端仍根据本次请求的显式组织 ID 和当前成员关系校验访问。
 
 ## 已确认的入口与导航规则
 
-当前已实施共享登录路由、公开页面布局、`/me` 及其 dashboard 兼容重定向；邀请流程也会保留登录返回地址并导航至已确认的目标组织。组织 `_active`／归档分支及 Admin／角色布局仍等待权限前置 issue #11。目标授权规则见 [权限架构](authorization.md)。
+共享登录路由、公开布局、`/me` 与 dashboard 兼容重定向、邀请后导航、组织 active／archive 分支、Admin／角色布局均已实施。组织和平台后端权限依赖已由 issue #11 交付；路由集成与当前回归证据见 [Web 路由实施计划](../implementation/web-routing.md)和 GitHub issues #8–#10。
 
 - `/` 始终为公开首页，已登录用户也不自动跳转个人空间。登录成功且没有有效返回地址时默认进入 `/me`。
 - 未登录进入受保护页面时跳转 `/login`，保留有效的站内返回地址；登录后回到目标页面，再检查组织或平台访问资格。已登录但无权限时显示拒绝访问，不循环跳转登录。
@@ -153,9 +151,7 @@ Better Auth 查询参与 SSR 预取时，应核对当前请求凭证的传递；
 
 ## 查询缓存与权限变化
 
-当前组织查询配置集中在 [query-options.ts](../../apps/web/src/lib/query-options.ts)，组织完整信息使用组织维度键，组织列表使用用户当前会话对应的列表查询。变更成功后使受影响查询失效，由引用相同查询配置的消费者更新。
-
-已确认待实施的权限缓存按当前用户与 orgId 划分。角色定义／成员角色改变、退出组织、组织归档／恢复后，失效相应权限和业务缓存，并更新路由上下文；退出登录或切换账号时清理旧授权结果。
+组织查询配置集中在 [query-options.ts](../../apps/web/src/lib/query-options.ts)，缓存键按用户 ID、组织 ID 和查询类型划分；平台用户及组织查询也按平台用户身份划分。成员／角色变化、归档／恢复等成功操作会使相关权限、业务和路由数据失效。退出登录或切换账号时清理旧授权结果。
 
 第一版不要求实时推送。另一客户端可能暂时显示旧按钮，但下一次服务端操作按当前授权判断并反馈，前端缓存不能延长实际权限。
 
@@ -171,6 +167,6 @@ Better Auth 查询参与 SSR 预取时，应核对当前请求凭证的传递；
 | Better Auth 客户端操作 | 返回值中的 `error`                                                                               | 操作表单和事件处理反馈        |
 | 未知异常               | 服务端日志及通用错误路径                                                                         | 通用错误边界，不公开内部细节  |
 
-[根路由](../../apps/web/src/routes/__root.tsx)识别访问错误并渲染对应 fallback；Router 的默认错误组件处理通用导航错误。Better Auth 操作检查返回的错误，业务查询与变更使用共享错误语义，避免把认证、授权和资源不存在都当作同一种失败。
+应用的根路由定义了应用级访问错误 fallback；Router 默认错误组件处理子路由和 loader 错误。SSR `data-only` 错误在传到浏览器时可能被还原为普通 `Error`，此时通用错误框仍显示服务端拒绝消息，但不会使用专用 403 版式；业务数据和管理页面不会因此输出。Better Auth 操作检查返回的错误，业务查询与变更使用共享错误语义，避免把认证、授权和资源不存在都当作同一种失败。
 
 页面反馈、toast、表单和对话框的编码规则见 Web 约定；本文件只说明错误从入口传播到消费者的关系。
