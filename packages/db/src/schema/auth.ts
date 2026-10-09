@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -6,7 +6,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
-  role: text("role"),
+  role: text("role").default("user"),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
@@ -112,7 +112,10 @@ export const member = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("member_organization_id_user_id_idx").on(table.organizationId, table.userId)],
+  (table) => [
+    uniqueIndex("member_organization_id_user_id_unique").on(table.organizationId, table.userId),
+    index("member_user_id_idx").on(table.userId),
+  ],
 );
 
 export const invitation = pgTable(
@@ -136,7 +139,11 @@ export const invitation = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("invitation_organization_id_email_idx").on(table.organizationId, table.email)],
+  (table) => [
+    index("invitation_organization_id_email_idx").on(table.organizationId, table.email),
+    index("invitation_organization_id_status_idx").on(table.organizationId, table.status),
+    index("invitation_inviter_id_idx").on(table.inviterId),
+  ],
 );
 
 export const organizationRole = pgTable(
@@ -156,7 +163,12 @@ export const organizationRole = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("organization_role_organization_id_idx").on(table.organizationId)],
+  (table) => [
+    uniqueIndex("organization_role_organization_id_role_unique").on(
+      table.organizationId,
+      table.role,
+    ),
+  ],
 );
 
 export const team = pgTable(
@@ -191,5 +203,8 @@ export const teamMember = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("team_member_team_id_user_id_idx").on(table.teamId, table.userId)],
+  (table) => [
+    uniqueIndex("team_member_team_id_user_id_unique").on(table.teamId, table.userId),
+    index("team_member_user_id_idx").on(table.userId),
+  ],
 );
