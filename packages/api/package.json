@@ -1,5 +1,6 @@
 {
   "name": "@org-saas/api",
+  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -8,9 +9,6 @@
     "./*": {
       "default": "./src/*.ts"
     }
-  },
-  "scripts": {
-    "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
     "@org-saas/auth": "workspace:*",

@@ -1,5 +1,6 @@
 {
   "name": "@org-saas/db",
+  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -13,8 +14,7 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate",
-    "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@org-saas/env": "workspace:*",

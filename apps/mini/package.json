@@ -1,5 +1,5 @@
 {
-  "name": "org-saas",
+  "name": "@org-saas/mini",
   "version": "0.2.0",
   "description": "",
   "main": "app.js",
