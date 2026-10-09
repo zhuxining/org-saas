@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@org-saas/ui/components/dropdown-menu";
 import { Skeleton } from "@org-saas/ui/components/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { toast } from "@org-saas/ui/components/toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { getSession } from "@/functions/auth.fn";
@@ -17,6 +18,7 @@ import { authClient } from "@/lib/auth-client";
 
 export function UserMenu() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: session, isPending } = useQuery({
     queryKey: ["session"],
     queryFn: () => getSession(),
@@ -52,9 +54,11 @@ export function UserMenu() {
               void authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    void navigate({
-                      to: "/",
-                    });
+                    queryClient.clear();
+                    void navigate({ to: "/" });
+                  },
+                  onError: (error) => {
+                    toast.add({ title: error.error.message ?? "退出失败", type: "error" });
                   },
                 },
               });

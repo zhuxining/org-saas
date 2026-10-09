@@ -1,3 +1,4 @@
+import { roles } from "@org-saas/auth/permissions";
 import { platformAdminRoles } from "@org-saas/auth/platform-permissions";
 import { and, asc, count, db, desc, eq, ilike, isNull, not, or, sql } from "@org-saas/db";
 import { member, organization, organizationRole, user } from "@org-saas/db/schema/auth";
@@ -115,7 +116,36 @@ async function loadOrganizationAccess(organizationId: string, userId: string) {
     isOwner,
     archivedAt: organizationRow.archivedAt,
     operations: resolveOperations(statements, isOwner, Boolean(organizationRow.archivedAt)),
+    statements,
   };
+}
+
+function accessContextOutput(access: Awaited<ReturnType<typeof loadOrganizationAccess>>) {
+  return {
+    organizationId: access.organizationId,
+    role: access.role,
+    isOwner: access.isOwner,
+    status: access.archivedAt ? ("archived" as const) : ("active" as const),
+    operations: access.operations,
+  };
+}
+
+function containsPermissions(
+  candidate: Record<string, string[]>,
+  grantor: Record<string, string[]>,
+): boolean {
+  return (
+    Object.entries(candidate).every(([, actions]) => Array.isArray(actions)) &&
+    Object.entries(candidate).every(([resource, actions]) =>
+      actions.every((action) => roleAllows(grantor, resource, action)),
+    )
+  );
+}
+
+function isAdminEquivalent(candidate: Record<string, string[]>): boolean {
+  return Object.entries(roles.admin.statements as unknown as Record<string, string[]>).every(
+    ([resource, actions]) => actions.every((action) => roleAllows(candidate, resource, action)),
+  );
 }
 
 function isPlatformAdmin(role: unknown): boolean {
@@ -137,16 +167,69 @@ function containsPattern(value: string): string {
 }
 
 export const organizationRouter = {
+  resolveBySlug: protectedImplementer.organization.resolveBySlug.handler(
+    async ({ context, input }) => {
+      const [organizationRow] = await db
+        .select({
+          id: organization.id,
+          name: organization.name,
+          slug: organization.slug,
+          logo: organization.logo,
+          createdAt: organization.createdAt,
+        })
+        .from(organization)
+        .where(eq(organization.slug, input.slug))
+        .limit(1);
+      if (!organizationRow) fail("NOT_FOUND", "Organization not found.");
+
+      const access = await loadOrganizationAccess(organizationRow.id, context.session.user.id);
+      return {
+        organization: {
+          ...organizationRow,
+          createdAt: organizationRow.createdAt.toISOString(),
+        },
+        access: accessContextOutput(access),
+      };
+    },
+  ),
   accessContext: protectedImplementer.organization.accessContext.handler(
     async ({ context, input }) => {
       const access = await loadOrganizationAccess(input.organizationId, context.session.user.id);
-      return {
-        organizationId: access.organizationId,
-        role: access.role,
-        isOwner: access.isOwner,
-        status: access.archivedAt ? "archived" : "active",
-        operations: access.operations,
-      };
+      return accessContextOutput(access);
+    },
+  ),
+  grantableRoles: protectedImplementer.organization.grantableRoles.handler(
+    async ({ context, input }) => {
+      const access = await loadOrganizationAccess(input.organizationId, context.session.user.id);
+      const [resource, action] = input.operation.split(".");
+      if (!roleAllows(access.statements, resource ?? "", action ?? "")) {
+        fail("FORBIDDEN", "You are not allowed to assign organization roles.");
+      }
+
+      const customRoles = await db
+        .select({ role: organizationRole.role, permission: organizationRole.permission })
+        .from(organizationRole)
+        .where(eq(organizationRole.organizationId, input.organizationId));
+      const candidates = [
+        ...Object.entries(roles).map(([name, role]) => ({
+          name,
+          custom: false,
+          statements: role.statements as Record<string, string[]>,
+        })),
+        ...customRoles.map(({ role, permission }) => ({
+          name: role,
+          custom: true,
+          statements: getRoleStatements(role, permission),
+        })),
+      ];
+
+      return candidates
+        .filter(({ name, statements }) => {
+          if (name === "owner" || !containsPermissions(statements, access.statements)) return false;
+          if (!access.isOwner && isAdminEquivalent(statements)) return false;
+          return true;
+        })
+        .map(({ name, custom }) => ({ name, custom }));
     },
   ),
   archive: protectedImplementer.organization.archive.handler(async ({ context, input }) => {

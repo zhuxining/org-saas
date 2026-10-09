@@ -139,6 +139,21 @@ postgresDescribe("restricted organization and platform API", () => {
     const invitationManagerStats = await invitationManagerClient.dashboard.orgStats({
       orgId: organization.id,
     });
+    const ownerResolved = await ownerClient.organization.resolveBySlug({ slug: organization.slug });
+    expect(ownerResolved).toMatchObject({
+      organization: { id: organization.id, slug: organization.slug },
+      access: { role: "owner", isOwner: true, status: "active" },
+    });
+    const memberResolved = await memberClient.organization.resolveBySlug({
+      slug: organization.slug,
+    });
+    expect(memberResolved.access).toMatchObject({
+      role: "member",
+      isOwner: false,
+      status: "active",
+      operations: { organization: { update: false, archive: false } },
+    });
+
     const ownerAccess = await ownerClient.organization.accessContext({
       organizationId: organization.id,
     });
@@ -189,9 +204,17 @@ postgresDescribe("restricted organization and platform API", () => {
       { code: "FORBIDDEN" },
     );
 
+    const ownerOrganizations = await environment.auth.api.listOrganizations({
+      headers: owner.headers,
+    });
+    expect(ownerOrganizations.some((item) => item.id === organization.id)).toBe(true);
     const ownerArchivedContext = await ownerClient.organization.accessContext({
       organizationId: organization.id,
     });
+    const archivedResolved = await ownerClient.organization.resolveBySlug({
+      slug: organization.slug,
+    });
+    expect(archivedResolved.access.status).toBe("archived");
     expect(ownerArchivedContext.status).toBe("archived");
     expect(ownerArchivedContext.operations.organization).toEqual({
       update: false,
@@ -264,6 +287,44 @@ postgresDescribe("restricted organization and platform API", () => {
       .set({ role: "user, platform-admin" })
       .where(environment.eq(environment.schema.user.id, platformAdmin.userId));
     const adminClient = createCaller(environment, platformAdmin.headers);
+
+    await environment.auth.api.createOrgRole({
+      body: {
+        organizationId: organizationA.id,
+        role: "member-role-manager",
+        permission: { member: ["update"], team: ["create"] },
+      },
+      headers: userA.headers,
+    });
+    const addMemberWithCustomRole = environment.auth.api.addMember as unknown as (input: {
+      body: { organizationId: string; userId: string; role: string };
+      headers: Headers;
+    }) => Promise<unknown>;
+    await addMemberWithCustomRole({
+      body: {
+        organizationId: organizationA.id,
+        userId: ordinaryUser.userId,
+        role: "member-role-manager",
+      },
+      headers: userA.headers,
+    });
+    const managerClient = createCaller(environment, ordinaryUser.headers);
+    const assignableRoles = await managerClient.organization.grantableRoles({
+      organizationId: organizationA.id,
+      operation: "member.update",
+    });
+    expect(assignableRoles.map(({ name }) => name)).toEqual(
+      expect.arrayContaining(["member", "member-role-manager"]),
+    );
+    expect(assignableRoles.map(({ name }) => name)).not.toEqual(
+      expect.arrayContaining(["owner", "admin"]),
+    );
+    await expect(
+      managerClient.organization.grantableRoles({
+        organizationId: organizationA.id,
+        operation: "invitation.create",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
 
     const organizations = await adminClient.platform.listOrganizations({
       search: organizationA.slug,

@@ -13,6 +13,7 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authenticated/dashboard/route'
 import { Route as AuthenticatedMeRouteRouteImport } from './routes/_authenticated/me/route'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
@@ -25,16 +26,21 @@ import { Route as PublicLandingIndexRouteImport } from './routes/_public/landing
 import { Route as PublicPricingIndexRouteImport } from './routes/_public/pricing/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
+import { Route as AuthenticatedAdminOrganizationsIndexRouteImport } from './routes/_authenticated/admin/organizations/index'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedDashboardOrgsNewRouteImport } from './routes/_authenticated/dashboard/orgs/new'
 import { Route as AuthenticatedDashboardProfileIndexRouteImport } from './routes/_authenticated/dashboard/profile/index'
 import { Route as AuthenticatedMeOrganizationsIndexRouteImport } from './routes/_authenticated/me/organizations/index'
 import { Route as AuthenticatedMeOrganizationsNewRouteImport } from './routes/_authenticated/me/organizations/new'
-import { Route as AuthenticatedOrgOrgSlugIndexRouteImport } from './routes/_authenticated/org/$orgSlug/index'
+import { Route as AuthenticatedOrgOrgSlugActiveRouteRouteImport } from './routes/_authenticated/org/$orgSlug/_active/route'
+import { Route as AuthenticatedOrgOrgSlugArchivedRouteImport } from './routes/_authenticated/org/$orgSlug/archived'
 import { Route as AuthenticatedMeSettingsProfileIndexRouteImport } from './routes/_authenticated/me/settings/profile/index'
-import { Route as AuthenticatedOrgOrgSlugMembersIndexRouteImport } from './routes/_authenticated/org/$orgSlug/members/index'
-import { Route as AuthenticatedOrgOrgSlugSettingsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/settings/index'
-import { Route as AuthenticatedOrgOrgSlugTeamsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/teams/index'
-import { Route as AuthenticatedOrgOrgSlugTeamsTeamIdRouteImport } from './routes/_authenticated/org/$orgSlug/teams/$teamId'
+import { Route as AuthenticatedOrgOrgSlugActiveIndexRouteImport } from './routes/_authenticated/org/$orgSlug/_active/index'
+import { Route as AuthenticatedOrgOrgSlugActiveMembersIndexRouteImport } from './routes/_authenticated/org/$orgSlug/_active/members/index'
+import { Route as AuthenticatedOrgOrgSlugActiveRolesIndexRouteImport } from './routes/_authenticated/org/$orgSlug/_active/roles/index'
+import { Route as AuthenticatedOrgOrgSlugActiveSettingsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/_active/settings/index'
+import { Route as AuthenticatedOrgOrgSlugActiveTeamsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/_active/teams/index'
+import { Route as AuthenticatedOrgOrgSlugActiveTeamsTeamIdRouteImport } from './routes/_authenticated/org/$orgSlug/_active/teams/$teamId'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -52,6 +58,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRouteRoute =
   AuthenticatedDashboardRouteRouteImport.update({
@@ -116,6 +127,18 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   path: '/api/rpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminOrganizationsIndexRoute =
+  AuthenticatedAdminOrganizationsIndexRouteImport.update({
+    id: '/organizations/',
+    path: '/organizations/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedDashboardOrgsNewRoute =
   AuthenticatedDashboardOrgsNewRouteImport.update({
     id: '/orgs/new',
@@ -140,10 +163,15 @@ const AuthenticatedMeOrganizationsNewRoute =
     path: '/organizations/new',
     getParentRoute: () => AuthenticatedMeRouteRoute,
   } as any)
-const AuthenticatedOrgOrgSlugIndexRoute =
-  AuthenticatedOrgOrgSlugIndexRouteImport.update({
-    id: '/',
-    path: '/',
+const AuthenticatedOrgOrgSlugActiveRouteRoute =
+  AuthenticatedOrgOrgSlugActiveRouteRouteImport.update({
+    id: '/_active',
+    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugArchivedRoute =
+  AuthenticatedOrgOrgSlugArchivedRouteImport.update({
+    id: '/archived',
+    path: '/archived',
     getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
   } as any)
 const AuthenticatedMeSettingsProfileIndexRoute =
@@ -152,33 +180,46 @@ const AuthenticatedMeSettingsProfileIndexRoute =
     path: '/settings/profile/',
     getParentRoute: () => AuthenticatedMeRouteRoute,
   } as any)
-const AuthenticatedOrgOrgSlugMembersIndexRoute =
-  AuthenticatedOrgOrgSlugMembersIndexRouteImport.update({
+const AuthenticatedOrgOrgSlugActiveIndexRoute =
+  AuthenticatedOrgOrgSlugActiveIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOrgOrgSlugActiveRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugActiveMembersIndexRoute =
+  AuthenticatedOrgOrgSlugActiveMembersIndexRouteImport.update({
     id: '/members/',
     path: '/members/',
-    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+    getParentRoute: () => AuthenticatedOrgOrgSlugActiveRouteRoute,
   } as any)
-const AuthenticatedOrgOrgSlugSettingsIndexRoute =
-  AuthenticatedOrgOrgSlugSettingsIndexRouteImport.update({
+const AuthenticatedOrgOrgSlugActiveRolesIndexRoute =
+  AuthenticatedOrgOrgSlugActiveRolesIndexRouteImport.update({
+    id: '/roles/',
+    path: '/roles/',
+    getParentRoute: () => AuthenticatedOrgOrgSlugActiveRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugActiveSettingsIndexRoute =
+  AuthenticatedOrgOrgSlugActiveSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
-    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+    getParentRoute: () => AuthenticatedOrgOrgSlugActiveRouteRoute,
   } as any)
-const AuthenticatedOrgOrgSlugTeamsIndexRoute =
-  AuthenticatedOrgOrgSlugTeamsIndexRouteImport.update({
+const AuthenticatedOrgOrgSlugActiveTeamsIndexRoute =
+  AuthenticatedOrgOrgSlugActiveTeamsIndexRouteImport.update({
     id: '/teams/',
     path: '/teams/',
-    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+    getParentRoute: () => AuthenticatedOrgOrgSlugActiveRouteRoute,
   } as any)
-const AuthenticatedOrgOrgSlugTeamsTeamIdRoute =
-  AuthenticatedOrgOrgSlugTeamsTeamIdRouteImport.update({
+const AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute =
+  AuthenticatedOrgOrgSlugActiveTeamsTeamIdRouteImport.update({
     id: '/teams/$teamId',
     path: '/teams/$teamId',
-    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+    getParentRoute: () => AuthenticatedOrgOrgSlugActiveRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
   '/me': typeof AuthenticatedMeRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
@@ -193,19 +234,25 @@ export interface FileRoutesByFullPath {
   '/pricing/': typeof PublicPricingIndexRoute
   '/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
   '/me/organizations/new': typeof AuthenticatedMeOrganizationsNewRoute
+  '/org/$orgSlug/archived': typeof AuthenticatedOrgOrgSlugArchivedRoute
+  '/admin/organizations/': typeof AuthenticatedAdminOrganizationsIndexRoute
+  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/dashboard/profile/': typeof AuthenticatedDashboardProfileIndexRoute
   '/me/organizations/': typeof AuthenticatedMeOrganizationsIndexRoute
-  '/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugIndexRoute
-  '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
   '/me/settings/profile/': typeof AuthenticatedMeSettingsProfileIndexRoute
-  '/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
-  '/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
-  '/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
+  '/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugActiveIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute
+  '/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugActiveMembersIndexRoute
+  '/org/$orgSlug/roles/': typeof AuthenticatedOrgOrgSlugActiveRolesIndexRoute
+  '/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugActiveSettingsIndexRoute
+  '/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugActiveTeamsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/org/$orgSlug': typeof AuthenticatedOrgOrgSlugActiveIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -215,20 +262,24 @@ export interface FileRoutesByTo {
   '/pricing': typeof PublicPricingIndexRoute
   '/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
   '/me/organizations/new': typeof AuthenticatedMeOrganizationsNewRoute
+  '/org/$orgSlug/archived': typeof AuthenticatedOrgOrgSlugArchivedRoute
+  '/admin/organizations': typeof AuthenticatedAdminOrganizationsIndexRoute
+  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileIndexRoute
   '/me/organizations': typeof AuthenticatedMeOrganizationsIndexRoute
-  '/org/$orgSlug': typeof AuthenticatedOrgOrgSlugIndexRoute
-  '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
   '/me/settings/profile': typeof AuthenticatedMeSettingsProfileIndexRoute
-  '/org/$orgSlug/members': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
-  '/org/$orgSlug/settings': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
-  '/org/$orgSlug/teams': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute
+  '/org/$orgSlug/members': typeof AuthenticatedOrgOrgSlugActiveMembersIndexRoute
+  '/org/$orgSlug/roles': typeof AuthenticatedOrgOrgSlugActiveRolesIndexRoute
+  '/org/$orgSlug/settings': typeof AuthenticatedOrgOrgSlugActiveSettingsIndexRoute
+  '/org/$orgSlug/teams': typeof AuthenticatedOrgOrgSlugActiveTeamsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
   '/_authenticated/me': typeof AuthenticatedMeRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
@@ -242,21 +293,27 @@ export interface FileRoutesById {
   '/_public/about/': typeof PublicAboutIndexRoute
   '/_public/landing/': typeof PublicLandingIndexRoute
   '/_public/pricing/': typeof PublicPricingIndexRoute
+  '/_authenticated/org/$orgSlug/_active': typeof AuthenticatedOrgOrgSlugActiveRouteRouteWithChildren
   '/_authenticated/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
   '/_authenticated/me/organizations/new': typeof AuthenticatedMeOrganizationsNewRoute
+  '/_authenticated/org/$orgSlug/archived': typeof AuthenticatedOrgOrgSlugArchivedRoute
+  '/_authenticated/admin/organizations/': typeof AuthenticatedAdminOrganizationsIndexRoute
+  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/_authenticated/dashboard/profile/': typeof AuthenticatedDashboardProfileIndexRoute
   '/_authenticated/me/organizations/': typeof AuthenticatedMeOrganizationsIndexRoute
-  '/_authenticated/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugIndexRoute
-  '/_authenticated/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
   '/_authenticated/me/settings/profile/': typeof AuthenticatedMeSettingsProfileIndexRoute
-  '/_authenticated/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
-  '/_authenticated/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
-  '/_authenticated/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
+  '/_authenticated/org/$orgSlug/_active/': typeof AuthenticatedOrgOrgSlugActiveIndexRoute
+  '/_authenticated/org/$orgSlug/_active/teams/$teamId': typeof AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute
+  '/_authenticated/org/$orgSlug/_active/members/': typeof AuthenticatedOrgOrgSlugActiveMembersIndexRoute
+  '/_authenticated/org/$orgSlug/_active/roles/': typeof AuthenticatedOrgOrgSlugActiveRolesIndexRoute
+  '/_authenticated/org/$orgSlug/_active/settings/': typeof AuthenticatedOrgOrgSlugActiveSettingsIndexRoute
+  '/_authenticated/org/$orgSlug/_active/teams/': typeof AuthenticatedOrgOrgSlugActiveTeamsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/me'
     | '/login'
@@ -271,19 +328,25 @@ export interface FileRouteTypes {
     | '/pricing/'
     | '/dashboard/orgs/new'
     | '/me/organizations/new'
+    | '/org/$orgSlug/archived'
+    | '/admin/organizations/'
+    | '/admin/users/'
     | '/dashboard/profile/'
     | '/me/organizations/'
+    | '/me/settings/profile/'
     | '/org/$orgSlug/'
     | '/org/$orgSlug/teams/$teamId'
-    | '/me/settings/profile/'
     | '/org/$orgSlug/members/'
+    | '/org/$orgSlug/roles/'
     | '/org/$orgSlug/settings/'
     | '/org/$orgSlug/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/login'
     | '/invite/$token'
+    | '/org/$orgSlug'
     | '/api/auth/$'
     | '/api/rpc/$'
     | '/dashboard'
@@ -293,12 +356,15 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/dashboard/orgs/new'
     | '/me/organizations/new'
+    | '/org/$orgSlug/archived'
+    | '/admin/organizations'
+    | '/admin/users'
     | '/dashboard/profile'
     | '/me/organizations'
-    | '/org/$orgSlug'
-    | '/org/$orgSlug/teams/$teamId'
     | '/me/settings/profile'
+    | '/org/$orgSlug/teams/$teamId'
     | '/org/$orgSlug/members'
+    | '/org/$orgSlug/roles'
     | '/org/$orgSlug/settings'
     | '/org/$orgSlug/teams'
   id:
@@ -306,6 +372,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_authenticated'
     | '/_public'
+    | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/me'
     | '/_auth/login'
@@ -319,16 +386,21 @@ export interface FileRouteTypes {
     | '/_public/about/'
     | '/_public/landing/'
     | '/_public/pricing/'
+    | '/_authenticated/org/$orgSlug/_active'
     | '/_authenticated/dashboard/orgs/new'
     | '/_authenticated/me/organizations/new'
+    | '/_authenticated/org/$orgSlug/archived'
+    | '/_authenticated/admin/organizations/'
+    | '/_authenticated/admin/users/'
     | '/_authenticated/dashboard/profile/'
     | '/_authenticated/me/organizations/'
-    | '/_authenticated/org/$orgSlug/'
-    | '/_authenticated/org/$orgSlug/teams/$teamId'
     | '/_authenticated/me/settings/profile/'
-    | '/_authenticated/org/$orgSlug/members/'
-    | '/_authenticated/org/$orgSlug/settings/'
-    | '/_authenticated/org/$orgSlug/teams/'
+    | '/_authenticated/org/$orgSlug/_active/'
+    | '/_authenticated/org/$orgSlug/_active/teams/$teamId'
+    | '/_authenticated/org/$orgSlug/_active/members/'
+    | '/_authenticated/org/$orgSlug/_active/roles/'
+    | '/_authenticated/org/$orgSlug/_active/settings/'
+    | '/_authenticated/org/$orgSlug/_active/teams/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -369,6 +441,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -454,6 +533,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/organizations/': {
+      id: '/_authenticated/admin/organizations/'
+      path: '/organizations'
+      fullPath: '/admin/organizations/'
+      preLoaderRoute: typeof AuthenticatedAdminOrganizationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/users/': {
+      id: '/_authenticated/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/dashboard/orgs/new': {
       id: '/_authenticated/dashboard/orgs/new'
       path: '/orgs/new'
@@ -482,11 +575,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeOrganizationsNewRouteImport
       parentRoute: typeof AuthenticatedMeRouteRoute
     }
-    '/_authenticated/org/$orgSlug/': {
-      id: '/_authenticated/org/$orgSlug/'
-      path: '/'
-      fullPath: '/org/$orgSlug/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgSlugIndexRouteImport
+    '/_authenticated/org/$orgSlug/_active': {
+      id: '/_authenticated/org/$orgSlug/_active'
+      path: ''
+      fullPath: '/org/$orgSlug'
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
+    }
+    '/_authenticated/org/$orgSlug/archived': {
+      id: '/_authenticated/org/$orgSlug/archived'
+      path: '/archived'
+      fullPath: '/org/$orgSlug/archived'
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugArchivedRouteImport
       parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
     }
     '/_authenticated/me/settings/profile/': {
@@ -496,33 +596,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeSettingsProfileIndexRouteImport
       parentRoute: typeof AuthenticatedMeRouteRoute
     }
-    '/_authenticated/org/$orgSlug/members/': {
-      id: '/_authenticated/org/$orgSlug/members/'
+    '/_authenticated/org/$orgSlug/_active/': {
+      id: '/_authenticated/org/$orgSlug/_active/'
+      path: '/'
+      fullPath: '/org/$orgSlug/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRoute
+    }
+    '/_authenticated/org/$orgSlug/_active/members/': {
+      id: '/_authenticated/org/$orgSlug/_active/members/'
       path: '/members'
       fullPath: '/org/$orgSlug/members/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgSlugMembersIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveMembersIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRoute
     }
-    '/_authenticated/org/$orgSlug/settings/': {
-      id: '/_authenticated/org/$orgSlug/settings/'
+    '/_authenticated/org/$orgSlug/_active/roles/': {
+      id: '/_authenticated/org/$orgSlug/_active/roles/'
+      path: '/roles'
+      fullPath: '/org/$orgSlug/roles/'
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRoute
+    }
+    '/_authenticated/org/$orgSlug/_active/settings/': {
+      id: '/_authenticated/org/$orgSlug/_active/settings/'
       path: '/settings'
       fullPath: '/org/$orgSlug/settings/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgSlugSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRoute
     }
-    '/_authenticated/org/$orgSlug/teams/': {
-      id: '/_authenticated/org/$orgSlug/teams/'
+    '/_authenticated/org/$orgSlug/_active/teams/': {
+      id: '/_authenticated/org/$orgSlug/_active/teams/'
       path: '/teams'
       fullPath: '/org/$orgSlug/teams/'
-      preLoaderRoute: typeof AuthenticatedOrgOrgSlugTeamsIndexRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveTeamsIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRoute
     }
-    '/_authenticated/org/$orgSlug/teams/$teamId': {
-      id: '/_authenticated/org/$orgSlug/teams/$teamId'
+    '/_authenticated/org/$orgSlug/_active/teams/$teamId': {
+      id: '/_authenticated/org/$orgSlug/_active/teams/$teamId'
       path: '/teams/$teamId'
       fullPath: '/org/$orgSlug/teams/$teamId'
-      preLoaderRoute: typeof AuthenticatedOrgOrgSlugTeamsTeamIdRouteImport
-      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugActiveTeamsTeamIdRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRoute
     }
   }
 }
@@ -538,6 +652,23 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
+
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminOrganizationsIndexRoute: typeof AuthenticatedAdminOrganizationsIndexRoute
+  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminOrganizationsIndexRoute:
+      AuthenticatedAdminOrganizationsIndexRoute,
+    AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
 
 interface AuthenticatedDashboardRouteRouteChildren {
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -577,25 +708,46 @@ const AuthenticatedMeRouteRouteChildren: AuthenticatedMeRouteRouteChildren = {
 const AuthenticatedMeRouteRouteWithChildren =
   AuthenticatedMeRouteRoute._addFileChildren(AuthenticatedMeRouteRouteChildren)
 
+interface AuthenticatedOrgOrgSlugActiveRouteRouteChildren {
+  AuthenticatedOrgOrgSlugActiveIndexRoute: typeof AuthenticatedOrgOrgSlugActiveIndexRoute
+  AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute: typeof AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute
+  AuthenticatedOrgOrgSlugActiveMembersIndexRoute: typeof AuthenticatedOrgOrgSlugActiveMembersIndexRoute
+  AuthenticatedOrgOrgSlugActiveRolesIndexRoute: typeof AuthenticatedOrgOrgSlugActiveRolesIndexRoute
+  AuthenticatedOrgOrgSlugActiveSettingsIndexRoute: typeof AuthenticatedOrgOrgSlugActiveSettingsIndexRoute
+  AuthenticatedOrgOrgSlugActiveTeamsIndexRoute: typeof AuthenticatedOrgOrgSlugActiveTeamsIndexRoute
+}
+
+const AuthenticatedOrgOrgSlugActiveRouteRouteChildren: AuthenticatedOrgOrgSlugActiveRouteRouteChildren =
+  {
+    AuthenticatedOrgOrgSlugActiveIndexRoute:
+      AuthenticatedOrgOrgSlugActiveIndexRoute,
+    AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute:
+      AuthenticatedOrgOrgSlugActiveTeamsTeamIdRoute,
+    AuthenticatedOrgOrgSlugActiveMembersIndexRoute:
+      AuthenticatedOrgOrgSlugActiveMembersIndexRoute,
+    AuthenticatedOrgOrgSlugActiveRolesIndexRoute:
+      AuthenticatedOrgOrgSlugActiveRolesIndexRoute,
+    AuthenticatedOrgOrgSlugActiveSettingsIndexRoute:
+      AuthenticatedOrgOrgSlugActiveSettingsIndexRoute,
+    AuthenticatedOrgOrgSlugActiveTeamsIndexRoute:
+      AuthenticatedOrgOrgSlugActiveTeamsIndexRoute,
+  }
+
+const AuthenticatedOrgOrgSlugActiveRouteRouteWithChildren =
+  AuthenticatedOrgOrgSlugActiveRouteRoute._addFileChildren(
+    AuthenticatedOrgOrgSlugActiveRouteRouteChildren,
+  )
+
 interface AuthenticatedOrgOrgSlugRouteRouteChildren {
-  AuthenticatedOrgOrgSlugIndexRoute: typeof AuthenticatedOrgOrgSlugIndexRoute
-  AuthenticatedOrgOrgSlugTeamsTeamIdRoute: typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
-  AuthenticatedOrgOrgSlugMembersIndexRoute: typeof AuthenticatedOrgOrgSlugMembersIndexRoute
-  AuthenticatedOrgOrgSlugSettingsIndexRoute: typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
-  AuthenticatedOrgOrgSlugTeamsIndexRoute: typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
+  AuthenticatedOrgOrgSlugActiveRouteRoute: typeof AuthenticatedOrgOrgSlugActiveRouteRouteWithChildren
+  AuthenticatedOrgOrgSlugArchivedRoute: typeof AuthenticatedOrgOrgSlugArchivedRoute
 }
 
 const AuthenticatedOrgOrgSlugRouteRouteChildren: AuthenticatedOrgOrgSlugRouteRouteChildren =
   {
-    AuthenticatedOrgOrgSlugIndexRoute: AuthenticatedOrgOrgSlugIndexRoute,
-    AuthenticatedOrgOrgSlugTeamsTeamIdRoute:
-      AuthenticatedOrgOrgSlugTeamsTeamIdRoute,
-    AuthenticatedOrgOrgSlugMembersIndexRoute:
-      AuthenticatedOrgOrgSlugMembersIndexRoute,
-    AuthenticatedOrgOrgSlugSettingsIndexRoute:
-      AuthenticatedOrgOrgSlugSettingsIndexRoute,
-    AuthenticatedOrgOrgSlugTeamsIndexRoute:
-      AuthenticatedOrgOrgSlugTeamsIndexRoute,
+    AuthenticatedOrgOrgSlugActiveRouteRoute:
+      AuthenticatedOrgOrgSlugActiveRouteRouteWithChildren,
+    AuthenticatedOrgOrgSlugArchivedRoute: AuthenticatedOrgOrgSlugArchivedRoute,
   }
 
 const AuthenticatedOrgOrgSlugRouteRouteWithChildren =
@@ -604,12 +756,14 @@ const AuthenticatedOrgOrgSlugRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedDashboardRouteRoute: typeof AuthenticatedDashboardRouteRouteWithChildren
   AuthenticatedMeRouteRoute: typeof AuthenticatedMeRouteRouteWithChildren
   AuthenticatedOrgOrgSlugRouteRoute: typeof AuthenticatedOrgOrgSlugRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedDashboardRouteRoute:
     AuthenticatedDashboardRouteRouteWithChildren,
   AuthenticatedMeRouteRoute: AuthenticatedMeRouteRouteWithChildren,

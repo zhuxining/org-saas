@@ -416,11 +416,12 @@ export function createOrganizationPolicyPlugin(
             }
 
             const isOrganizationCreation = path === "/organization/create";
+            const isOrganizationList = path === "/organization/list";
             const isDeactivation =
               path === "/organization/set-active" &&
               body.organizationId === null &&
               body.organizationSlug === undefined;
-            if (!isOrganizationCreation && !isDeactivation) {
+            if (!isOrganizationCreation && !isDeactivation && !isOrganizationList) {
               organizationId ??= session?.session.activeOrganizationId ?? undefined;
             }
             if (!organization && organizationId) {
