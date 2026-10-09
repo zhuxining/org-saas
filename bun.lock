@@ -56,6 +56,7 @@
         "@org-saas/ui": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
+        "@orpc/ratelimit": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/tanstack-query": "catalog:",
         "@orpc/zod": "catalog:",
@@ -103,6 +104,8 @@
         "@org-saas/env": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
+        "@orpc/pino": "catalog:",
+        "@orpc/ratelimit": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
         "dotenv": "catalog:",
@@ -504,6 +507,10 @@
     "@orpc/json-schema": ["@orpc/json-schema@2.0.0-beta.42", "", { "dependencies": { "@openapi-spec/types": "~0.3.0", "@orpc/client": "2.0.0-beta.42", "@orpc/contract": "2.0.0-beta.42", "@orpc/server": "2.0.0-beta.42", "@orpc/shared": "2.0.0-beta.42", "@standard-schema/spec": "^1.1.0" } }, "sha512-iw/NsGLkTS3Blqb7TUzCSITaD6DMTuKIxMyoNT3TJBId3hC5JaEm4eiKktg4xA0zWn8NdUbOcsg+1E+l7b95fg=="],
 
     "@orpc/openapi": ["@orpc/openapi@2.0.0-beta.42", "", { "dependencies": { "@openapi-spec/downgrader": "~0.3.0", "@openapi-spec/types": "~0.3.0", "@orpc/client": "2.0.0-beta.42", "@orpc/contract": "2.0.0-beta.42", "@orpc/json-schema": "2.0.0-beta.42", "@orpc/server": "2.0.0-beta.42", "@orpc/shared": "2.0.0-beta.42", "@standard-server/core": "~0.10.1", "@standard-server/fetch": "~0.10.1", "rou3": "^1.0.0" }, "peerDependencies": { "@scalar/api-reference": ">=1.57.2", "@types/swagger-ui": ">=5.32.0", "swagger-ui": ">=5.32.6" }, "optionalPeers": ["@scalar/api-reference", "@types/swagger-ui", "swagger-ui"] }, "sha512-u4DdwDVXvSQBDsA//IP6i+kHDUlu+6eNsI45+8YnXeGxm+4+/ePq24zZoOrZbafTM2pevXQO+aGD2wtFNdjK0w=="],
+
+    "@orpc/pino": ["@orpc/pino@2.0.0-beta.42", "", { "dependencies": { "@orpc/client": "2.0.0-beta.42", "@orpc/server": "2.0.0-beta.42", "@orpc/shared": "2.0.0-beta.42", "@standard-server/core": "~0.10.1" }, "peerDependencies": { "pino": ">=10.1.0" } }, "sha512-1ePhCUtAVgMYCB9cqDi6eqcEq8gka0TMIobHPKVM8u9Jfkn/VYJCT1/WFox+Yq6rKdi+4gRYQA9jBeAI8nt0LQ=="],
+
+    "@orpc/ratelimit": ["@orpc/ratelimit@2.0.0-beta.42", "", { "dependencies": { "@orpc/server": "2.0.0-beta.42", "@orpc/shared": "2.0.0-beta.42", "@standard-server/core": "~0.10.1" }, "peerDependencies": { "@upstash/ratelimit": ">=2.0.8", "redis": ">=6.0.0" }, "optionalPeers": ["@upstash/ratelimit", "redis"] }, "sha512-zun8y7Eb+ZJoez19/P65/5JC0rB8w74iVownLsyypn0lysDLrGEFg690dGfmbJJvTsBW+Y5ePYpei1e0CWmJ6w=="],
 
     "@orpc/server": ["@orpc/server@2.0.0-beta.42", "", { "dependencies": { "@orpc/client": "2.0.0-beta.42", "@orpc/contract": "2.0.0-beta.42", "@orpc/shared": "2.0.0-beta.42", "@standard-server/aws-lambda": "~0.10.1", "@standard-server/core": "~0.10.1", "@standard-server/fastify": "~0.10.1", "@standard-server/fetch": "~0.10.1", "@standard-server/node": "~0.10.1", "@standard-server/peer": "~0.10.1", "cookie": "^2.0.1" }, "peerDependencies": { "crossws": ">=0.3.4", "fastify": ">=5.6.1" }, "optionalPeers": ["crossws", "fastify"] }, "sha512-gZXjfrKnYBNTgv70C3OB1ct04rbbMXOzX+sVx393YvcoEOjUr1cO8BwMBpIAQwaS42NKcoIjjo4zXF0dXOyb3Q=="],
 

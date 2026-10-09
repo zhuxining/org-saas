@@ -18,6 +18,8 @@
     "@org-saas/env": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
+    "@orpc/pino": "catalog:",
+    "@orpc/ratelimit": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "dotenv": "catalog:",

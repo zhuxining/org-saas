@@ -1,6 +1,6 @@
-import { getLogger, type LoggerContext } from "@orpc/experimental-pino";
-import { createRatelimitMiddleware, type Ratelimiter } from "@orpc/experimental-ratelimit";
-import { MemoryRatelimiter } from "@orpc/experimental-ratelimit/memory";
+import { getLogger, type LoggerContext } from "@orpc/pino";
+import { ratelimit, type RateLimiter } from "@orpc/ratelimit";
+import { MemoryRateLimiter } from "@orpc/ratelimit/memory";
 import { ORPCError, os } from "@orpc/server";
 import pino from "pino";
 
@@ -16,7 +16,7 @@ const logger = pino({
 });
 
 // 创建不同级别的限制器
-export const standardLimiter = new MemoryRatelimiter({
+export const standardLimiter = new MemoryRateLimiter({
   maxRequests: 100,
   window: 60000,
   blockingUntilReady: {
@@ -25,9 +25,9 @@ export const standardLimiter = new MemoryRatelimiter({
   },
 });
 
-// 扩展 Context 类型以包含 LoggerContext,Ratelimiter
+// Extend the context with the request logger and rate limiter.
 export interface EnhancedContext extends Context, LoggerContext {
-  ratelimiter: Ratelimiter;
+  ratelimiter: RateLimiter;
 }
 
 export const o = os.$context<EnhancedContext>();
@@ -50,7 +50,7 @@ export const protectedProcedure = publicProcedure.use(requireAuth);
 
 // 速率限制中间件
 export const rateLimitedProcedure = protectedProcedure.use(
-  createRatelimitMiddleware({
+  ratelimit({
     limiter: ({ context }) => context.ratelimiter,
     key: ({ context }, _input) => `${context.session.user.id}:global`,
   }),

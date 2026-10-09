@@ -1,16 +1,17 @@
 import { createContext } from "@org-saas/api/context";
 import { standardLimiter } from "@org-saas/api/index";
 import { appRouter } from "@org-saas/api/routers/index";
-import { RatelimitHandlerPlugin } from "@orpc/experimental-ratelimit";
+import { OpenAPIGenerator } from "@orpc/openapi";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { OpenAPIReferenceHandlerPlugin } from "@orpc/openapi/plugins";
+import { RateLimitHandlerPlugin } from "@orpc/ratelimit";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod";
 import { createFileRoute } from "@tanstack/react-router";
 
 const rpcHandler = new RPCHandler(appRouter, {
-  plugins: [new RatelimitHandlerPlugin()],
+  plugins: [new RateLimitHandlerPlugin()],
   interceptors: [
     onError((error) => {
       console.error(error);
@@ -18,18 +19,19 @@ const rpcHandler = new RPCHandler(appRouter, {
   ],
 });
 
+const openAPISpec = new OpenAPIGenerator({
+  converters: [new ZodToJsonSchemaConverter()],
+}).generate(appRouter, {
+  base: {
+    info: {
+      title: "org-saas API",
+      version: "1.0.0",
+    },
+  },
+});
+
 const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-      specGenerateOptions: {
-        info: {
-          title: "org-saas API",
-          version: "1.0.0",
-        },
-      },
-    }),
-  ],
+  plugins: [new OpenAPIReferenceHandlerPlugin({ spec: openAPISpec })],
   interceptors: [
     onError((error) => {
       console.error(error);
