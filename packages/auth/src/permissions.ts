@@ -1,26 +1,23 @@
 import { createAccessControl } from "better-auth/plugins/access";
-import { adminAc, defaultStatements } from "better-auth/plugins/organization/access";
+import { defaultStatements } from "better-auth/plugins/organization/access";
 
-const statement = {
-  ...defaultStatements,
-  project: ["create", "share", "update", "delete"],
-} as const;
+const ac = createAccessControl(defaultStatements);
 
-const ac = createAccessControl(statement);
-
-const member = ac.newRole({
-  project: ["create"],
-  ...adminAc.statements,
-});
+const member = ac.newRole({});
 
 const admin = ac.newRole({
-  project: ["create", "update"],
-  ...adminAc.statements,
+  organization: ["update"],
+  invitation: ["create", "cancel"],
+  member: ["create", "update", "delete"],
+  team: ["create", "update", "delete"],
 });
 
 const owner = ac.newRole({
-  project: ["create", "update", "delete"],
-  ...adminAc.statements,
+  organization: ["update"],
+  invitation: ["create", "cancel"],
+  member: ["create", "update", "delete"],
+  team: ["create", "update", "delete"],
+  ac: ["create", "read", "update", "delete"],
 });
 
 export { ac };
