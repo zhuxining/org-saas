@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@org-saas/ui/components/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Check, LogOut, X } from "lucide-react";
 import { useState } from "react";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/invite/$token")({
 function InvitePage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string>();
   const invitePath = `/invite/${encodeURIComponent(token)}`;
@@ -51,6 +52,8 @@ function InvitePage() {
         setFeedback(result.error.message ?? "退出登录失败，请重试");
         return;
       }
+      queryClient.removeQueries({ queryKey: ["session"] });
+      queryClient.removeQueries({ queryKey: ["invitation", token] });
       await navigate({ to: "/login", search: { redirect: invitePath } });
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "退出登录失败，请重试");
