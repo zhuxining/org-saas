@@ -9,74 +9,87 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as publicRouteRouteImport } from './routes/(public)/route'
-import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
-import { Route as authLoginRouteImport } from './routes/(auth)/login'
-import { Route as publicIndexRouteImport } from './routes/(public)/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as OrgOrgSlugRouteRouteImport } from './routes/org/$orgSlug/route'
-import { Route as authInviteTokenRouteImport } from './routes/(auth)/invite/$token'
-import { Route as publicAboutIndexRouteImport } from './routes/(public)/about/index'
-import { Route as publicLandingIndexRouteImport } from './routes/(public)/landing/index'
-import { Route as publicPricingIndexRouteImport } from './routes/(public)/pricing/index'
+import { Route as AuthRouteRouteImport } from './routes/_auth/route'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as PublicRouteRouteImport } from './routes/_public/route'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authenticated/dashboard/route'
+import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as InviteTokenRouteImport } from './routes/invite/$token'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
+import { Route as AuthenticatedOrgOrgSlugRouteRouteImport } from './routes/_authenticated/org/$orgSlug/route'
+import { Route as PublicAboutIndexRouteImport } from './routes/_public/about/index'
+import { Route as PublicLandingIndexRouteImport } from './routes/_public/landing/index'
+import { Route as PublicPricingIndexRouteImport } from './routes/_public/pricing/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc.$'
-import { Route as DashboardOrgsNewRouteImport } from './routes/dashboard/orgs/new'
-import { Route as DashboardProfileIndexRouteImport } from './routes/dashboard/profile/index'
-import { Route as OrgOrgSlugIndexRouteImport } from './routes/org/$orgSlug/index'
-import { Route as OrgOrgSlugMembersIndexRouteImport } from './routes/org/$orgSlug/members/index'
-import { Route as OrgOrgSlugSettingsIndexRouteImport } from './routes/org/$orgSlug/settings/index'
-import { Route as OrgOrgSlugTeamsIndexRouteImport } from './routes/org/$orgSlug/teams/index'
-import { Route as OrgOrgSlugTeamsTeamIdRouteImport } from './routes/org/$orgSlug/teams/$teamId'
+import { Route as AuthenticatedDashboardOrgsNewRouteImport } from './routes/_authenticated/dashboard/orgs/new'
+import { Route as AuthenticatedDashboardProfileIndexRouteImport } from './routes/_authenticated/dashboard/profile/index'
+import { Route as AuthenticatedOrgOrgSlugIndexRouteImport } from './routes/_authenticated/org/$orgSlug/index'
+import { Route as AuthenticatedOrgOrgSlugMembersIndexRouteImport } from './routes/_authenticated/org/$orgSlug/members/index'
+import { Route as AuthenticatedOrgOrgSlugSettingsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/settings/index'
+import { Route as AuthenticatedOrgOrgSlugTeamsIndexRouteImport } from './routes/_authenticated/org/$orgSlug/teams/index'
+import { Route as AuthenticatedOrgOrgSlugTeamsTeamIdRouteImport } from './routes/_authenticated/org/$orgSlug/teams/$teamId'
 
-const publicRouteRoute = publicRouteRouteImport.update({
-  id: '/(public)',
+const AuthRouteRoute = AuthRouteRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRouteRoute = DashboardRouteRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authLoginRoute = authLoginRouteImport.update({
-  id: '/(auth)/login',
+const PublicRouteRoute = PublicRouteRouteImport.update({
+  id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthRouteRoute,
 } as any)
-const publicIndexRoute = publicIndexRouteImport.update({
+const AuthenticatedDashboardRouteRoute =
+  AuthenticatedDashboardRouteRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => publicRouteRoute,
+  getParentRoute: () => PublicRouteRoute,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const OrgOrgSlugRouteRoute = OrgOrgSlugRouteRouteImport.update({
-  id: '/org/$orgSlug',
-  path: '/org/$orgSlug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authInviteTokenRoute = authInviteTokenRouteImport.update({
-  id: '/(auth)/invite/$token',
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const publicAboutIndexRoute = publicAboutIndexRouteImport.update({
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugRouteRoute =
+  AuthenticatedOrgOrgSlugRouteRouteImport.update({
+    id: '/org/$orgSlug',
+    path: '/org/$orgSlug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const PublicAboutIndexRoute = PublicAboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
-  getParentRoute: () => publicRouteRoute,
+  getParentRoute: () => PublicRouteRoute,
 } as any)
-const publicLandingIndexRoute = publicLandingIndexRouteImport.update({
+const PublicLandingIndexRoute = PublicLandingIndexRouteImport.update({
   id: '/landing/',
   path: '/landing/',
-  getParentRoute: () => publicRouteRoute,
+  getParentRoute: () => PublicRouteRoute,
 } as any)
-const publicPricingIndexRoute = publicPricingIndexRouteImport.update({
+const PublicPricingIndexRoute = PublicPricingIndexRouteImport.update({
   id: '/pricing/',
   path: '/pricing/',
-  getParentRoute: () => publicRouteRoute,
+  getParentRoute: () => PublicRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -88,117 +101,126 @@ const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   path: '/api/rpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardOrgsNewRoute = DashboardOrgsNewRouteImport.update({
-  id: '/orgs/new',
-  path: '/orgs/new',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardProfileIndexRoute = DashboardProfileIndexRouteImport.update({
-  id: '/profile/',
-  path: '/profile/',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const OrgOrgSlugIndexRoute = OrgOrgSlugIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => OrgOrgSlugRouteRoute,
-} as any)
-const OrgOrgSlugMembersIndexRoute = OrgOrgSlugMembersIndexRouteImport.update({
-  id: '/members/',
-  path: '/members/',
-  getParentRoute: () => OrgOrgSlugRouteRoute,
-} as any)
-const OrgOrgSlugSettingsIndexRoute = OrgOrgSlugSettingsIndexRouteImport.update({
-  id: '/settings/',
-  path: '/settings/',
-  getParentRoute: () => OrgOrgSlugRouteRoute,
-} as any)
-const OrgOrgSlugTeamsIndexRoute = OrgOrgSlugTeamsIndexRouteImport.update({
-  id: '/teams/',
-  path: '/teams/',
-  getParentRoute: () => OrgOrgSlugRouteRoute,
-} as any)
-const OrgOrgSlugTeamsTeamIdRoute = OrgOrgSlugTeamsTeamIdRouteImport.update({
-  id: '/teams/$teamId',
-  path: '/teams/$teamId',
-  getParentRoute: () => OrgOrgSlugRouteRoute,
-} as any)
+const AuthenticatedDashboardOrgsNewRoute =
+  AuthenticatedDashboardOrgsNewRouteImport.update({
+    id: '/orgs/new',
+    path: '/orgs/new',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardProfileIndexRoute =
+  AuthenticatedDashboardProfileIndexRouteImport.update({
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugIndexRoute =
+  AuthenticatedOrgOrgSlugIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugMembersIndexRoute =
+  AuthenticatedOrgOrgSlugMembersIndexRouteImport.update({
+    id: '/members/',
+    path: '/members/',
+    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugSettingsIndexRoute =
+  AuthenticatedOrgOrgSlugSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugTeamsIndexRoute =
+  AuthenticatedOrgOrgSlugTeamsIndexRouteImport.update({
+    id: '/teams/',
+    path: '/teams/',
+    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
+const AuthenticatedOrgOrgSlugTeamsTeamIdRoute =
+  AuthenticatedOrgOrgSlugTeamsTeamIdRouteImport.update({
+    id: '/teams/$teamId',
+    path: '/teams/$teamId',
+    getParentRoute: () => AuthenticatedOrgOrgSlugRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/org/$orgSlug': typeof OrgOrgSlugRouteRouteWithChildren
-  '/login': typeof authLoginRoute
-  '/': typeof publicIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/invite/$token': typeof authInviteTokenRoute
+  '/': typeof PublicIndexRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
+  '/login': typeof AuthLoginRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/org/$orgSlug': typeof AuthenticatedOrgOrgSlugRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/dashboard/orgs/new': typeof DashboardOrgsNewRoute
-  '/about/': typeof publicAboutIndexRoute
-  '/landing/': typeof publicLandingIndexRoute
-  '/pricing/': typeof publicPricingIndexRoute
-  '/dashboard/profile/': typeof DashboardProfileIndexRoute
-  '/org/$orgSlug/': typeof OrgOrgSlugIndexRoute
-  '/org/$orgSlug/teams/$teamId': typeof OrgOrgSlugTeamsTeamIdRoute
-  '/org/$orgSlug/members/': typeof OrgOrgSlugMembersIndexRoute
-  '/org/$orgSlug/settings/': typeof OrgOrgSlugSettingsIndexRoute
-  '/org/$orgSlug/teams/': typeof OrgOrgSlugTeamsIndexRoute
+  '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/about/': typeof PublicAboutIndexRoute
+  '/landing/': typeof PublicLandingIndexRoute
+  '/pricing/': typeof PublicPricingIndexRoute
+  '/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
+  '/dashboard/profile/': typeof AuthenticatedDashboardProfileIndexRoute
+  '/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  '/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
+  '/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
+  '/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesByTo {
-  '/login': typeof authLoginRoute
-  '/': typeof publicIndexRoute
-  '/dashboard': typeof DashboardIndexRoute
-  '/invite/$token': typeof authInviteTokenRoute
+  '/': typeof PublicIndexRoute
+  '/login': typeof AuthLoginRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/dashboard/orgs/new': typeof DashboardOrgsNewRoute
-  '/about': typeof publicAboutIndexRoute
-  '/landing': typeof publicLandingIndexRoute
-  '/pricing': typeof publicPricingIndexRoute
-  '/dashboard/profile': typeof DashboardProfileIndexRoute
-  '/org/$orgSlug': typeof OrgOrgSlugIndexRoute
-  '/org/$orgSlug/teams/$teamId': typeof OrgOrgSlugTeamsTeamIdRoute
-  '/org/$orgSlug/members': typeof OrgOrgSlugMembersIndexRoute
-  '/org/$orgSlug/settings': typeof OrgOrgSlugSettingsIndexRoute
-  '/org/$orgSlug/teams': typeof OrgOrgSlugTeamsIndexRoute
+  '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/about': typeof PublicAboutIndexRoute
+  '/landing': typeof PublicLandingIndexRoute
+  '/pricing': typeof PublicPricingIndexRoute
+  '/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
+  '/dashboard/profile': typeof AuthenticatedDashboardProfileIndexRoute
+  '/org/$orgSlug': typeof AuthenticatedOrgOrgSlugIndexRoute
+  '/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  '/org/$orgSlug/members': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
+  '/org/$orgSlug/settings': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
+  '/org/$orgSlug/teams': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/(public)': typeof publicRouteRouteWithChildren
-  '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/org/$orgSlug': typeof OrgOrgSlugRouteRouteWithChildren
-  '/(auth)/login': typeof authLoginRoute
-  '/(public)/': typeof publicIndexRoute
-  '/dashboard/': typeof DashboardIndexRoute
-  '/(auth)/invite/$token': typeof authInviteTokenRoute
+  '/_auth': typeof AuthRouteRouteWithChildren
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_public': typeof PublicRouteRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
+  '/_auth/login': typeof AuthLoginRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/_public/': typeof PublicIndexRoute
+  '/_authenticated/org/$orgSlug': typeof AuthenticatedOrgOrgSlugRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
-  '/dashboard/orgs/new': typeof DashboardOrgsNewRoute
-  '/(public)/about/': typeof publicAboutIndexRoute
-  '/(public)/landing/': typeof publicLandingIndexRoute
-  '/(public)/pricing/': typeof publicPricingIndexRoute
-  '/dashboard/profile/': typeof DashboardProfileIndexRoute
-  '/org/$orgSlug/': typeof OrgOrgSlugIndexRoute
-  '/org/$orgSlug/teams/$teamId': typeof OrgOrgSlugTeamsTeamIdRoute
-  '/org/$orgSlug/members/': typeof OrgOrgSlugMembersIndexRoute
-  '/org/$orgSlug/settings/': typeof OrgOrgSlugSettingsIndexRoute
-  '/org/$orgSlug/teams/': typeof OrgOrgSlugTeamsIndexRoute
+  '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/_public/about/': typeof PublicAboutIndexRoute
+  '/_public/landing/': typeof PublicLandingIndexRoute
+  '/_public/pricing/': typeof PublicPricingIndexRoute
+  '/_authenticated/dashboard/orgs/new': typeof AuthenticatedDashboardOrgsNewRoute
+  '/_authenticated/dashboard/profile/': typeof AuthenticatedDashboardProfileIndexRoute
+  '/_authenticated/org/$orgSlug/': typeof AuthenticatedOrgOrgSlugIndexRoute
+  '/_authenticated/org/$orgSlug/teams/$teamId': typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  '/_authenticated/org/$orgSlug/members/': typeof AuthenticatedOrgOrgSlugMembersIndexRoute
+  '/_authenticated/org/$orgSlug/settings/': typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
+  '/_authenticated/org/$orgSlug/teams/': typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/dashboard'
-    | '/org/$orgSlug'
-    | '/login'
     | '/'
-    | '/dashboard/'
+    | '/dashboard'
+    | '/login'
     | '/invite/$token'
+    | '/org/$orgSlug'
     | '/api/auth/$'
     | '/api/rpc/$'
-    | '/dashboard/orgs/new'
+    | '/dashboard/'
     | '/about/'
     | '/landing/'
     | '/pricing/'
+    | '/dashboard/orgs/new'
     | '/dashboard/profile/'
     | '/org/$orgSlug/'
     | '/org/$orgSlug/teams/$teamId'
@@ -207,16 +229,16 @@ export interface FileRouteTypes {
     | '/org/$orgSlug/teams/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/login'
     | '/'
-    | '/dashboard'
+    | '/login'
     | '/invite/$token'
     | '/api/auth/$'
     | '/api/rpc/$'
-    | '/dashboard/orgs/new'
+    | '/dashboard'
     | '/about'
     | '/landing'
     | '/pricing'
+    | '/dashboard/orgs/new'
     | '/dashboard/profile'
     | '/org/$orgSlug'
     | '/org/$orgSlug/teams/$teamId'
@@ -225,108 +247,123 @@ export interface FileRouteTypes {
     | '/org/$orgSlug/teams'
   id:
     | '__root__'
-    | '/(public)'
-    | '/dashboard'
-    | '/org/$orgSlug'
-    | '/(auth)/login'
-    | '/(public)/'
-    | '/dashboard/'
-    | '/(auth)/invite/$token'
+    | '/_auth'
+    | '/_authenticated'
+    | '/_public'
+    | '/_authenticated/dashboard'
+    | '/_auth/login'
+    | '/invite/$token'
+    | '/_public/'
+    | '/_authenticated/org/$orgSlug'
     | '/api/auth/$'
     | '/api/rpc/$'
-    | '/dashboard/orgs/new'
-    | '/(public)/about/'
-    | '/(public)/landing/'
-    | '/(public)/pricing/'
-    | '/dashboard/profile/'
-    | '/org/$orgSlug/'
-    | '/org/$orgSlug/teams/$teamId'
-    | '/org/$orgSlug/members/'
-    | '/org/$orgSlug/settings/'
-    | '/org/$orgSlug/teams/'
+    | '/_authenticated/dashboard/'
+    | '/_public/about/'
+    | '/_public/landing/'
+    | '/_public/pricing/'
+    | '/_authenticated/dashboard/orgs/new'
+    | '/_authenticated/dashboard/profile/'
+    | '/_authenticated/org/$orgSlug/'
+    | '/_authenticated/org/$orgSlug/teams/$teamId'
+    | '/_authenticated/org/$orgSlug/members/'
+    | '/_authenticated/org/$orgSlug/settings/'
+    | '/_authenticated/org/$orgSlug/teams/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  publicRouteRoute: typeof publicRouteRouteWithChildren
-  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  OrgOrgSlugRouteRoute: typeof OrgOrgSlugRouteRouteWithChildren
-  authLoginRoute: typeof authLoginRoute
-  authInviteTokenRoute: typeof authInviteTokenRoute
+  AuthRouteRoute: typeof AuthRouteRouteWithChildren
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  PublicRouteRoute: typeof PublicRouteRouteWithChildren
+  InviteTokenRoute: typeof InviteTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/(public)': {
-      id: '/(public)'
+    '/_auth': {
+      id: '/_auth'
       path: ''
-      fullPath: ''
-      preLoaderRoute: typeof publicRouteRouteImport
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/login': {
-      id: '/(auth)/login'
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
       path: '/login'
       fullPath: '/login'
-      preLoaderRoute: typeof authLoginRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRouteRoute
     }
-    '/(public)/': {
-      id: '/(public)/'
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_public/': {
+      id: '/_public/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof publicIndexRouteImport
-      parentRoute: typeof publicRouteRoute
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/org/$orgSlug': {
-      id: '/org/$orgSlug'
-      path: '/org/$orgSlug'
-      fullPath: '/org/$orgSlug'
-      preLoaderRoute: typeof OrgOrgSlugRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/invite/$token': {
-      id: '/(auth)/invite/$token'
+    '/invite/$token': {
+      id: '/invite/$token'
       path: '/invite/$token'
       fullPath: '/invite/$token'
-      preLoaderRoute: typeof authInviteTokenRouteImport
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(public)/about/': {
-      id: '/(public)/about/'
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/org/$orgSlug': {
+      id: '/_authenticated/org/$orgSlug'
+      path: '/org/$orgSlug'
+      fullPath: '/org/$orgSlug'
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_public/about/': {
+      id: '/_public/about/'
       path: '/about'
       fullPath: '/about/'
-      preLoaderRoute: typeof publicAboutIndexRouteImport
-      parentRoute: typeof publicRouteRoute
+      preLoaderRoute: typeof PublicAboutIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
-    '/(public)/landing/': {
-      id: '/(public)/landing/'
+    '/_public/landing/': {
+      id: '/_public/landing/'
       path: '/landing'
       fullPath: '/landing/'
-      preLoaderRoute: typeof publicLandingIndexRouteImport
-      parentRoute: typeof publicRouteRoute
+      preLoaderRoute: typeof PublicLandingIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
-    '/(public)/pricing/': {
-      id: '/(public)/pricing/'
+    '/_public/pricing/': {
+      id: '/_public/pricing/'
       path: '/pricing'
       fullPath: '/pricing/'
-      preLoaderRoute: typeof publicPricingIndexRouteImport
-      parentRoute: typeof publicRouteRoute
+      preLoaderRoute: typeof PublicPricingIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -342,118 +379,153 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/orgs/new': {
-      id: '/dashboard/orgs/new'
+    '/_authenticated/dashboard/orgs/new': {
+      id: '/_authenticated/dashboard/orgs/new'
       path: '/orgs/new'
       fullPath: '/dashboard/orgs/new'
-      preLoaderRoute: typeof DashboardOrgsNewRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      preLoaderRoute: typeof AuthenticatedDashboardOrgsNewRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
-    '/dashboard/profile/': {
-      id: '/dashboard/profile/'
+    '/_authenticated/dashboard/profile/': {
+      id: '/_authenticated/dashboard/profile/'
       path: '/profile'
       fullPath: '/dashboard/profile/'
-      preLoaderRoute: typeof DashboardProfileIndexRouteImport
-      parentRoute: typeof DashboardRouteRoute
+      preLoaderRoute: typeof AuthenticatedDashboardProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
-    '/org/$orgSlug/': {
-      id: '/org/$orgSlug/'
+    '/_authenticated/org/$orgSlug/': {
+      id: '/_authenticated/org/$orgSlug/'
       path: '/'
       fullPath: '/org/$orgSlug/'
-      preLoaderRoute: typeof OrgOrgSlugIndexRouteImport
-      parentRoute: typeof OrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
     }
-    '/org/$orgSlug/members/': {
-      id: '/org/$orgSlug/members/'
+    '/_authenticated/org/$orgSlug/members/': {
+      id: '/_authenticated/org/$orgSlug/members/'
       path: '/members'
       fullPath: '/org/$orgSlug/members/'
-      preLoaderRoute: typeof OrgOrgSlugMembersIndexRouteImport
-      parentRoute: typeof OrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugMembersIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
     }
-    '/org/$orgSlug/settings/': {
-      id: '/org/$orgSlug/settings/'
+    '/_authenticated/org/$orgSlug/settings/': {
+      id: '/_authenticated/org/$orgSlug/settings/'
       path: '/settings'
       fullPath: '/org/$orgSlug/settings/'
-      preLoaderRoute: typeof OrgOrgSlugSettingsIndexRouteImport
-      parentRoute: typeof OrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
     }
-    '/org/$orgSlug/teams/': {
-      id: '/org/$orgSlug/teams/'
+    '/_authenticated/org/$orgSlug/teams/': {
+      id: '/_authenticated/org/$orgSlug/teams/'
       path: '/teams'
       fullPath: '/org/$orgSlug/teams/'
-      preLoaderRoute: typeof OrgOrgSlugTeamsIndexRouteImport
-      parentRoute: typeof OrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugTeamsIndexRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
     }
-    '/org/$orgSlug/teams/$teamId': {
-      id: '/org/$orgSlug/teams/$teamId'
+    '/_authenticated/org/$orgSlug/teams/$teamId': {
+      id: '/_authenticated/org/$orgSlug/teams/$teamId'
       path: '/teams/$teamId'
       fullPath: '/org/$orgSlug/teams/$teamId'
-      preLoaderRoute: typeof OrgOrgSlugTeamsTeamIdRouteImport
-      parentRoute: typeof OrgOrgSlugRouteRoute
+      preLoaderRoute: typeof AuthenticatedOrgOrgSlugTeamsTeamIdRouteImport
+      parentRoute: typeof AuthenticatedOrgOrgSlugRouteRoute
     }
   }
 }
 
-interface publicRouteRouteChildren {
-  publicIndexRoute: typeof publicIndexRoute
-  publicAboutIndexRoute: typeof publicAboutIndexRoute
-  publicLandingIndexRoute: typeof publicLandingIndexRoute
-  publicPricingIndexRoute: typeof publicPricingIndexRoute
+interface AuthRouteRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
 }
 
-const publicRouteRouteChildren: publicRouteRouteChildren = {
-  publicIndexRoute: publicIndexRoute,
-  publicAboutIndexRoute: publicAboutIndexRoute,
-  publicLandingIndexRoute: publicLandingIndexRoute,
-  publicPricingIndexRoute: publicPricingIndexRoute,
+const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
 }
 
-const publicRouteRouteWithChildren = publicRouteRoute._addFileChildren(
-  publicRouteRouteChildren,
+const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
+  AuthRouteRouteChildren,
 )
 
-interface DashboardRouteRouteChildren {
-  DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardOrgsNewRoute: typeof DashboardOrgsNewRoute
-  DashboardProfileIndexRoute: typeof DashboardProfileIndexRoute
+interface AuthenticatedDashboardRouteRouteChildren {
+  AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
+  AuthenticatedDashboardOrgsNewRoute: typeof AuthenticatedDashboardOrgsNewRoute
+  AuthenticatedDashboardProfileIndexRoute: typeof AuthenticatedDashboardProfileIndexRoute
 }
 
-const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
-  DashboardIndexRoute: DashboardIndexRoute,
-  DashboardOrgsNewRoute: DashboardOrgsNewRoute,
-  DashboardProfileIndexRoute: DashboardProfileIndexRoute,
+const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRouteChildren =
+  {
+    AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
+    AuthenticatedDashboardOrgsNewRoute: AuthenticatedDashboardOrgsNewRoute,
+    AuthenticatedDashboardProfileIndexRoute:
+      AuthenticatedDashboardProfileIndexRoute,
+  }
+
+const AuthenticatedDashboardRouteRouteWithChildren =
+  AuthenticatedDashboardRouteRoute._addFileChildren(
+    AuthenticatedDashboardRouteRouteChildren,
+  )
+
+interface AuthenticatedOrgOrgSlugRouteRouteChildren {
+  AuthenticatedOrgOrgSlugIndexRoute: typeof AuthenticatedOrgOrgSlugIndexRoute
+  AuthenticatedOrgOrgSlugTeamsTeamIdRoute: typeof AuthenticatedOrgOrgSlugTeamsTeamIdRoute
+  AuthenticatedOrgOrgSlugMembersIndexRoute: typeof AuthenticatedOrgOrgSlugMembersIndexRoute
+  AuthenticatedOrgOrgSlugSettingsIndexRoute: typeof AuthenticatedOrgOrgSlugSettingsIndexRoute
+  AuthenticatedOrgOrgSlugTeamsIndexRoute: typeof AuthenticatedOrgOrgSlugTeamsIndexRoute
 }
 
-const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
-  DashboardRouteRouteChildren,
-)
+const AuthenticatedOrgOrgSlugRouteRouteChildren: AuthenticatedOrgOrgSlugRouteRouteChildren =
+  {
+    AuthenticatedOrgOrgSlugIndexRoute: AuthenticatedOrgOrgSlugIndexRoute,
+    AuthenticatedOrgOrgSlugTeamsTeamIdRoute:
+      AuthenticatedOrgOrgSlugTeamsTeamIdRoute,
+    AuthenticatedOrgOrgSlugMembersIndexRoute:
+      AuthenticatedOrgOrgSlugMembersIndexRoute,
+    AuthenticatedOrgOrgSlugSettingsIndexRoute:
+      AuthenticatedOrgOrgSlugSettingsIndexRoute,
+    AuthenticatedOrgOrgSlugTeamsIndexRoute:
+      AuthenticatedOrgOrgSlugTeamsIndexRoute,
+  }
 
-interface OrgOrgSlugRouteRouteChildren {
-  OrgOrgSlugIndexRoute: typeof OrgOrgSlugIndexRoute
-  OrgOrgSlugTeamsTeamIdRoute: typeof OrgOrgSlugTeamsTeamIdRoute
-  OrgOrgSlugMembersIndexRoute: typeof OrgOrgSlugMembersIndexRoute
-  OrgOrgSlugSettingsIndexRoute: typeof OrgOrgSlugSettingsIndexRoute
-  OrgOrgSlugTeamsIndexRoute: typeof OrgOrgSlugTeamsIndexRoute
+const AuthenticatedOrgOrgSlugRouteRouteWithChildren =
+  AuthenticatedOrgOrgSlugRouteRoute._addFileChildren(
+    AuthenticatedOrgOrgSlugRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRouteRoute: typeof AuthenticatedDashboardRouteRouteWithChildren
+  AuthenticatedOrgOrgSlugRouteRoute: typeof AuthenticatedOrgOrgSlugRouteRouteWithChildren
 }
 
-const OrgOrgSlugRouteRouteChildren: OrgOrgSlugRouteRouteChildren = {
-  OrgOrgSlugIndexRoute: OrgOrgSlugIndexRoute,
-  OrgOrgSlugTeamsTeamIdRoute: OrgOrgSlugTeamsTeamIdRoute,
-  OrgOrgSlugMembersIndexRoute: OrgOrgSlugMembersIndexRoute,
-  OrgOrgSlugSettingsIndexRoute: OrgOrgSlugSettingsIndexRoute,
-  OrgOrgSlugTeamsIndexRoute: OrgOrgSlugTeamsIndexRoute,
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRouteRoute:
+    AuthenticatedDashboardRouteRouteWithChildren,
+  AuthenticatedOrgOrgSlugRouteRoute:
+    AuthenticatedOrgOrgSlugRouteRouteWithChildren,
 }
 
-const OrgOrgSlugRouteRouteWithChildren = OrgOrgSlugRouteRoute._addFileChildren(
-  OrgOrgSlugRouteRouteChildren,
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface PublicRouteRouteChildren {
+  PublicIndexRoute: typeof PublicIndexRoute
+  PublicAboutIndexRoute: typeof PublicAboutIndexRoute
+  PublicLandingIndexRoute: typeof PublicLandingIndexRoute
+  PublicPricingIndexRoute: typeof PublicPricingIndexRoute
+}
+
+const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicIndexRoute: PublicIndexRoute,
+  PublicAboutIndexRoute: PublicAboutIndexRoute,
+  PublicLandingIndexRoute: PublicLandingIndexRoute,
+  PublicPricingIndexRoute: PublicPricingIndexRoute,
+}
+
+const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(
+  PublicRouteRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  publicRouteRoute: publicRouteRouteWithChildren,
-  DashboardRouteRoute: DashboardRouteRouteWithChildren,
-  OrgOrgSlugRouteRoute: OrgOrgSlugRouteRouteWithChildren,
-  authLoginRoute: authLoginRoute,
-  authInviteTokenRoute: authInviteTokenRoute,
+  AuthRouteRoute: AuthRouteRouteWithChildren,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  PublicRouteRoute: PublicRouteRouteWithChildren,
+  InviteTokenRoute: InviteTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

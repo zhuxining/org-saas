@@ -8,7 +8,13 @@ import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+export default function SignUpForm({
+  redirectTo,
+  onSwitchToSignIn,
+}: {
+  redirectTo: string;
+  onSwitchToSignIn: () => void;
+}) {
   const navigate = useNavigate({
     from: "/",
   });
@@ -29,7 +35,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         {
           onSuccess: () => {
             void navigate({
-              to: "/dashboard",
+              to: redirectTo as string,
             });
             toast.add({ title: "注册成功！", type: "success" });
           },
