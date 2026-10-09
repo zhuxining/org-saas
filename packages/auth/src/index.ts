@@ -8,8 +8,36 @@ import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
+import { createOrganizationPolicyPlugin } from "./organization-policy";
 import { ac, roles } from "./permissions";
 import { platformAc, platformRoles } from "./platform-permissions";
+
+const organizationOptions = {
+  allowUserToCreateOrganization: true,
+  disableOrganizationDeletion: true,
+  schema: {
+    organization: {
+      additionalFields: {
+        archivedAt: {
+          type: "date",
+          required: false,
+          input: false,
+          returned: false,
+        },
+      },
+    },
+  },
+  teams: {
+    enabled: true,
+    maximumTeams: 10, // Optional: limit teams per organization
+    allowRemovingAllTeams: false, // Optional: prevent removing the last team
+  },
+  ac,
+  dynamicAccessControl: {
+    enabled: true,
+  },
+  roles,
+} as const;
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -39,32 +67,8 @@ export const auth = betterAuth({
     }),
     openAPI(), // `http://localhost:3001/api/auth/reference`
     tanstackStartCookies(),
-    organization({
-      allowUserToCreateOrganization: true,
-      disableOrganizationDeletion: true,
-      schema: {
-        organization: {
-          additionalFields: {
-            archivedAt: {
-              type: "date",
-              required: false,
-              input: false,
-              returned: false,
-            },
-          },
-        },
-      },
-      teams: {
-        enabled: true,
-        maximumTeams: 10, // Optional: limit teams per organization
-        allowRemovingAllTeams: false, // Optional: prevent removing the last team
-      },
-      ac,
-      dynamicAccessControl: {
-        enabled: true,
-      },
-      roles,
-    }),
+    organization(organizationOptions),
+    createOrganizationPolicyPlugin(organizationOptions),
   ],
 });
 

@@ -1,0 +1,531 @@
+import type { BetterAuthPlugin } from "better-auth";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { hasPermission, type OrganizationOptions } from "better-auth/plugins/organization";
+
+const organizationPath = /^\/organization\//;
+const roleAssignmentPaths = new Set([
+  "/organization/add-member",
+  "/organization/invite-member",
+  "/organization/update-member-role",
+]);
+const requiredOperationPermissions: Record<string, Record<string, string[]>> = {
+  "/organization/add-member": { member: ["create"] },
+  "/organization/invite-member": { invitation: ["create"] },
+  "/organization/remove-member": { member: ["delete"] },
+  "/organization/update-member-role": { member: ["update"] },
+  "/organization/leave": { member: ["delete"] },
+  "/organization/update": { organization: ["update"] },
+  "/organization/delete": { organization: ["delete"] },
+  "/organization/create-team": { team: ["create"] },
+  "/organization/update-team": { team: ["update"] },
+  "/organization/remove-team": { team: ["delete"] },
+  "/organization/add-team-member": { member: ["update"] },
+  "/organization/remove-team-member": { member: ["delete"] },
+  "/organization/create-role": { ac: ["create"] },
+  "/organization/update-role": { ac: ["update"] },
+  "/organization/delete-role": { ac: ["delete"] },
+  "/organization/cancel-invitation": { invitation: ["cancel"] },
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isPathlessAddMemberContext(context: { path?: string; body?: unknown }): boolean {
+  // Better Auth 1.7.7 exposes addMember only as auth.api.addMember and omits its endpoint path.
+  const body = isRecord(context.body) ? context.body : {};
+  return context.path === undefined && typeof body.userId === "string" && body.role !== undefined;
+}
+
+function roleNames(value: unknown): string[] {
+  return typeof value === "string"
+    ? value
+        .split(",")
+        .map((role) => role.trim())
+        .filter(Boolean)
+    : [];
+}
+
+export function hasSingleRole(value: unknown): boolean {
+  return (
+    typeof value === "string" && value.trim() === value && value.length > 0 && !value.includes(",")
+  );
+}
+
+function rolePermissionEntries(permission: unknown): Array<[string, string]> {
+  if (!isRecord(permission)) return [];
+  return Object.entries(permission).flatMap(([resource, actions]) =>
+    Array.isArray(actions)
+      ? actions.flatMap((action) =>
+          typeof action === "string" ? [[resource, action] as [string, string]] : [],
+        )
+      : [],
+  );
+}
+
+function parsePermissions(value: unknown): Record<string, string[]> | null {
+  let parsed = value;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  if (!isRecord(parsed)) return null;
+  const entries = Object.entries(parsed);
+  if (
+    entries.some(
+      ([, actions]) =>
+        !Array.isArray(actions) || actions.some((action) => typeof action !== "string"),
+    )
+  ) {
+    return null;
+  }
+  return parsed as Record<string, string[]>;
+}
+
+function isOwnerRole(role: unknown): boolean {
+  return roleNames(role).includes("owner");
+}
+
+function forbidden(code: string, message: string): never {
+  throw APIError.from("FORBIDDEN", { code, message });
+}
+
+function badRequest(code: string, message: string): never {
+  throw APIError.from("BAD_REQUEST", { code, message });
+}
+
+export function createOrganizationPolicyPlugin(options: OrganizationOptions): BetterAuthPlugin {
+  return {
+    id: "organization-policy",
+    hooks: {
+      before: [
+        {
+          matcher: (context) =>
+            (typeof context.path === "string" && organizationPath.test(context.path)) ||
+            isPathlessAddMemberContext(context),
+          handler: createAuthMiddleware(async (ctx) => {
+            const body = isRecord(ctx.body) ? ctx.body : {};
+            const path =
+              ctx.path === "/" && isPathlessAddMemberContext({ body })
+                ? "/organization/add-member"
+                : ctx.path;
+            const query = isRecord(ctx.query) ? ctx.query : {};
+            const input = { ...query, ...body };
+            if (roleAssignmentPaths.has(path) && !hasSingleRole(body.role)) {
+              badRequest("SINGLE_ROLE_REQUIRED", "Exactly one organization role is required.");
+            }
+
+            const session = await getSessionFromCtx(ctx).catch(() => null);
+            const adapter = ctx.context.adapter;
+            const explicitId = [input.organizationId, input.id].find(
+              (value): value is string => typeof value === "string",
+            );
+            let organizationId = explicitId;
+            let organization = explicitId
+              ? await adapter.findOne({
+                  model: "organization",
+                  where: [{ field: "id", value: explicitId }],
+                })
+              : null;
+            const slug = [input.organizationSlug, input.slug].find(
+              (value): value is string => typeof value === "string",
+            );
+            if (!organization && slug) {
+              organization = await adapter.findOne({
+                model: "organization",
+                where: [{ field: "slug", value: slug }],
+              });
+              if (isRecord(organization) && typeof organization.id === "string") {
+                organizationId ??= organization.id;
+              }
+            }
+
+            const nested = isRecord(body.data) ? body.data : {};
+            const findMemberReference = async (reference: string, scope?: string) => {
+              const where = scope
+                ? [
+                    { field: "organizationId", value: scope },
+                    { field: "id", value: reference },
+                  ]
+                : [{ field: "id", value: reference }];
+              const byId = await adapter.findOne({ model: "member", where });
+              if (byId) return byId;
+              const user = await adapter.findOne({
+                model: "user",
+                where: [{ field: "email", value: reference }],
+              });
+              if (!isRecord(user) || typeof user.id !== "string") return null;
+              const memberWhere = scope
+                ? [
+                    { field: "organizationId", value: scope },
+                    { field: "userId", value: user.id },
+                  ]
+                : [{ field: "userId", value: user.id }];
+              return adapter.findOne({ model: "member", where: memberWhere });
+            };
+            const memberReference = input.memberIdOrEmail ?? nested.memberIdOrEmail;
+            if (typeof memberReference === "string") {
+              const record = await findMemberReference(
+                memberReference,
+                organizationId ?? session?.session.activeOrganizationId ?? undefined,
+              );
+              if (isRecord(record) && typeof record.organizationId === "string") {
+                if (organizationId && organizationId !== record.organizationId) {
+                  forbidden(
+                    "ORGANIZATION_REFERENCE_MISMATCH",
+                    "The resource does not belong to this organization.",
+                  );
+                }
+                organizationId ??= record.organizationId;
+                if (!organization) {
+                  organization = await adapter.findOne({
+                    model: "organization",
+                    where: [{ field: "id", value: record.organizationId }],
+                  });
+                }
+              }
+            }
+            const referenceFields: Array<[string, string]> = [
+              ["invitationId", "invitation"],
+              ["memberId", "member"],
+              ["teamId", "team"],
+              ["roleId", "organizationRole"],
+            ];
+            for (const [field, model] of referenceFields) {
+              const value = input[field] ?? nested[field];
+              for (const id of Array.isArray(value) ? value : [value]) {
+                if (typeof id !== "string") continue;
+                const record = await adapter.findOne({
+                  model,
+                  where: [{ field: "id", value: id }],
+                });
+                if (!isRecord(record) || typeof record.organizationId !== "string") continue;
+                if (organizationId && organizationId !== record.organizationId) {
+                  forbidden(
+                    "ORGANIZATION_REFERENCE_MISMATCH",
+                    "The resource does not belong to this organization.",
+                  );
+                }
+                organizationId ??= record.organizationId;
+                if (!organization) {
+                  organization = await adapter.findOne({
+                    model: "organization",
+                    where: [{ field: "id", value: record.organizationId }],
+                  });
+                }
+              }
+            }
+
+            const isOrganizationCreation = path === "/organization/create";
+            const isDeactivation =
+              path === "/organization/set-active" &&
+              body.organizationId === null &&
+              body.organizationSlug === undefined;
+            if (!isOrganizationCreation && !isDeactivation) {
+              organizationId ??= session?.session.activeOrganizationId ?? undefined;
+            }
+            if (!organization && organizationId) {
+              organization = await adapter.findOne({
+                model: "organization",
+                where: [{ field: "id", value: organizationId }],
+              });
+            }
+            if (isRecord(organization) && organization.archivedAt) {
+              forbidden("ORGANIZATION_ARCHIVED", "This organization is archived.");
+            }
+            const operationPermission = requiredOperationPermissions[path];
+            if (operationPermission && !session?.user.id) {
+              throw APIError.fromStatus("UNAUTHORIZED");
+            }
+            if (!organizationId || !session?.user.id) return;
+
+            const actor = await adapter.findOne({
+              model: "member",
+              where: [
+                { field: "organizationId", value: organizationId },
+                { field: "userId", value: session.user.id },
+              ],
+            });
+            if (!isRecord(actor) || typeof actor.role !== "string") {
+              if (operationPermission) {
+                forbidden(
+                  "ORGANIZATION_MEMBERSHIP_REQUIRED",
+                  "You must be a member of this organization.",
+                );
+              }
+              return;
+            }
+
+            const actorIsOwner = isOwnerRole(actor.role);
+            if (operationPermission) {
+              const allowed = await hasPermission(
+                {
+                  options,
+                  organizationId,
+                  role: actor.role,
+                  permissions: operationPermission,
+                },
+                ctx,
+              );
+              if (!allowed) {
+                forbidden(
+                  "ORGANIZATION_OPERATION_FORBIDDEN",
+                  "You are not allowed to perform this organization operation.",
+                );
+              }
+            }
+            const isAdminEquivalent = async (role: string): Promise<boolean> => {
+              const adminPermissions = options.roles?.admin?.statements;
+              if (!adminPermissions || !Object.keys(adminPermissions).length) return false;
+              return hasPermission(
+                {
+                  options,
+                  organizationId: organizationId as string,
+                  role,
+                  permissions: adminPermissions,
+                },
+                ctx,
+              );
+            };
+            const targetRole = async (role: string): Promise<Record<string, unknown> | null> => {
+              const staticRoles = options.roles ?? {};
+              if (Object.hasOwn(staticRoles, role)) return null;
+              const record = await adapter.findOne({
+                model: "organizationRole",
+                where: [
+                  { field: "organizationId", value: organizationId as string },
+                  { field: "role", value: role },
+                ],
+              });
+              return isRecord(record) ? record : null;
+            };
+            const ensureGrantBoundary = async (role: string): Promise<void> => {
+              if (!Object.hasOwn(options.roles ?? {}, role)) {
+                const dynamicRole = await targetRole(role);
+                if (!dynamicRole)
+                  badRequest("ROLE_NOT_FOUND", "The requested organization role does not exist.");
+              }
+              const dynamicRole = await targetRole(role);
+              const permissions = Object.hasOwn(options.roles ?? {}, role)
+                ? options.roles?.[role as keyof NonNullable<OrganizationOptions["roles"]>]
+                    ?.statements
+                : parsePermissions(dynamicRole?.permission);
+              if (!permissions)
+                badRequest(
+                  "ROLE_PERMISSIONS_INVALID",
+                  "The requested role has invalid permissions.",
+                );
+              for (const [resource, action] of rolePermissionEntries(permissions)) {
+                const allowed = await hasPermission(
+                  {
+                    options,
+                    organizationId: organizationId as string,
+                    role: actor.role as string,
+                    permissions: { [resource]: [action] },
+                  },
+                  ctx,
+                );
+                if (!allowed)
+                  forbidden(
+                    "ROLE_GRANT_EXCEEDS_ACTOR",
+                    "You cannot grant permissions you do not hold.",
+                  );
+              }
+              const adminEquivalent = await isAdminEquivalent(role);
+              if ((role === "owner" || adminEquivalent) && !actorIsOwner) {
+                forbidden(
+                  "PROTECTED_ROLE_ASSIGNMENT",
+                  "Only an owner may assign owner or admin-equivalent roles.",
+                );
+              }
+            };
+
+            if (roleAssignmentPaths.has(path)) {
+              await ensureGrantBoundary(body.role as string);
+            }
+
+            if (
+              path === "/organization/remove-member" ||
+              path === "/organization/update-member-role"
+            ) {
+              const memberId =
+                typeof body.memberId === "string"
+                  ? body.memberId
+                  : typeof body.memberIdOrEmail === "string"
+                    ? body.memberIdOrEmail
+                    : undefined;
+              const target = memberId ? await findMemberReference(memberId, organizationId) : null;
+              if (isRecord(target) && typeof target.role === "string") {
+                const targetIsAdminEquivalent = await isAdminEquivalent(target.role);
+                const targetIsOwner = isOwnerRole(target.role);
+                const targetIsSelf = target.userId === session.user.id;
+                if (!actorIsOwner && (targetIsOwner || targetIsAdminEquivalent || targetIsSelf)) {
+                  forbidden(
+                    "PROTECTED_MEMBER_ROLE",
+                    "Only an owner may change or remove this member.",
+                  );
+                }
+              }
+            }
+
+            if (path === "/organization/create-role" || path === "/organization/update-role") {
+              const data = isRecord(body.data) ? body.data : {};
+              const roleName =
+                typeof body.role === "string"
+                  ? body.role
+                  : typeof body.roleName === "string"
+                    ? body.roleName
+                    : typeof data.roleName === "string"
+                      ? data.roleName
+                      : undefined;
+              let existingRole: Record<string, unknown> | null = null;
+              if (path === "/organization/update-role") {
+                const roleId = typeof body.roleId === "string" ? body.roleId : undefined;
+                existingRole = roleId
+                  ? await adapter.findOne({
+                      model: "organizationRole",
+                      where: [
+                        { field: "id", value: roleId },
+                        { field: "organizationId", value: organizationId },
+                      ],
+                    })
+                  : typeof body.roleName === "string"
+                    ? await adapter.findOne({
+                        model: "organizationRole",
+                        where: [
+                          { field: "role", value: body.roleName },
+                          { field: "organizationId", value: organizationId },
+                        ],
+                      })
+                    : null;
+              }
+              const existingName =
+                isRecord(existingRole) && typeof existingRole.role === "string"
+                  ? existingRole.role
+                  : undefined;
+              const existingIsAdminEquivalent = existingName
+                ? await isAdminEquivalent(existingName)
+                : false;
+              const resultingPermissions = parsePermissions(data.permission ?? body.permission);
+              const resultingIsAdminEquivalent = resultingPermissions
+                ? rolePermissionEntries(options.roles?.admin?.statements ?? {}).every(
+                    ([resource, action]) => (resultingPermissions[resource] ?? []).includes(action),
+                  )
+                : false;
+              if (
+                !actorIsOwner &&
+                (existingIsAdminEquivalent ||
+                  resultingIsAdminEquivalent ||
+                  roleName === "owner" ||
+                  roleName === "admin")
+              ) {
+                forbidden(
+                  "PROTECTED_ROLE_DEFINITION",
+                  "Only an owner may create or change admin-equivalent role definitions.",
+                );
+              }
+            }
+
+            if (path === "/organization/delete-role") {
+              const role = body.roleId
+                ? await adapter.findOne({
+                    model: "organizationRole",
+                    where: [
+                      { field: "id", value: body.roleId as string },
+                      { field: "organizationId", value: organizationId },
+                    ],
+                  })
+                : typeof body.roleName === "string"
+                  ? await adapter.findOne({
+                      model: "organizationRole",
+                      where: [
+                        { field: "role", value: body.roleName },
+                        { field: "organizationId", value: organizationId },
+                      ],
+                    })
+                  : null;
+              if (isRecord(role) && typeof role.role === "string") {
+                if (!actorIsOwner && (await isAdminEquivalent(role.role))) {
+                  forbidden(
+                    "PROTECTED_ROLE_DEFINITION",
+                    "Only an owner may delete an admin-equivalent role.",
+                  );
+                }
+                const pending = await adapter.findMany({
+                  model: "invitation",
+                  where: [
+                    { field: "organizationId", value: organizationId },
+                    { field: "status", value: "pending" },
+                  ],
+                });
+                if (
+                  pending.some(
+                    (invite) =>
+                      isRecord(invite) &&
+                      typeof invite.role === "string" &&
+                      roleNames(invite.role).includes(role.role as string),
+                  )
+                ) {
+                  badRequest(
+                    "ROLE_ASSIGNED_TO_PENDING_INVITATION",
+                    "A role assigned to a pending invitation cannot be deleted.",
+                  );
+                }
+              }
+            }
+          }),
+        },
+      ],
+      after: [
+        {
+          matcher: ({ path }) =>
+            path === "/organization/remove-member" || path === "/organization/leave",
+          handler: createAuthMiddleware(async (ctx) => {
+            const body = isRecord(ctx.body) ? ctx.body : {};
+            let result: unknown = ctx.context.returned;
+            if (result instanceof Response) {
+              try {
+                result = await result.clone().json();
+              } catch {
+                result = null;
+              }
+            }
+            const member = isRecord(result) && isRecord(result.member) ? result.member : result;
+            const session = await getSessionFromCtx(ctx).catch(() => null);
+            const userId =
+              ctx.path === "/organization/leave"
+                ? session?.user.id
+                : isRecord(member) && typeof member.userId === "string"
+                  ? member.userId
+                  : undefined;
+            const organizationId =
+              typeof body.organizationId === "string"
+                ? body.organizationId
+                : isRecord(member) && typeof member.organizationId === "string"
+                  ? member.organizationId
+                  : session?.session.activeOrganizationId;
+            if (!userId || !organizationId) return;
+            const teams = await ctx.context.adapter.findMany({
+              model: "team",
+              where: [{ field: "organizationId", value: organizationId }],
+            });
+            const teamIds = teams.flatMap((team) =>
+              isRecord(team) && typeof team.id === "string" ? [team.id] : [],
+            );
+            if (!teamIds.length) return;
+            await ctx.context.adapter.deleteMany({
+              model: "teamMember",
+              where: [
+                { field: "userId", value: userId },
+                { field: "teamId", value: teamIds, operator: "in" },
+              ],
+            });
+          }),
+        },
+      ],
+    },
+  };
+}
