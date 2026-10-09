@@ -14,8 +14,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@org-sass/ui/components/dropdown-menu";
-import { cn } from "@org-sass/ui/lib/utils";
+} from "@org-saas/ui/components/dropdown-menu";
+import { cn } from "@org-saas/ui/lib/utils";
 import { CheckIcon } from "lucide-react";
 import * as React from "react";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@org-sass/auth",
+  "name": "@org-saas/auth",
   "type": "module",
   "exports": {
     ".": {
@@ -15,14 +15,14 @@
     "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
-    "@org-sass/db": "workspace:*",
-    "@org-sass/env": "workspace:*",
+    "@org-saas/db": "workspace:*",
+    "@org-saas/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@org-sass/config": "workspace:*",
+    "@org-saas/config": "workspace:*",
     "typescript": "catalog:"
   }
 }

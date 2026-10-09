@@ -1,6 +1,6 @@
-import { Button } from "@org-sass/ui/components/button";
-import { Input } from "@org-sass/ui/components/input";
-import { Label } from "@org-sass/ui/components/label";
+import { Button } from "@org-saas/ui/components/button";
+import { Input } from "@org-saas/ui/components/input";
+import { Label } from "@org-saas/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";

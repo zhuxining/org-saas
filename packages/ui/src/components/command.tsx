@@ -4,9 +4,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@org-sass/ui/components/dialog";
-import { InputGroup, InputGroupAddon } from "@org-sass/ui/components/input-group";
-import { cn } from "@org-sass/ui/lib/utils";
+} from "@org-saas/ui/components/dialog";
+import { InputGroup, InputGroupAddon } from "@org-saas/ui/components/input-group";
+import { cn } from "@org-saas/ui/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { SearchIcon, CheckIcon } from "lucide-react";
 import * as React from "react";

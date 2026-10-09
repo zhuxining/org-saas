@@ -1,6 +1,6 @@
-import { db } from "@org-sass/db";
-import * as schema from "@org-sass/db/schema/auth";
-import { env } from "@org-sass/env/server";
+import { db } from "@org-saas/db";
+import * as schema from "@org-saas/db/schema/auth";
+import { env } from "@org-saas/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { openAPI } from "better-auth/plugins";

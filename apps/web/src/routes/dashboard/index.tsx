@@ -1,6 +1,6 @@
-import { Button } from "@org-sass/ui/components/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@org-sass/ui/components/card";
-import { Skeleton } from "@org-sass/ui/components/skeleton";
+import { Button } from "@org-saas/ui/components/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@org-saas/ui/components/card";
+import { Skeleton } from "@org-saas/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Plus } from "lucide-react";

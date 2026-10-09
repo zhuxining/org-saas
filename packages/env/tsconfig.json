@@ -1,4 +1,4 @@
 {
-  "extends": "@org-sass/config/tsconfig.base.json",
+  "extends": "@org-saas/config/tsconfig.base.json",
   "compilerOptions": { "types": ["node"] }
 }

@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@org-sass/ui/components/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@org-saas/ui/components/avatar";
 
 export function UserAvatar({
   name,

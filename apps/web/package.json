@@ -9,10 +9,10 @@
     "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
-    "@org-sass/api": "workspace:*",
-    "@org-sass/auth": "workspace:*",
-    "@org-sass/env": "workspace:*",
-    "@org-sass/ui": "workspace:*",
+    "@org-saas/api": "workspace:*",
+    "@org-saas/auth": "workspace:*",
+    "@org-saas/env": "workspace:*",
+    "@org-saas/ui": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
@@ -34,7 +34,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@org-sass/config": "workspace:*",
+    "@org-saas/config": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/devtools-vite": "catalog:",
     "@tanstack/react-devtools": "catalog:",

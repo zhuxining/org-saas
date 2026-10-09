@@ -1,5 +1,5 @@
-import { Button } from "@org-sass/ui/components/button";
-import { Card, CardContent } from "@org-sass/ui/components/card";
+import { Button } from "@org-saas/ui/components/button";
+import { Card, CardContent } from "@org-saas/ui/components/card";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Lock, Zap } from "lucide-react";
 

@@ -1,4 +1,4 @@
-import { auth } from "@org-sass/auth";
+import { auth } from "@org-saas/auth";
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 

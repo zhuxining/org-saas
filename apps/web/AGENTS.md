@@ -21,7 +21,7 @@ apps/web/src/
 └── types/orpc.d.ts      # oRPC 类型扩展
 ```
 
-> UI 组件（shadcn）位于 `packages/ui/`，通过 `@org-sass/ui` 导入。
+> UI 组件（shadcn）位于 `packages/ui/`，通过 `@org-saas/ui` 导入。
 > 权限系统（RBAC）见 [packages/auth/AGENTS.md](../../packages/auth/AGENTS.md)。
 
 ## 路由系统

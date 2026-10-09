@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@org-sass/ui/components/select";
+} from "@org-saas/ui/components/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 

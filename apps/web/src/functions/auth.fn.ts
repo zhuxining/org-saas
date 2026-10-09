@@ -1,4 +1,4 @@
-import { auth } from "@org-sass/auth";
+import { auth } from "@org-saas/auth";
 import { createServerFn } from "@tanstack/react-start";
 
 import { authMiddleware } from "@/middleware/auth";

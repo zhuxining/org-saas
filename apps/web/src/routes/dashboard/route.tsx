@@ -1,4 +1,4 @@
-import { Button } from "@org-sass/ui/components/button";
+import { Button } from "@org-saas/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,8 +6,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@org-sass/ui/components/dropdown-menu";
-import { Separator } from "@org-sass/ui/components/separator";
+} from "@org-saas/ui/components/dropdown-menu";
+import { Separator } from "@org-saas/ui/components/separator";
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { Home, LogOut, Settings, User } from "lucide-react";
 

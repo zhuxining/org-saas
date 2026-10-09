@@ -1,5 +1,5 @@
-import { and, count, db, eq } from "@org-sass/db";
-import { invitation, member, team } from "@org-sass/db/schema/auth";
+import { and, count, db, eq } from "@org-saas/db";
+import { invitation, member, team } from "@org-saas/db/schema/auth";
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 

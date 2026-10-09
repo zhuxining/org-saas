@@ -1,4 +1,4 @@
-import { auth } from "@org-sass/auth";
+import { auth } from "@org-saas/auth";
 import { createMiddleware } from "@tanstack/react-start";
 
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {

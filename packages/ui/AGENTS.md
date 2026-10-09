@@ -7,8 +7,8 @@
 ## 使用方式
 
 ```typescript
-import { Button, Dialog, Input } from "@org-sass/ui";
-import { cn } from "@org-sass/ui/lib/utils";
+import { Button, Dialog, Input } from "@org-saas/ui";
+import { cn } from "@org-saas/ui/lib/utils";
 ```
 
 ## 添加组件

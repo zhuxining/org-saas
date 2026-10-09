@@ -1,4 +1,4 @@
-import { Button } from "@org-sass/ui/components/button";
+import { Button } from "@org-saas/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@org-sass/ui/components/dropdown-menu";
-import { Skeleton } from "@org-sass/ui/components/skeleton";
+} from "@org-saas/ui/components/dropdown-menu";
+import { Skeleton } from "@org-saas/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 

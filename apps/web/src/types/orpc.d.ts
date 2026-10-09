@@ -1,4 +1,4 @@
-import type { Context } from "@org-sass/api/context";
+import type { Context } from "@org-saas/api/context";
 
 // 扩展 oRPC privateData 返回的 user 类型
 declare module "@/utils/orpc" {

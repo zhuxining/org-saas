@@ -1,4 +1,4 @@
-import { cn } from "@org-sass/ui/lib/utils";
+import { cn } from "@org-saas/ui/lib/utils";
 
 function AspectRatio({
   ratio,

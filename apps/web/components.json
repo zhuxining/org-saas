@@ -15,8 +15,8 @@
     "components": "@/components",
     "hooks": "@/hooks",
     "lib": "@/lib",
-    "utils": "@org-sass/ui/lib/utils",
-    "ui": "@org-sass/ui/components"
+    "utils": "@org-saas/ui/lib/utils",
+    "ui": "@org-saas/ui/components"
   },
   "menuColor": "default",
   "menuAccent": "subtle",

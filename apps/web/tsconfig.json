@@ -1,5 +1,5 @@
 {
-  "extends": "@org-sass/config/tsconfig.base.json",
+  "extends": "@org-saas/config/tsconfig.base.json",
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
     "target": "ESNext",
@@ -18,7 +18,7 @@
     "noUncheckedSideEffectImports": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@org-sass/ui/*": ["../../packages/ui/src/*"]
+      "@org-saas/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }

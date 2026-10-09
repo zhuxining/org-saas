@@ -1,5 +1,5 @@
 {
-  "name": "@org-sass/db",
+  "name": "@org-saas/db",
   "type": "module",
   "exports": {
     ".": {
@@ -17,14 +17,14 @@
     "clean": "git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
-    "@org-sass/env": "workspace:*",
+    "@org-saas/env": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "^1.0.0-rc.4",
     "pg": "^8.23.1",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@org-sass/config": "workspace:*",
+    "@org-saas/config": "workspace:*",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^1.0.0-rc.4",
     "typescript": "catalog:"

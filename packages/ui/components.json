@@ -12,11 +12,11 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@org-sass/ui/components",
-    "utils": "@org-sass/ui/lib/utils",
-    "hooks": "@org-sass/ui/hooks",
-    "lib": "@org-sass/ui/lib",
-    "ui": "@org-sass/ui/components"
+    "components": "@org-saas/ui/components",
+    "utils": "@org-saas/ui/lib/utils",
+    "hooks": "@org-saas/ui/hooks",
+    "lib": "@org-saas/ui/lib",
+    "ui": "@org-saas/ui/components"
   },
   "menuColor": "default",
   "menuAccent": "subtle",

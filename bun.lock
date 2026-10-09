@@ -5,10 +5,10 @@
     "": {
       "name": "org-saas",
       "dependencies": {
-        "@org-sass/env": "workspace:*",
+        "@org-saas/env": "workspace:*",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "taze": "^21.3.0",
         "vite-plus": "catalog:",
       },
@@ -40,7 +40,7 @@
       },
     },
     "apps/mini": {
-      "name": "org-sass",
+      "name": "org-saas",
       "version": "0.2.0",
       "dependencies": {
         "dayjs": "^1.11.23",
@@ -50,10 +50,10 @@
     "apps/web": {
       "name": "web",
       "dependencies": {
-        "@org-sass/api": "workspace:*",
-        "@org-sass/auth": "workspace:*",
-        "@org-sass/env": "workspace:*",
-        "@org-sass/ui": "workspace:*",
+        "@org-saas/api": "workspace:*",
+        "@org-saas/auth": "workspace:*",
+        "@org-saas/env": "workspace:*",
+        "@org-saas/ui": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
@@ -75,7 +75,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "@tailwindcss/vite": "catalog:",
         "@tanstack/devtools-vite": "catalog:",
         "@tanstack/react-devtools": "catalog:",
@@ -96,11 +96,11 @@
       },
     },
     "packages/api": {
-      "name": "@org-sass/api",
+      "name": "@org-saas/api",
       "dependencies": {
-        "@org-sass/auth": "workspace:*",
-        "@org-sass/db": "workspace:*",
-        "@org-sass/env": "workspace:*",
+        "@org-saas/auth": "workspace:*",
+        "@org-saas/db": "workspace:*",
+        "@org-saas/env": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
@@ -110,46 +110,46 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/auth": {
-      "name": "@org-sass/auth",
+      "name": "@org-saas/auth",
       "dependencies": {
-        "@org-sass/db": "workspace:*",
-        "@org-sass/env": "workspace:*",
+        "@org-saas/db": "workspace:*",
+        "@org-saas/env": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
     "packages/config": {
-      "name": "@org-sass/config",
+      "name": "@org-saas/config",
       "version": "0.0.0",
     },
     "packages/db": {
-      "name": "@org-sass/db",
+      "name": "@org-saas/db",
       "dependencies": {
-        "@org-sass/env": "workspace:*",
+        "@org-saas/env": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^1.0.0-rc.4",
         "pg": "^8.23.1",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "@types/pg": "^8.23.1",
         "drizzle-kit": "^1.0.0-rc.4",
         "typescript": "catalog:",
       },
     },
     "packages/env": {
-      "name": "@org-sass/env",
+      "name": "@org-saas/env",
       "version": "0.0.0",
       "dependencies": {
         "@t3-oss/env-core": "^0.13.11",
@@ -157,13 +157,13 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "@types/node": "catalog:",
         "typescript": "catalog:",
       },
     },
     "packages/ui": {
-      "name": "@org-sass/ui",
+      "name": "@org-saas/ui",
       "version": "0.0.0",
       "dependencies": {
         "@base-ui/react": "^1.8.0",
@@ -189,7 +189,7 @@
         "vaul": "^1.1.2",
       },
       "devDependencies": {
-        "@org-sass/config": "workspace:*",
+        "@org-saas/config": "workspace:*",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
         "shadcn": "^4.21.4",
@@ -484,17 +484,17 @@
 
     "@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.43.0", "", {}, "sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg=="],
 
-    "@org-sass/api": ["@org-sass/api@workspace:packages/api"],
+    "@org-saas/api": ["@org-saas/api@workspace:packages/api"],
 
-    "@org-sass/auth": ["@org-sass/auth@workspace:packages/auth"],
+    "@org-saas/auth": ["@org-saas/auth@workspace:packages/auth"],
 
-    "@org-sass/config": ["@org-sass/config@workspace:packages/config"],
+    "@org-saas/config": ["@org-saas/config@workspace:packages/config"],
 
-    "@org-sass/db": ["@org-sass/db@workspace:packages/db"],
+    "@org-saas/db": ["@org-saas/db@workspace:packages/db"],
 
-    "@org-sass/env": ["@org-sass/env@workspace:packages/env"],
+    "@org-saas/env": ["@org-saas/env@workspace:packages/env"],
 
-    "@org-sass/ui": ["@org-sass/ui@workspace:packages/ui"],
+    "@org-saas/ui": ["@org-saas/ui@workspace:packages/ui"],
 
     "@orpc/client": ["@orpc/client@2.0.0-beta.42", "", { "dependencies": { "@orpc/shared": "2.0.0-beta.42", "@standard-server/core": "~0.10.1", "@standard-server/fetch": "~0.10.1", "@standard-server/peer": "~0.10.1" } }, "sha512-5UVRiHw9UsOVsfK1EweJoOqDhnseIz1TG4U/pcGe/P6I/yBDafh+ijZ/ZaBrql2hC7PSgEwfCFljEG8IfxVGqA=="],
 
@@ -1834,7 +1834,7 @@
 
     "ora": ["ora@8.2.0", "https://registry.npmmirror.com/ora/-/ora-8.2.0.tgz", { "dependencies": { "chalk": "^5.3.0", "cli-cursor": "^5.0.0", "cli-spinners": "^2.9.2", "is-interactive": "^2.0.0", "is-unicode-supported": "^2.0.0", "log-symbols": "^6.0.0", "stdin-discarder": "^0.2.2", "string-width": "^7.2.0", "strip-ansi": "^7.1.0" } }, "sha512-weP+BZ8MVNnlCm8c0Qdc1WSWq4Qn7I+9CJGm7Qali6g44e/PUzbjNqJX5NJ9ljlNMosfJvg1fKEGILklK9cwnw=="],
 
-    "org-sass": ["org-sass@workspace:apps/mini"],
+    "org-saas": ["org-saas@workspace:apps/mini"],
 
     "oxc-parser": ["oxc-parser@0.120.0", "", { "dependencies": { "@oxc-project/types": "^0.120.0" }, "optionalDependencies": { "@oxc-parser/binding-android-arm-eabi": "0.120.0", "@oxc-parser/binding-android-arm64": "0.120.0", "@oxc-parser/binding-darwin-arm64": "0.120.0", "@oxc-parser/binding-darwin-x64": "0.120.0", "@oxc-parser/binding-freebsd-x64": "0.120.0", "@oxc-parser/binding-linux-arm-gnueabihf": "0.120.0", "@oxc-parser/binding-linux-arm-musleabihf": "0.120.0", "@oxc-parser/binding-linux-arm64-gnu": "0.120.0", "@oxc-parser/binding-linux-arm64-musl": "0.120.0", "@oxc-parser/binding-linux-ppc64-gnu": "0.120.0", "@oxc-parser/binding-linux-riscv64-gnu": "0.120.0", "@oxc-parser/binding-linux-riscv64-musl": "0.120.0", "@oxc-parser/binding-linux-s390x-gnu": "0.120.0", "@oxc-parser/binding-linux-x64-gnu": "0.120.0", "@oxc-parser/binding-linux-x64-musl": "0.120.0", "@oxc-parser/binding-openharmony-arm64": "0.120.0", "@oxc-parser/binding-wasm32-wasi": "0.120.0", "@oxc-parser/binding-win32-arm64-msvc": "0.120.0", "@oxc-parser/binding-win32-ia32-msvc": "0.120.0", "@oxc-parser/binding-win32-x64-msvc": "0.120.0" } }, "sha512-WyPWZlcIm+Fkte63FGfgFB8mAAk33aH9h5N9lphXVOHSXEBFFsmYdOBedVKly363aWABjZdaj/m9lBfEY4wt+w=="],
 

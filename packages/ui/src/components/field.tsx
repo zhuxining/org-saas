@@ -1,8 +1,8 @@
 "use client";
 
-import { Label } from "@org-sass/ui/components/label";
-import { Separator } from "@org-sass/ui/components/separator";
-import { cn } from "@org-sass/ui/lib/utils";
+import { Label } from "@org-saas/ui/components/label";
+import { Separator } from "@org-saas/ui/components/separator";
+import { cn } from "@org-saas/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { useMemo } from "react";
 

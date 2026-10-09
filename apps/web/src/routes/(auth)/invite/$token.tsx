@@ -1,11 +1,11 @@
-import { Button } from "@org-sass/ui/components/button";
+import { Button } from "@org-saas/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@org-sass/ui/components/card";
+} from "@org-saas/ui/components/card";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 import { useState } from "react";

@@ -1,5 +1,5 @@
 {
-  "name": "@org-sass/env",
+  "name": "@org-saas/env",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@org-sass/config": "workspace:*",
+    "@org-saas/config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

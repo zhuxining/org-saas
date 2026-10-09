@@ -1,5 +1,5 @@
-import { Button } from "@org-sass/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@org-sass/ui/components/card";
+import { Button } from "@org-saas/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@org-saas/ui/components/card";
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@org-sass/ui/components/table";
+} from "@org-saas/ui/components/table";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Trash2 } from "lucide-react";

@@ -1,4 +1,4 @@
-import { auth } from "@org-sass/auth";
+import { auth } from "@org-saas/auth";
 
 export async function createContext(input: { req: Request } | { headers: Headers }) {
   const headers = "req" in input ? input.req.headers : input.headers;

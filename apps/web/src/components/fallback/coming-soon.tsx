@@ -1,4 +1,4 @@
-import { Button } from "@org-sass/ui/components/button";
+import { Button } from "@org-saas/ui/components/button";
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@org-sass/ui/components/card";
+} from "@org-saas/ui/components/card";
 import { useRouter } from "@tanstack/react-router";
 import { Home, Rocket } from "lucide-react";
 

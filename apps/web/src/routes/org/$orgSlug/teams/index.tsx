@@ -1,5 +1,5 @@
-import { Button } from "@org-sass/ui/components/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@org-sass/ui/components/card";
+import { Button } from "@org-saas/ui/components/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@org-saas/ui/components/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, UsersRound } from "lucide-react";

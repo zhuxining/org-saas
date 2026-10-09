@@ -1,4 +1,4 @@
-import type { auth } from "@org-sass/auth";
+import type { auth } from "@org-saas/auth";
 import { createAuthClient } from "better-auth/client";
 import { organizationClient } from "better-auth/client/plugins";
 

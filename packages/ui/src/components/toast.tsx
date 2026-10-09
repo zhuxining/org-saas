@@ -1,6 +1,6 @@
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
-import { Button } from "@org-sass/ui/components/button";
-import { cn } from "@org-sass/ui/lib/utils";
+import { Button } from "@org-saas/ui/components/button";
+import { cn } from "@org-saas/ui/lib/utils";
 import {
   XIcon,
   CircleCheckIcon,

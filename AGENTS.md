@@ -66,7 +66,7 @@ bun run check            # 代码检查 lint/格式化/类型检查 (vp check)
 **导入规范**:
 
 ```typescript
-import { db } from "@org-sass/db"; // 跨包导入
+import { db } from "@org-saas/db"; // 跨包导入
 
 import { orpc } from "@/utils/orpc"; // 内部导入
 ```
@@ -90,7 +90,7 @@ import { orpc } from "@/utils/orpc"; // 内部导入
 
 - 已启用 `strict` / `noUnusedLocals` / `noUnusedParameters` / `verbatimModuleSyntax` / `erasableSyntaxOnly` / `noUncheckedIndexedAccess` / `noImplicitOverride`，不要放宽。
 - 禁 `enum` / `namespace`（`erasableSyntaxOnly` 会拒绝）→ 用 `const` 对象 + 类型推导 / ES 模块。
-- 路径别名：应用内 `@/*` → `src/*`，跨包用 `@org-sass/*`（如 `@org-sass/db`）。
+- 路径别名：应用内 `@/*` → `src/*`，跨包用 `@org-saas/*`（如 `@org-saas/db`）。
 
 ### Lint / 格式化 / 类型检查（vite-plus）
 

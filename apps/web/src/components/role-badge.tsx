@@ -1,4 +1,4 @@
-import { Badge } from "@org-sass/ui/components/badge";
+import { Badge } from "@org-saas/ui/components/badge";
 
 const roleConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> =
   {

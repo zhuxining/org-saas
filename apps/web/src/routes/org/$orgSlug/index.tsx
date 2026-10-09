@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@org-sass/ui/components/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@org-saas/ui/components/card";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Mail, Users, UsersRound } from "lucide-react";

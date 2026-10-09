@@ -1,12 +1,12 @@
-import { Badge } from "@org-sass/ui/components/badge";
-import { Button } from "@org-sass/ui/components/button";
+import { Badge } from "@org-saas/ui/components/badge";
+import { Button } from "@org-saas/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@org-sass/ui/components/card";
+} from "@org-saas/ui/components/card";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 

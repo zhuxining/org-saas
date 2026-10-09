@@ -1,7 +1,7 @@
-import { Button } from "@org-sass/ui/components/button";
-import { Input } from "@org-sass/ui/components/input";
-import { Textarea } from "@org-sass/ui/components/textarea";
-import { cn } from "@org-sass/ui/lib/utils";
+import { Button } from "@org-saas/ui/components/button";
+import { Input } from "@org-saas/ui/components/input";
+import { Textarea } from "@org-saas/ui/components/textarea";
+import { cn } from "@org-saas/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 

@@ -1,11 +1,11 @@
-import { Badge } from "@org-sass/ui/components/badge";
-import { Button } from "@org-sass/ui/components/button";
+import { Badge } from "@org-saas/ui/components/badge";
+import { Button } from "@org-saas/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@org-sass/ui/components/dropdown-menu";
+} from "@org-saas/ui/components/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@org-sass/ui/components/table";
+} from "@org-saas/ui/components/table";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";

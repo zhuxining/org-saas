@@ -1,4 +1,4 @@
-import { Toaster } from "@org-sass/ui/components/sonner";
+import { Toaster } from "@org-saas/ui/components/sonner";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { FormDevtoolsPanel } from "@tanstack/react-form-devtools";
 import type { QueryClient } from "@tanstack/react-query";

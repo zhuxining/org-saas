@@ -1,5 +1,5 @@
 {
-  "name": "org-sass",
+  "name": "org-saas",
   "private": true,
   "workspaces": {
     "packages": [
@@ -51,18 +51,18 @@
     "dev:web": "vp run --filter web dev",
     "dev:fumadocs": "vp run --filter fumadocs dev",
     "build": "vp run --parallel --filter web --filter fumadocs build",
-    "db:push": "vp run --filter @org-sass/db db:push",
-    "db:studio": "vp run --filter @org-sass/db db:studio",
-    "db:generate": "vp run --filter @org-sass/db db:generate",
-    "db:migrate": "vp run --filter @org-sass/db db:migrate",
+    "db:push": "vp run --filter @org-saas/db db:push",
+    "db:studio": "vp run --filter @org-saas/db db:studio",
+    "db:generate": "vp run --filter @org-saas/db db:generate",
+    "db:migrate": "vp run --filter @org-saas/db db:migrate",
     "check": "vp check --fix",
     "clean": "vp run --workspaces --if-present clean && git clean -xdf node_modules .dist .output .tanstack .wrangler"
   },
   "dependencies": {
-    "@org-sass/env": "workspace:*"
+    "@org-saas/env": "workspace:*"
   },
   "devDependencies": {
-    "@org-sass/config": "workspace:*",
+    "@org-saas/config": "workspace:*",
     "taze": "^21.3.0",
     "vite-plus": "catalog:"
   },

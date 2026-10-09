@@ -4,7 +4,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@org-sass/ui/components/sheet";
+} from "@org-saas/ui/components/sheet";
 import { Link } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
 

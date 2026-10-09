@@ -26,7 +26,7 @@
 
 ```typescript
 // 服务端
-import { auth } from "@org-sass/auth";
+import { auth } from "@org-saas/auth";
 const session = await auth.api.getSession({ headers: request.headers });
 
 // 权限检查

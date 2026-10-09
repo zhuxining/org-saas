@@ -1,5 +1,5 @@
 {
-  "extends": "@org-sass/config/tsconfig.base.json",
+  "extends": "@org-saas/config/tsconfig.base.json",
   "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
     "types": ["vite/client", "node"],

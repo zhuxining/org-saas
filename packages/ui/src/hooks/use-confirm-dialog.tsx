@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@org-sass/ui/components/alert-dialog";
+} from "@org-saas/ui/components/alert-dialog";
 import { useCallback, useState } from "react";
 
 export interface ConfirmDialogOptions {

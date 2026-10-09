@@ -1,5 +1,5 @@
 {
-  "name": "@org-sass/ui",
+  "name": "@org-saas/ui",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -36,7 +36,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@org-sass/config": "workspace:*",
+    "@org-saas/config": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "shadcn": "^4.21.4",

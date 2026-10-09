@@ -1,4 +1,4 @@
-import type { auth } from "@org-sass/auth";
+import type { auth } from "@org-saas/auth";
 
 import { getSession } from "@/functions/auth.fn";
 import type { RouterAppContext } from "@/routes/__root";

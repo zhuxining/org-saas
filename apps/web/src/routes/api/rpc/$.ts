@@ -1,6 +1,6 @@
-import { createContext } from "@org-sass/api/context";
-import { standardLimiter } from "@org-sass/api/index";
-import { appRouter } from "@org-sass/api/routers/index";
+import { createContext } from "@org-saas/api/context";
+import { standardLimiter } from "@org-saas/api/index";
+import { appRouter } from "@org-saas/api/routers/index";
 import { RatelimitHandlerPlugin } from "@orpc/experimental-ratelimit";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -24,7 +24,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
       schemaConverters: [new ZodToJsonSchemaConverter()],
       specGenerateOptions: {
         info: {
-          title: "org-sass API",
+          title: "org-saas API",
           version: "1.0.0",
         },
       },

@@ -1,4 +1,4 @@
-import { Button } from "@org-sass/ui/components/button";
+import { Button } from "@org-saas/ui/components/button";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { UserPlus } from "lucide-react";
