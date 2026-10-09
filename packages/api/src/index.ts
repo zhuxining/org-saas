@@ -1,3 +1,4 @@
+import { env } from "@org-saas/env/server";
 import { getLogger, type LoggerContext } from "@orpc/pino";
 import { ratelimit, type RateLimiter } from "@orpc/ratelimit";
 import { MemoryRateLimiter } from "@orpc/ratelimit/memory";
@@ -9,7 +10,7 @@ import { apiContract } from "./contracts/index";
 
 // 创建 Pino logger
 const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
+  level: env.LOG_LEVEL,
   formatters: {
     level: (label) => ({ level: label }),
   },
