@@ -1,4 +1,16 @@
-# 项目开发约定
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in GitHub Issues for `zhuxining/org-saas`, managed with `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use the multi-context glossary map at `GLOSSARY-MAP.md` and system-wide ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
 ## 项目与边界
 
