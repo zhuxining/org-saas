@@ -1,17 +1,12 @@
-import { auth } from "@org-saas/auth";
+import { createSessionGetter } from "@org-saas/auth/session";
 
-export async function createContext(input: { req: Request } | { headers: Headers }): Promise<{
-  session: Awaited<ReturnType<typeof auth.api.getSession>>;
-  headers: Headers;
-}> {
+export function createContext(input: { req: Request } | { headers: Headers }) {
   const headers = "req" in input ? input.req.headers : input.headers;
-  const session = await auth.api.getSession({
-    headers,
-  });
+
   return {
-    session,
     headers,
+    getSession: createSessionGetter(headers),
   };
 }
 
-export type Context = Awaited<ReturnType<typeof createContext>>;
+export type Context = ReturnType<typeof createContext>;

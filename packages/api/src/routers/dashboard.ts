@@ -1,11 +1,10 @@
 import { and, count, db, eq } from "@org-saas/db";
 import { invitation, member, team } from "@org-saas/db/schema/auth";
-import { ORPCError } from "@orpc/server";
 
 import { protectedImplementer } from "../index";
 
 export const dashboardRouter = {
-  orgStats: protectedImplementer.dashboard.orgStats.handler(async ({ context, input }) => {
+  orgStats: protectedImplementer.dashboard.orgStats.handler(async ({ context, input, errors }) => {
     const userId = context.session.user.id;
 
     // 验证用户是否为组织成员
@@ -16,7 +15,7 @@ export const dashboardRouter = {
       .limit(1);
 
     if (!membership[0]) {
-      throw new ORPCError("FORBIDDEN", { message: "您不是此组织的成员" });
+      throw errors.FORBIDDEN({ message: "您不是此组织的成员" });
     }
 
     const [memberCount, teamCount, pendingInvitationCount] = await Promise.all([

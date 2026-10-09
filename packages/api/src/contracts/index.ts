@@ -1,3 +1,5 @@
+import type { RouterContractClient } from "@orpc/contract";
+
 import { betterAuthOpenAPIDocsContract } from "./better-auth-openapi-docs";
 import { dashboardContract } from "./dashboard";
 import { systemContract } from "./system";
@@ -9,3 +11,5 @@ export const apiContract = {
   user: userContract,
   dashboard: dashboardContract,
 };
+
+export type ApiContractClient = RouterContractClient<typeof apiContract>;

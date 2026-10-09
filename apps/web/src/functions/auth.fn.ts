@@ -6,14 +6,15 @@ import { authMiddleware } from "@/middleware/auth";
 export const getSession = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    return context.session;
+    return context.getSession();
   });
 
 export const resolveOrgBySlug = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .inputValidator((slug: string) => slug)
+  .validator((slug: string) => slug)
   .handler(async ({ context, data: slug }) => {
-    const user = context.session?.user;
+    const session = await context.getSession();
+    const user = session?.user;
     if (!user) {
       return null;
     }

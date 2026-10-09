@@ -35,14 +35,20 @@ export const implementer = implement(apiContract).$context<EnhancedContext>();
 
 export const publicImplementer = implementer;
 
-const requireAuth = implementer.middleware(async ({ context, next }) => {
-  if (!context.session?.user) {
+const requireAuth = implementer.middleware(async ({ context, errors, next }) => {
+  const session = await context.getSession();
+
+  if (!session?.user) {
+    if ("UNAUTHORIZED" in errors) {
+      throw errors.UNAUTHORIZED();
+    }
+
     throw new ORPCError("UNAUTHORIZED");
   }
 
   return next({
     context: {
-      session: context.session,
+      session,
     },
   });
 });

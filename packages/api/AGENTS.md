@@ -4,8 +4,8 @@
 
 提供业务 oRPC 路由，支持 HTTP 客户端调用与 SSR 服务端直接调用。
 
-- `src/context.ts`：从请求 headers 提取 Better Auth 会话。
-- `src/index.ts`：公共 procedure、认证中间件、限流和日志能力。
+- `src/context.ts`：从请求 headers 创建请求级 session getter；受保护 procedure 在认证 middleware 中按需读取会话。
+- `src/index.ts`：contract implementer、认证中间件、限流和日志能力。
 - `src/routers/index.ts`：组合业务路由；各子路由实现具体业务。
 - HTTP 接入位于 `apps/web/src/routes/api/rpc.$.ts`；同构客户端位于 `apps/web/src/utils/orpc.ts`。
 
@@ -13,15 +13,17 @@
 
 ## Procedure 与访问边界
 
-- 无需登录的接口使用 `publicProcedure`；需要登录的接口使用 `protectedProcedure`；需要用户级限流时使用 `rateLimitedProcedure`。
+- 无需登录的接口从 `publicImplementer` 实现；需要登录的接口从 `protectedImplementer` 实现；需要用户级限流时从 `rateLimitedImplementer` 实现。
 - 复用现有 procedure 和中间件。新增公共访问策略时集中定义，不在路由内复制会话解析或绕过 Better Auth。
-- `protectedProcedure` 仅保证会话存在。涉及组织的数据，仍需在服务端验证目标组织的访问资格，并将查询限制在该组织范围内；参考 `src/routers/dashboard.ts`。
+- `protectedImplementer` 通过请求级 `getSession()` 懒加载 Better Auth session，并将非空 session 注入 handler context。getter 仅在单个请求内缓存；不可放入模块级共享状态。
+- `protectedImplementer` 仅保证会话存在。涉及组织的数据，仍需在服务端验证目标组织的访问资格，并将查询限制在该组织范围内；参考 `src/routers/dashboard.ts`。
 - SSR 与 HTTP 调用使用同一业务处理器，保留相同的输入校验和访问检查。
 
 ## 输入与错误
 
-- 业务 RPC 必须契约优先：先在 `src/contracts/` 按业务领域定义 Zod 输入和输出 schema，再在 `src/contracts/index.ts` 汇总 `apiContract`，路由通过 `implement(apiContract)` 实现；客户端类型从契约推导，不重复声明。
-- 每个契约文件只放对应领域的接口契约；路由实现从契约 implementer 获取 procedure，并复用集中定义的认证和限流 implementer。页面可直接导入领域契约中的输入 schema。
+- 业务 RPC 必须契约优先：先在 `src/contracts/` 按业务领域定义 Zod 输入、输出和预期错误，再在 `src/contracts/index.ts` 汇总 `apiContract`，通过 `implement(apiContract)` 实现；最终 router 使用 contract implementer 的 `router(...)` 组装并校验覆盖范围。
+- 每个契约文件只放对应领域的接口契约；路由实现从契约 implementer 获取 procedure，并复用集中定义的认证和限流 implementer。页面可直接导入领域契约中的输入 schema，浏览器 client 类型从契约推导。
+- 业务输出使用稳定的 DTO schema；动态上游数据可以使用宽类型，但需保持在明确的边界内。
 - 输入 schema 表达接口允许的字段和业务限制，不能直接把完整数据库模型作为可写输入。共享 schema 时保持浏览器可用，避免引入服务端依赖。
 - 页面可以复用契约的输入 schema；服务端通过契约实现执行输入校验，页面校验不能替代它。
 - 预期业务错误抛 `ORPCError`，使用准确的错误码；未知异常按服务端错误处理。

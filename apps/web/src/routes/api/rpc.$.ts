@@ -41,7 +41,7 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 async function handle({ request }: { request: Request }) {
   const context = {
-    ...(await createContext({ headers: request.headers })),
+    ...createContext({ headers: request.headers }),
     ratelimiter: standardLimiter,
   };
 

@@ -1,5 +1,4 @@
 import { auth } from "@org-saas/auth";
-import { ORPCError } from "@orpc/server";
 
 import { protectedImplementer } from "../index";
 
@@ -12,10 +11,6 @@ export const userRouter = {
       },
       headers: context.headers,
     });
-
-    if (!updated) {
-      throw new ORPCError("NOT_FOUND", { message: "用户不存在" });
-    }
 
     return updated;
   }),
