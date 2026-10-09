@@ -10,7 +10,7 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
@@ -34,11 +34,11 @@ function NewOrgPage() {
       });
 
       if (result.error) {
-        toast.error(result.error.message ?? "创建失败");
+        toast.add({ title: result.error.message ?? "创建失败", type: "error" });
         return;
       }
 
-      toast.success("组织创建成功");
+      toast.add({ title: "组织创建成功", type: "success" });
       navigate({ to: `/org/${value.slug}` as string });
     },
     validators: {

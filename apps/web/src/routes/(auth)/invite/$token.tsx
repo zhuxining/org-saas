@@ -9,7 +9,7 @@ import {
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -30,11 +30,11 @@ function InvitePage() {
     setLoading(false);
 
     if (result.error) {
-      toast.error(result.error.message ?? "接受邀请失败");
+      toast.add({ title: result.error.message ?? "接受邀请失败", type: "error" });
       return;
     }
 
-    toast.success("已成功加入组织");
+    toast.add({ title: "已成功加入组织", type: "success" });
     navigate({ to: "/dashboard" as string });
   };
 
@@ -46,11 +46,11 @@ function InvitePage() {
     setLoading(false);
 
     if (result.error) {
-      toast.error(result.error.message ?? "拒绝邀请失败");
+      toast.add({ title: result.error.message ?? "拒绝邀请失败", type: "error" });
       return;
     }
 
-    toast.success("已拒绝邀请");
+    toast.add({ title: "已拒绝邀请", type: "success" });
     navigate({ to: "/" });
   };
 

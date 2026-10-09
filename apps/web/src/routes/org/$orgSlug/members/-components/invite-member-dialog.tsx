@@ -17,7 +17,7 @@ import {
 } from "@org-saas/ui/components/select";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
@@ -44,11 +44,11 @@ export function InviteMemberDialog({ open, onOpenChange, orgId }: InviteMemberDi
       });
 
       if (result.error) {
-        toast.error(result.error.message ?? "邀请失败");
+        toast.add({ title: result.error.message ?? "邀请失败", type: "error" });
         return;
       }
 
-      toast.success(`已向 ${value.email} 发送邀请`);
+      toast.add({ title: `已向 ${value.email} 发送邀请`, type: "success" });
       onOpenChange(false);
       form.reset();
       queryClient.invalidateQueries(orgFullQueryOptions(orgId));

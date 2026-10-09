@@ -10,7 +10,7 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
@@ -35,11 +35,11 @@ export function CreateTeamDialog({ open, onOpenChange, orgId }: CreateTeamDialog
       });
 
       if (result.error) {
-        toast.error(result.error.message ?? "创建失败");
+        toast.add({ title: result.error.message ?? "创建失败", type: "error" });
         return;
       }
 
-      toast.success("团队创建成功");
+      toast.add({ title: "团队创建成功", type: "success" });
       onOpenChange(false);
       form.reset();
       queryClient.invalidateQueries(orgFullQueryOptions(orgId));

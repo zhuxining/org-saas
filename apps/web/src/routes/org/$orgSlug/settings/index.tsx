@@ -11,7 +11,7 @@ import { Label } from "@org-saas/ui/components/label";
 import { Separator } from "@org-saas/ui/components/separator";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
@@ -43,11 +43,11 @@ function SettingsPage() {
       });
 
       if (result.error) {
-        toast.error(result.error.message ?? "更新失败");
+        toast.add({ title: result.error.message ?? "更新失败", type: "error" });
         return;
       }
 
-      toast.success("组织设置已更新");
+      toast.add({ title: "组织设置已更新", type: "success" });
       if (value.slug !== org.slug) {
         navigate({
           to: "/org/$orgSlug/settings",
@@ -68,7 +68,7 @@ function SettingsPage() {
 
   const handleDelete = async () => {
     if (role !== "owner") {
-      toast.error("只有 Owner 可以删除组织");
+      toast.add({ title: "只有 Owner 可以删除组织", type: "error" });
       return;
     }
 
@@ -80,9 +80,9 @@ function SettingsPage() {
     });
 
     if (result.error) {
-      toast.error(result.error.message ?? "删除失败");
+      toast.add({ title: result.error.message ?? "删除失败", type: "error" });
     } else {
-      toast.success("组织已删除");
+      toast.add({ title: "组织已删除", type: "success" });
       navigate({ to: "/dashboard" });
     }
   };

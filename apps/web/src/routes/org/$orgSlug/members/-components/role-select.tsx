@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@org-saas/ui/components/select";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 
 import { authClient } from "@/lib/auth-client";
 import { orgFullQueryOptions } from "@/lib/query-options";
@@ -30,9 +30,9 @@ export function RoleSelect({ memberId, currentRole, orgId }: RoleSelectProps) {
     });
 
     if (result.error) {
-      toast.error(result.error.message ?? "角色更新失败");
+      toast.add({ title: result.error.message ?? "角色更新失败", type: "error" });
     } else {
-      toast.success("角色已更新");
+      toast.add({ title: "角色已更新", type: "success" });
       queryClient.invalidateQueries(orgFullQueryOptions(orgId));
     }
   };

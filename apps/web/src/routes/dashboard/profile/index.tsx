@@ -10,7 +10,7 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -34,9 +34,9 @@ function ProfilePage() {
           name: value.name || undefined,
           image: value.image || undefined,
         });
-        toast.success("个人信息已更新");
+        toast.add({ title: "个人信息已更新", type: "success" });
       } catch {
-        toast.error("更新失败");
+        toast.add({ title: "更新失败", type: "error" });
       }
     },
     validators: {

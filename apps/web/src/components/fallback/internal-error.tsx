@@ -11,12 +11,14 @@ import { useRouter } from "@tanstack/react-router";
 import { AlertCircle, Home, RefreshCw } from "lucide-react";
 
 interface ErrorBoundaryProps {
-  error: Error;
+  error: unknown;
   reset?: () => void;
 }
 
 export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   const router = useRouter();
+  const errorMessage =
+    error instanceof Error ? error.message : typeof error === "string" ? error : "未知错误";
 
   const handleReset = () => {
     reset?.();
@@ -38,10 +40,10 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
           <CardDescription>应用遇到了一个意外错误。请尝试刷新页面或返回首页。</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && (
+          {errorMessage && (
             <div className="bg-muted rounded-md p-3">
               <p className="text-muted-foreground text-sm wrap-break-word">
-                {error.message || "未知错误"}
+                {errorMessage}
               </p>
             </div>
           )}

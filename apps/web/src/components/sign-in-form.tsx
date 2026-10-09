@@ -3,7 +3,7 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
@@ -29,10 +29,10 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
             navigate({
               to: "/dashboard",
             });
-            toast.success("Sign in successful");
+            toast.add({ title: "Sign in successful", type: "success" });
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            toast.add({ title: error.error.message || error.error.statusText, type: "error" });
           },
         },
       );

@@ -10,7 +10,7 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,10 +20,12 @@ export const queryClient = new QueryClient({
   },
   queryCache: new QueryCache({
     onError: (error, query) => {
-      toast.error(`Error: ${error.message}`, {
-        action: {
-          label: "retry",
-          onClick: query.invalidate,
+      toast.add({
+        title: `Error: ${error.message}`,
+        type: "error",
+        actionProps: {
+          children: "retry",
+          onClick: () => query.invalidate(),
         },
       });
     },

@@ -11,7 +11,7 @@ import {
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";
@@ -54,9 +54,9 @@ function TeamDetailPage() {
       organizationId: org.id,
     });
     if (result.error) {
-      toast.error(result.error.message ?? "删除失败");
+      toast.add({ title: result.error.message ?? "删除失败", type: "error" });
     } else {
-      toast.success("团队已删除");
+      toast.add({ title: "团队已删除", type: "success" });
       queryClient.invalidateQueries(orgFullQueryOptions(org.id));
     }
   };

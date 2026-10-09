@@ -16,7 +16,7 @@ import {
 } from "@org-saas/ui/components/table";
 import { useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, UserMinus, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@org-saas/ui/components/toast";
 
 import { RoleBadge } from "@/components/role-badge";
 import { UserAvatar } from "@/components/user-avatar";
@@ -56,9 +56,9 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       organizationId: orgId,
     });
     if (result.error) {
-      toast.error(result.error.message ?? "移除失败");
+      toast.add({ title: result.error.message ?? "移除失败", type: "error" });
     } else {
-      toast.success("成员已移除");
+      toast.add({ title: "成员已移除", type: "success" });
       invalidateOrg();
     }
   };
@@ -68,9 +68,9 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       invitationId,
     });
     if (result.error) {
-      toast.error(result.error.message ?? "取消失败");
+      toast.add({ title: result.error.message ?? "取消失败", type: "error" });
     } else {
-      toast.success("邀请已取消");
+      toast.add({ title: "邀请已取消", type: "success" });
       invalidateOrg();
     }
   };

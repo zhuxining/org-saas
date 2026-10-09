@@ -1,3 +1,4 @@
+import { Toaster } from "@org-saas/ui/components/toast";
 import { TooltipProvider } from "@org-saas/ui/components/tooltip";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { FormDevtoolsPanel } from "@tanstack/react-form-devtools";
@@ -66,7 +67,7 @@ function RootDocument() {
         <ThemeProvider defaultTheme="system" storageKey="theme">
           <div className="min-h-screen">
             <TooltipProvider>
-              <Outlet />{" "}
+              <Outlet /> <Toaster />
             </TooltipProvider>
           </div>
           <TanStackDevtools
