@@ -65,7 +65,7 @@ export function OrgSwitcher({ activeOrgSlug }: { activeOrgSlug?: string }) {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate({ to: "/dashboard/orgs/new" as string })}>
+        <DropdownMenuItem onClick={() => navigate({ to: "/me/organizations/new" })}>
           <Plus className="size-4" />
           <span>创建新组织</span>
         </DropdownMenuItem>

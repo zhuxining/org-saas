@@ -8,52 +8,38 @@ import {
 } from "@org-saas/ui/components/card";
 import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
-import { Separator } from "@org-saas/ui/components/separator";
 import { toast } from "@org-saas/ui/components/toast";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
-import { useOrgContext } from "@/lib/org-context";
-import { requireAdmin } from "@/utils/guards";
 
-export const Route = createFileRoute("/_authenticated/org/$orgSlug/settings/")({
-  component: SettingsPage,
+export const Route = createFileRoute("/_authenticated/me/organizations/new")({
+  component: NewOrgPage,
 });
 
-function SettingsPage() {
-  const { org, role } = useOrgContext();
+function NewOrgPage() {
   const navigate = useNavigate();
-
-  requireAdmin(role);
 
   const form = useForm({
     defaultValues: {
-      name: org.name,
-      slug: org.slug,
+      name: "",
+      slug: "",
     },
     onSubmit: async ({ value }) => {
-      const result = await authClient.organization.update({
-        data: {
-          name: value.name,
-          slug: value.slug,
-        },
-        organizationId: org.id,
+      const result = await authClient.organization.create({
+        name: value.name,
+        slug: value.slug,
       });
 
       if (result.error) {
-        toast.add({ title: result.error.message ?? "更新失败", type: "error" });
+        toast.add({ title: result.error.message ?? "创建失败", type: "error" });
         return;
       }
 
-      toast.add({ title: "组织设置已更新", type: "success" });
-      if (value.slug !== org.slug) {
-        void navigate({
-          to: "/org/$orgSlug/settings",
-          params: { orgSlug: value.slug },
-        });
-      }
+      toast.add({ title: "组织创建成功", type: "success" });
+      void navigate({ to: `/org/${value.slug}` as string });
     },
     validators: {
       onSubmit: z.object({
@@ -66,35 +52,14 @@ function SettingsPage() {
     },
   });
 
-  const handleDelete = async () => {
-    if (role !== "owner") {
-      toast.add({ title: "只有 Owner 可以删除组织", type: "error" });
-      return;
-    }
-
-    const confirmed = window.confirm(`确定要删除组织 "${org.name}" 吗？此操作无法撤销。`);
-    if (!confirmed) return;
-
-    const result = await authClient.organization.delete({
-      organizationId: org.id,
-    });
-
-    if (result.error) {
-      toast.add({ title: result.error.message ?? "删除失败", type: "error" });
-    } else {
-      toast.add({ title: "组织已删除", type: "success" });
-      void navigate({ to: "/me" });
-    }
-  };
-
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-6 text-2xl font-bold">组织设置</h1>
+    <div className="mx-auto max-w-lg p-6">
+      <h1 className="mb-6 text-2xl font-bold">创建新组织</h1>
 
-      <Card className="mb-6">
+      <Card>
         <CardHeader>
-          <CardTitle>基本信息</CardTitle>
-          <CardDescription>更新组织的名称和 URL</CardDescription>
+          <CardTitle>组织信息</CardTitle>
+          <CardDescription>创建一个新的组织来管理你的团队</CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -112,8 +77,16 @@ function SettingsPage() {
                   <Input
                     id={field.name}
                     value={field.state.value}
+                    placeholder="我的组织"
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                      const slug = e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, "-")
+                        .replace(/^-|-$/g, "");
+                      form.setFieldValue("slug", slug);
+                    }}
                   />
                   {field.state.meta.errors.map((error) => (
                     <p key={error?.message} className="text-destructive text-sm">
@@ -131,9 +104,13 @@ function SettingsPage() {
                   <Input
                     id={field.name}
                     value={field.state.value}
+                    placeholder="my-org"
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
+                  <p className="text-muted-foreground text-xs">
+                    用于 URL: /org/{field.state.value || "slug"}
+                  </p>
                   {field.state.meta.errors.map((error) => (
                     <p key={error?.message} className="text-destructive text-sm">
                       {error?.message}
@@ -143,31 +120,21 @@ function SettingsPage() {
               )}
             </form.Field>
 
-            <form.Subscribe>
-              {(state) => (
-                <Button type="submit" disabled={!state.canSubmit || state.isSubmitting}>
-                  {state.isSubmitting ? "保存中..." : "保存"}
-                </Button>
-              )}
-            </form.Subscribe>
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => navigate({ to: "/me" })}>
+                取消
+              </Button>
+              <form.Subscribe>
+                {(state) => (
+                  <Button type="submit" disabled={!state.canSubmit || state.isSubmitting}>
+                    {state.isSubmitting ? "创建中..." : "创建组织"}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </div>
           </form>
         </CardContent>
       </Card>
-
-      {role === "owner" && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">危险区域</CardTitle>
-            <CardDescription>删除组织将移除所有成员、团队和数据，此操作无法撤销</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Separator className="mb-4" />
-            <Button variant="destructive" onClick={handleDelete}>
-              删除组织
-            </Button>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
