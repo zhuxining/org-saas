@@ -111,6 +111,7 @@
       },
       "devDependencies": {
         "@org-saas/config": "workspace:*",
+        "@types/node": "catalog:",
         "typescript": "catalog:",
       },
     },
