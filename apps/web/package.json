@@ -14,8 +14,6 @@
     "@org-sass/env": "workspace:*",
     "@org-sass/ui": "workspace:*",
     "@orpc/client": "catalog:",
-    "@orpc/experimental-pino": "catalog:",
-    "@orpc/experimental-ratelimit": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/tanstack-query": "catalog:",
@@ -43,16 +41,16 @@
     "@tanstack/react-form-devtools": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
     "@tanstack/react-router-devtools": "catalog:",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "jsdom": "^30.0.1",
+    "jsdom": "^30.1.2",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "web-vitals": "^6.0.1"
+    "web-vitals": "^6.2.3"
   }
 }
