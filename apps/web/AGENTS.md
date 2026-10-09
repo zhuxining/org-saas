@@ -19,7 +19,7 @@
 
 - 路由树由 TanStack 工具生成，修改路由源文件，不手工编辑 `src/routeTree.gen.ts`。
 - 路由专属组件放在同级 `-components/`，避免被识别为路由；跨页面组件放 `src/components/`。组件文件用 kebab-case，导出名用 PascalCase。
-- 保持 SSR / 客户端边界：客户端组件不直接导入数据库、服务端环境变量或认证服务端实现；Server Functions 与同构入口遵循现有组织方式。
+- 保持 SSR / 客户端边界：客户端组件不直接导入数据库、服务端环境变量或认证服务端实现。
 - 页面守卫使用现有 `requireSession`、`requireOrgRole`、`requireAdmin`、`requireOwner`；组织路由入口见 `src/routes/org/$orgSlug/route.tsx` 和 `resolveOrgBySlug`。页面守卫不能替代服务端访问检查。
 - `src/routes/api/` 负责 oRPC / Better Auth 的 HTTP 接入，业务处理放对应共享包。
 
@@ -33,6 +33,6 @@
 
 ## UI 与验证
 
-- 组件导入、主题、图标及 Base UI 组合方式遵循 [UI 约定](../../packages/ui/AGENTS.md)。业务组件优先组合共享组件，视觉样式使用 Tailwind 语义 token，自定义 CSS class 仅承担结构布局。
+- 组件导入、组合、样式、主题和图标遵循 [UI 约定](../../packages/ui/AGENTS.md)。
 - React 19 使用 `ref` prop；保持语义化元素、表单 label、列表稳定 key 和键盘可操作性。
 - 完成页面改动后检查相关状态与交互；涉及路由、SSR 或客户端边界时，从仓库根运行 `vp run --filter web build`。
