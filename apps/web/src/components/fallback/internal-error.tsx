@@ -22,11 +22,11 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
 
   const handleReset = () => {
     reset?.();
-    router.invalidate();
+    void router.invalidate();
   };
 
   const handleGoHome = () => {
-    router.navigate({ to: "/" });
+    void router.navigate({ to: "/" });
   };
 
   return (

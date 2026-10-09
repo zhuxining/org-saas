@@ -42,7 +42,7 @@ export function CreateTeamDialog({ open, onOpenChange, orgId }: CreateTeamDialog
       toast.add({ title: "团队创建成功", type: "success" });
       onOpenChange(false);
       form.reset();
-      queryClient.invalidateQueries(orgFullQueryOptions(orgId));
+      void queryClient.invalidateQueries(orgFullQueryOptions(orgId));
     },
     validators: {
       onSubmit: z.object({
@@ -62,7 +62,7 @@ export function CreateTeamDialog({ open, onOpenChange, orgId }: CreateTeamDialog
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            void form.handleSubmit();
           }}
           className="space-y-4"
         >

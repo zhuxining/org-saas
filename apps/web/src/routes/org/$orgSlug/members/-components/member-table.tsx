@@ -59,7 +59,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       toast.add({ title: result.error.message ?? "移除失败", type: "error" });
     } else {
       toast.add({ title: "成员已移除", type: "success" });
-      invalidateOrg();
+      void invalidateOrg();
     }
   };
 
@@ -71,7 +71,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       toast.add({ title: result.error.message ?? "取消失败", type: "error" });
     } else {
       toast.add({ title: "邀请已取消", type: "success" });
-      invalidateOrg();
+      void invalidateOrg();
     }
   };
 

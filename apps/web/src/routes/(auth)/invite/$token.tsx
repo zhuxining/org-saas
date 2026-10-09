@@ -35,7 +35,7 @@ function InvitePage() {
     }
 
     toast.add({ title: "已成功加入组织", type: "success" });
-    navigate({ to: "/dashboard" as string });
+    void navigate({ to: "/dashboard" as string });
   };
 
   const handleReject = async () => {
@@ -51,7 +51,7 @@ function InvitePage() {
     }
 
     toast.add({ title: "已拒绝邀请", type: "success" });
-    navigate({ to: "/" });
+    void navigate({ to: "/" });
   };
 
   return (

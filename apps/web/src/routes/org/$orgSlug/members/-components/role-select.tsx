@@ -33,7 +33,7 @@ export function RoleSelect({ memberId, currentRole, orgId }: RoleSelectProps) {
       toast.add({ title: result.error.message ?? "角色更新失败", type: "error" });
     } else {
       toast.add({ title: "角色已更新", type: "success" });
-      queryClient.invalidateQueries(orgFullQueryOptions(orgId));
+      void queryClient.invalidateQueries(orgFullQueryOptions(orgId));
     }
   };
 

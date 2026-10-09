@@ -20,7 +20,7 @@ export function OfflinePage() {
       setIsOnline(true);
       // 网络恢复后自动刷新页面
       setTimeout(() => {
-        router.invalidate();
+        void router.invalidate();
       }, 1000);
     };
 
@@ -38,7 +38,7 @@ export function OfflinePage() {
   }, [router]);
 
   const handleRefresh = () => {
-    router.invalidate();
+    void router.invalidate();
   };
 
   return (

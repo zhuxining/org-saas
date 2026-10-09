@@ -1,4 +1,4 @@
-import type { Context } from "@org-saas/api/context";
+import type {} from "@/utils/orpc";
 
 // 扩展 oRPC privateData 返回的 user 类型
 declare module "@/utils/orpc" {
@@ -7,7 +7,11 @@ declare module "@/utils/orpc" {
       queryOptions(): {
         data: {
           message: string;
-          user: Context["session"]["user"] & {
+          user: {
+            id: string;
+            name: string;
+            email: string;
+            image?: string | null;
             activeOrganizationId?: string | null;
             activeTeamId?: string | null;
           };

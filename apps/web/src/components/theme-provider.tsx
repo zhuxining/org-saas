@@ -1,5 +1,5 @@
 import { ScriptOnce } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 
 type Theme = "dark" | "light" | "system";
@@ -14,6 +14,22 @@ type ThemeProviderState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
 };
+
+const THEME_STORAGE_EVENT = "theme-storage-change";
+
+function getStoredTheme(storageKey: string, defaultTheme: Theme): Theme {
+  const stored = localStorage.getItem(storageKey);
+  return stored === "light" || stored === "dark" || stored === "system" ? stored : defaultTheme;
+}
+
+function subscribeToThemeStorage(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(THEME_STORAGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(THEME_STORAGE_EVENT, onChange);
+  };
+}
 
 function getThemeScript(storageKey: string, defaultTheme: Theme) {
   const key = JSON.stringify(storageKey);
@@ -44,34 +60,27 @@ export function ThemeProvider({
   defaultTheme = "system",
   storageKey = "theme",
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(defaultTheme);
-  const [mounted, setMounted] = useState(false);
-
+  const theme = useSyncExternalStore(
+    subscribeToThemeStorage,
+    () => getStoredTheme(storageKey, defaultTheme),
+    () => defaultTheme,
+  );
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
-    setThemeState(
-      stored === "light" || stored === "dark" || stored === "system" ? stored : defaultTheme,
-    );
-    setMounted(true);
-  }, [defaultTheme, storageKey]);
-
-  useEffect(() => {
-    if (!mounted) return;
     applyTheme(theme);
-  }, [theme, mounted]);
+  }, [theme]);
 
   useEffect(() => {
-    if (!mounted || theme !== "system") return;
+    if (theme !== "system") return;
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => applyTheme("system");
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
-  }, [theme, mounted]);
+  }, [theme]);
 
   const setTheme = (next: Theme) => {
     localStorage.setItem(storageKey, next);
-    setThemeState(next);
+    window.dispatchEvent(new Event(THEME_STORAGE_EVENT));
   };
 
   return (

@@ -28,7 +28,7 @@ export function ComingSoonPage({
   const router = useRouter();
 
   const handleGoHome = () => {
-    router.navigate({ to: "/" });
+    void router.navigate({ to: "/" });
   };
 
   return (

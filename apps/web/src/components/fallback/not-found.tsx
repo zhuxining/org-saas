@@ -14,7 +14,7 @@ export function NotFoundPage() {
   const router = useRouter();
 
   const handleGoHome = () => {
-    router.navigate({ to: "/" });
+    void router.navigate({ to: "/" });
   };
 
   const handleGoBack = () => {

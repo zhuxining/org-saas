@@ -55,7 +55,7 @@ export function OrgSwitcher({ activeOrgSlug }: { activeOrgSlug?: string }) {
           <DropdownMenuItem
             key={org.id}
             onClick={() =>
-              navigate({
+              void navigate({
                 to: `/org/${org.slug}`,
               })
             }

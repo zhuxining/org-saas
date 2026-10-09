@@ -51,7 +51,7 @@ export function InviteMemberDialog({ open, onOpenChange, orgId }: InviteMemberDi
       toast.add({ title: `已向 ${value.email} 发送邀请`, type: "success" });
       onOpenChange(false);
       form.reset();
-      queryClient.invalidateQueries(orgFullQueryOptions(orgId));
+      void queryClient.invalidateQueries(orgFullQueryOptions(orgId));
     },
     validators: {
       onSubmit: z.object({
@@ -72,7 +72,7 @@ export function InviteMemberDialog({ open, onOpenChange, orgId }: InviteMemberDi
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            form.handleSubmit();
+            void form.handleSubmit();
           }}
           className="space-y-4"
         >

@@ -90,7 +90,6 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return;
-    onSelect(api);
     api.on("reInit", onSelect);
     api.on("select", onSelect);
 
@@ -108,8 +107,8 @@ function Carousel({
         orientation: orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
         scrollPrev,
         scrollNext,
-        canScrollPrev,
-        canScrollNext,
+        canScrollPrev: api?.canScrollPrev() ?? canScrollPrev,
+        canScrollNext: api?.canScrollNext() ?? canScrollNext,
       }}
     >
       <div

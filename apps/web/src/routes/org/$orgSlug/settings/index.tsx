@@ -49,7 +49,7 @@ function SettingsPage() {
 
       toast.add({ title: "组织设置已更新", type: "success" });
       if (value.slug !== org.slug) {
-        navigate({
+        void navigate({
           to: "/org/$orgSlug/settings",
           params: { orgSlug: value.slug },
         });
@@ -83,7 +83,7 @@ function SettingsPage() {
       toast.add({ title: result.error.message ?? "删除失败", type: "error" });
     } else {
       toast.add({ title: "组织已删除", type: "success" });
-      navigate({ to: "/dashboard" });
+      void navigate({ to: "/dashboard" });
     }
   };
 
@@ -101,7 +101,7 @@ function SettingsPage() {
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              form.handleSubmit();
+              void form.handleSubmit();
             }}
             className="space-y-4"
           >

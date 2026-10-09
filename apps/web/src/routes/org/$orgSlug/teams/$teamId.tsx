@@ -57,7 +57,7 @@ function TeamDetailPage() {
       toast.add({ title: result.error.message ?? "删除失败", type: "error" });
     } else {
       toast.add({ title: "团队已删除", type: "success" });
-      queryClient.invalidateQueries(orgFullQueryOptions(org.id));
+      void queryClient.invalidateQueries(orgFullQueryOptions(org.id));
     }
   };
 

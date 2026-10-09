@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import react from "@vitejs/plugin-react";
+import viteReact from "@vitejs/plugin-react";
 import mdx from "fumadocs-mdx/vite";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
@@ -22,6 +22,6 @@ export default defineConfig({
         enabled: true,
       },
     }),
-    react(),
+    viteReact({ compiler: true }),
   ]),
 });

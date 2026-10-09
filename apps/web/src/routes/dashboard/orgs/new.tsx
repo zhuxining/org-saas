@@ -39,7 +39,7 @@ function NewOrgPage() {
       }
 
       toast.add({ title: "组织创建成功", type: "success" });
-      navigate({ to: `/org/${value.slug}` as string });
+      void navigate({ to: `/org/${value.slug}` as string });
     },
     validators: {
       onSubmit: z.object({
@@ -66,7 +66,7 @@ function NewOrgPage() {
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              form.handleSubmit();
+              void form.handleSubmit();
             }}
             className="space-y-4"
           >

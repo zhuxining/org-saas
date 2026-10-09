@@ -13,7 +13,7 @@ export function UnauthorizedPage({ error }: UnauthorizedPageProps) {
   const router = useRouter();
 
   const handleLogin = () => {
-    router.navigate({
+    void router.navigate({
       to: error.redirectTo,
       search: { redirect: window.location.href },
     });
