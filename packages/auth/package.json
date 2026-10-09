@@ -13,6 +13,7 @@
     }
   },
   "dependencies": {
+    "@better-auth/core": "1.7.7",
     "@org-saas/db": "workspace:*",
     "@org-saas/env": "workspace:*",
     "better-auth": "catalog:",

@@ -9,8 +9,9 @@ import { organization } from "better-auth/plugins/organization";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
 import { createOrganizationPolicyPlugin } from "./organization-policy";
+import { withOrganizationMutationTransactions } from "./organization-transaction";
 import { ac, roles } from "./permissions";
-import { platformAc, platformRoles } from "./platform-permissions";
+import { platformAc, platformAdminRoles, platformRoles } from "./platform-permissions";
 
 const organizationOptions = {
   allowUserToCreateOrganization: true,
@@ -21,6 +22,13 @@ const organizationOptions = {
         archivedAt: {
           type: "date",
           required: false,
+          input: false,
+          returned: false,
+        },
+        ownerMutationVersion: {
+          type: "number",
+          required: true,
+          defaultValue: 0,
           input: false,
           returned: false,
         },
@@ -39,10 +47,11 @@ const organizationOptions = {
   roles,
 } as const;
 
-export const auth = betterAuth({
+const authInstance = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: schema,
+    transaction: true,
   }),
   trustedOrigins: [env.CORS_ORIGIN],
   emailAndPassword: {
@@ -63,14 +72,16 @@ export const auth = betterAuth({
       ac: platformAc,
       roles: platformRoles,
       defaultRole: "user",
-      adminRoles: ["platform-admin"],
+      adminRoles: [...platformAdminRoles],
     }),
     openAPI(), // `http://localhost:3001/api/auth/reference`
     tanstackStartCookies(),
     organization(organizationOptions),
-    createOrganizationPolicyPlugin(organizationOptions),
+    createOrganizationPolicyPlugin(organizationOptions, platformAdminRoles),
   ],
 });
+
+export const auth = withOrganizationMutationTransactions(authInstance);
 
 // 导出类型供客户端使用
 export type Auth = typeof auth;

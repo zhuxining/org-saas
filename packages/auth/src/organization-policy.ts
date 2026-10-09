@@ -1,6 +1,15 @@
+import { getCurrentAdapter } from "better-auth";
 import type { BetterAuthPlugin } from "better-auth";
-import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import {
+  APIError,
+  createAuthEndpoint,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api";
 import { hasPermission, type OrganizationOptions } from "better-auth/plugins/organization";
+import { z } from "zod";
+
+import { accountDeletionPaths, ownerMutationPaths } from "./organization-transaction";
 
 const organizationPath = /^\/organization\//;
 const roleAssignmentPaths = new Set([
@@ -97,14 +106,107 @@ function badRequest(code: string, message: string): never {
   throw APIError.from("BAD_REQUEST", { code, message });
 }
 
-export function createOrganizationPolicyPlugin(options: OrganizationOptions): BetterAuthPlugin {
+function createOwnershipTransferEndpoint(options: OrganizationOptions) {
+  return createAuthEndpoint(
+    "/organization/transfer-ownership",
+    {
+      method: "POST",
+      requireHeaders: true,
+      body: z.object({
+        organizationId: z.string().min(1),
+        newOwnerMemberId: z.string().min(1),
+        formerOwnerRole: z.string().min(1),
+      }),
+    },
+    async (ctx) => {
+      const session = await getSessionFromCtx(ctx);
+      if (!session) throw APIError.fromStatus("UNAUTHORIZED");
+      if (!hasSingleRole(ctx.body.formerOwnerRole) || ctx.body.formerOwnerRole === "owner") {
+        badRequest("NON_OWNER_ROLE_REQUIRED", "The former owner must receive one non-owner role.");
+      }
+
+      const adapter = await getCurrentAdapter(ctx.context.adapter);
+      const organization = await adapter.findOne({
+        model: "organization",
+        where: [{ field: "id", value: ctx.body.organizationId }],
+      });
+      if (!isRecord(organization)) badRequest("ORGANIZATION_NOT_FOUND", "Organization not found.");
+      const members = await adapter.findMany({
+        model: "member",
+        where: [{ field: "organizationId", value: ctx.body.organizationId }],
+      });
+      const owners = members.filter((member) => isRecord(member) && isOwnerRole(member.role));
+      const formerOwner = owners[0];
+      if (owners.length !== 1) {
+        badRequest(
+          "OWNER_STATE_INVALID",
+          "Ownership transfer requires exactly one current owner; review existing organization data.",
+        );
+      }
+      if (!isRecord(formerOwner) || formerOwner.userId !== session.user.id) {
+        forbidden("OWNER_REQUIRED", "Only the current owner may transfer ownership.");
+      }
+      const target = await adapter.findOne({
+        model: "member",
+        where: [
+          { field: "id", value: ctx.body.newOwnerMemberId },
+          { field: "organizationId", value: ctx.body.organizationId },
+        ],
+      });
+      if (!isRecord(target) || target.id === formerOwner.id) {
+        badRequest("TRANSFER_TARGET_INVALID", "The new owner must be another organization member.");
+      }
+      const roleExists = Object.hasOwn(options.roles ?? {}, ctx.body.formerOwnerRole)
+        ? true
+        : Boolean(
+            await adapter.findOne({
+              model: "organizationRole",
+              where: [
+                { field: "organizationId", value: ctx.body.organizationId },
+                { field: "role", value: ctx.body.formerOwnerRole },
+              ],
+            }),
+          );
+      if (!roleExists) badRequest("ROLE_NOT_FOUND", "The former owner's role does not exist.");
+
+      const demotedOwner = await adapter.update({
+        model: "member",
+        where: [
+          { field: "id", value: formerOwner.id as string },
+          { field: "organizationId", value: ctx.body.organizationId },
+          { field: "role", value: "owner" },
+        ],
+        update: { role: ctx.body.formerOwnerRole },
+      });
+      if (!demotedOwner) badRequest("OWNER_CHANGED", "The current owner changed before transfer.");
+      const promotedTarget = await adapter.update({
+        model: "member",
+        where: [
+          { field: "id", value: target.id as string },
+          { field: "organizationId", value: ctx.body.organizationId },
+          { field: "role", value: target.role as string },
+        ],
+        update: { role: "owner" },
+      });
+      if (!promotedTarget) badRequest("TRANSFER_TARGET_CHANGED", "The transfer target changed.");
+      return ctx.json({ formerOwner: demotedOwner, newOwner: promotedTarget });
+    },
+  );
+}
+
+export function createOrganizationPolicyPlugin(
+  options: OrganizationOptions,
+  platformAdminRoles: readonly string[] = [],
+) {
   return {
     id: "organization-policy",
+    endpoints: { transferOrganizationOwnership: createOwnershipTransferEndpoint(options) },
     hooks: {
       before: [
         {
           matcher: (context) =>
-            (typeof context.path === "string" && organizationPath.test(context.path)) ||
+            (typeof context.path === "string" &&
+              (organizationPath.test(context.path) || accountDeletionPaths.has(context.path))) ||
             isPathlessAddMemberContext(context),
           handler: createAuthMiddleware(async (ctx) => {
             const body = isRecord(ctx.body) ? ctx.body : {};
@@ -119,7 +221,79 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
             }
 
             const session = await getSessionFromCtx(ctx).catch(() => null);
-            const adapter = ctx.context.adapter;
+            const adapter = await getCurrentAdapter(ctx.context.adapter);
+            if (accountDeletionPaths.has(path ?? "")) {
+              if (!session) throw APIError.fromStatus("UNAUTHORIZED");
+              if (
+                path === "/admin/remove-user" &&
+                !platformAdminRoles.some((role) => roleNames(session.user.role).includes(role))
+              ) {
+                forbidden("PLATFORM_ADMIN_REQUIRED", "Platform administrator access is required.");
+              }
+              const targetUserId =
+                path === "/admin/remove-user"
+                  ? typeof body.userId === "string"
+                    ? body.userId
+                    : undefined
+                  : session?.user.id;
+              if (!targetUserId) {
+                forbidden(
+                  "ACCOUNT_DELETION_TARGET_REQUIRED",
+                  "The account deletion target cannot be verified safely.",
+                );
+              }
+              const memberships = await adapter.findMany({
+                model: "member",
+                where: [{ field: "userId", value: targetUserId }],
+              });
+              const organizationIds = [
+                ...new Set(
+                  memberships.flatMap((member) =>
+                    isRecord(member) && typeof member.organizationId === "string"
+                      ? [member.organizationId]
+                      : [],
+                  ),
+                ),
+              ].sort();
+              for (const organizationId of organizationIds) {
+                const locked = await adapter.incrementOne({
+                  model: "organization",
+                  where: [{ field: "id", value: organizationId }],
+                  increment: { ownerMutationVersion: 1 },
+                });
+                if (!locked) badRequest("ORGANIZATION_NOT_FOUND", "Organization not found.");
+                const owners = (
+                  await adapter.findMany({
+                    model: "member",
+                    where: [{ field: "organizationId", value: organizationId }],
+                  })
+                ).filter((member) => isRecord(member) && isOwnerRole(member.role));
+                if (owners.length !== 1) {
+                  badRequest(
+                    "OWNER_STATE_INVALID",
+                    "Account changes require exactly one owner in every organization; review existing organization data.",
+                  );
+                }
+              }
+              const currentMemberships = await adapter.findMany({
+                model: "member",
+                where: [{ field: "userId", value: targetUserId }],
+              });
+              const ownedOrganizationIds = currentMemberships
+                .filter((member) => isRecord(member) && isOwnerRole(member.role))
+                .flatMap((member) =>
+                  isRecord(member) && typeof member.organizationId === "string"
+                    ? [member.organizationId]
+                    : [],
+                );
+              if (ownedOrganizationIds.length > 0) {
+                forbidden(
+                  "OWNER_TRANSFER_REQUIRED",
+                  "Transfer ownership before deleting an owner account.",
+                );
+              }
+              return;
+            }
             const explicitId = [input.organizationId, input.id].find(
               (value): value is string => typeof value === "string",
             );
@@ -233,6 +407,27 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
                 where: [{ field: "id", value: organizationId }],
               });
             }
+            if (ownerMutationPaths.has(path ?? "") && organizationId) {
+              const locked = await adapter.incrementOne({
+                model: "organization",
+                where: [{ field: "id", value: organizationId }],
+                increment: { ownerMutationVersion: 1 },
+              });
+              if (!locked) badRequest("ORGANIZATION_NOT_FOUND", "Organization not found.");
+              organization = locked;
+              const owners = (
+                await adapter.findMany({
+                  model: "member",
+                  where: [{ field: "organizationId", value: organizationId }],
+                })
+              ).filter((member) => isRecord(member) && isOwnerRole(member.role));
+              if (owners.length !== 1) {
+                badRequest(
+                  "OWNER_STATE_INVALID",
+                  "Organization membership changes require exactly one owner; review existing organization data.",
+                );
+              }
+            }
             if (isRecord(organization) && organization.archivedAt) {
               forbidden("ORGANIZATION_ARCHIVED", "This organization is archived.");
             }
@@ -344,7 +539,45 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
             };
 
             if (roleAssignmentPaths.has(path)) {
+              if (roleNames(body.role).includes("owner")) {
+                forbidden(
+                  "OWNER_TRANSFER_REQUIRED",
+                  "Ownership can only change through an explicit transfer.",
+                );
+              }
               await ensureGrantBoundary(body.role as string);
+            }
+
+            if (path === "/organization/accept-invitation") {
+              const invitationId = body.invitationId;
+              if (typeof invitationId === "string") {
+                const invitation = await adapter.findOne({
+                  model: "invitation",
+                  where: [{ field: "id", value: invitationId }],
+                });
+                if (isRecord(invitation) && roleNames(invitation.role).includes("owner")) {
+                  forbidden(
+                    "OWNER_TRANSFER_REQUIRED",
+                    "Ownership can only change through an explicit transfer.",
+                  );
+                }
+              }
+            }
+
+            if (path === "/organization/leave") {
+              const currentMember = await adapter.findOne({
+                model: "member",
+                where: [
+                  { field: "organizationId", value: organizationId },
+                  { field: "userId", value: session?.user.id },
+                ],
+              });
+              if (isRecord(currentMember) && isOwnerRole(currentMember.role)) {
+                forbidden(
+                  "OWNER_TRANSFER_REQUIRED",
+                  "Transfer ownership before leaving the organization.",
+                );
+              }
             }
 
             if (
@@ -362,7 +595,18 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
                 const targetIsAdminEquivalent = await isAdminEquivalent(target.role);
                 const targetIsOwner = isOwnerRole(target.role);
                 const targetIsSelf = target.userId === session.user.id;
-                if (!actorIsOwner && (targetIsOwner || targetIsAdminEquivalent || targetIsSelf)) {
+                const assigningOwner =
+                  path === "/organization/update-member-role" &&
+                  roleNames(body.role).includes("owner");
+                if (targetIsOwner || assigningOwner) {
+                  forbidden(
+                    "OWNER_TRANSFER_REQUIRED",
+                    path === "/organization/remove-member"
+                      ? "Transfer ownership before removing the owner."
+                      : "Ownership can only change through an explicit transfer.",
+                  );
+                }
+                if (!actorIsOwner && (targetIsAdminEquivalent || targetIsSelf)) {
                   forbidden(
                     "PROTECTED_MEMBER_ROLE",
                     "Only an owner may change or remove this member.",
@@ -454,6 +698,23 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
                     "Only an owner may delete an admin-equivalent role.",
                   );
                 }
+                const members = await adapter.findMany({
+                  model: "member",
+                  where: [{ field: "organizationId", value: organizationId }],
+                });
+                if (
+                  members.some(
+                    (member) =>
+                      isRecord(member) &&
+                      typeof member.role === "string" &&
+                      roleNames(member.role).includes(role.role as string),
+                  )
+                ) {
+                  badRequest(
+                    "ROLE_ASSIGNED_TO_MEMBER",
+                    "A role assigned to an organization member cannot be deleted.",
+                  );
+                }
                 const pending = await adapter.findMany({
                   model: "invitation",
                   where: [
@@ -508,7 +769,8 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
                   ? member.organizationId
                   : session?.session.activeOrganizationId;
             if (!userId || !organizationId) return;
-            const teams = await ctx.context.adapter.findMany({
+            const adapter = await getCurrentAdapter(ctx.context.adapter);
+            const teams = await adapter.findMany({
               model: "team",
               where: [{ field: "organizationId", value: organizationId }],
             });
@@ -516,7 +778,7 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
               isRecord(team) && typeof team.id === "string" ? [team.id] : [],
             );
             if (!teamIds.length) return;
-            await ctx.context.adapter.deleteMany({
+            await adapter.deleteMany({
               model: "teamMember",
               where: [
                 { field: "userId", value: userId },
@@ -527,5 +789,5 @@ export function createOrganizationPolicyPlugin(options: OrganizationOptions): Be
         },
       ],
     },
-  };
+  } satisfies BetterAuthPlugin;
 }

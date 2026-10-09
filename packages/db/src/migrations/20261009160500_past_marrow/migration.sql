@@ -1,0 +1,1 @@
+ALTER TABLE "organization" ADD COLUMN "owner_mutation_version" integer DEFAULT 0 NOT NULL;
