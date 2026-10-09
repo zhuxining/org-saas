@@ -8,6 +8,7 @@ import { admin } from "better-auth/plugins/admin";
 import { organization } from "better-auth/plugins/organization";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 
+import { organizationPolicyPlugin } from "./organization-policy";
 import { ac, roles } from "./permissions";
 import { platformAc, platformRoles } from "./platform-permissions";
 
@@ -65,6 +66,7 @@ export const auth = betterAuth({
       },
       roles,
     }),
+    organizationPolicyPlugin,
   ],
 });
 
