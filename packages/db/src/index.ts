@@ -10,4 +10,4 @@ export const db: NodePgDatabase<typeof relations> = drizzle({
 });
 
 // Re-export drizzle-orm utilities
-export { and, count, eq } from "drizzle-orm";
+export { and, asc, count, desc, eq, ilike, isNull, not, or, sql } from "drizzle-orm";

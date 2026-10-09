@@ -9,7 +9,11 @@ import {
 import { hasPermission, type OrganizationOptions } from "better-auth/plugins/organization";
 import { z } from "zod";
 
-import { accountDeletionPaths, ownerMutationPaths } from "./organization-transaction";
+import {
+  accountDeletionPaths,
+  organizationMutationPaths,
+  ownerMutationPaths,
+} from "./organization-transaction";
 
 const organizationPath = /^\/organization\//;
 const roleAssignmentPaths = new Set([
@@ -104,6 +108,24 @@ function forbidden(code: string, message: string): never {
 
 function badRequest(code: string, message: string): never {
   throw APIError.from("BAD_REQUEST", { code, message });
+}
+
+async function canViewPendingInvitations(
+  options: OrganizationOptions,
+  context: Parameters<typeof hasPermission>[1],
+  organizationId: string,
+  role: string,
+): Promise<boolean> {
+  return (
+    (await hasPermission(
+      { options, organizationId, role, permissions: { invitation: ["create"] } },
+      context,
+    )) ||
+    (await hasPermission(
+      { options, organizationId, role, permissions: { invitation: ["cancel"] } },
+      context,
+    ))
+  );
 }
 
 function createOwnershipTransferEndpoint(options: OrganizationOptions) {
@@ -407,7 +429,8 @@ export function createOrganizationPolicyPlugin(
                 where: [{ field: "id", value: organizationId }],
               });
             }
-            if (ownerMutationPaths.has(path ?? "") && organizationId) {
+            // Serialize all organization writes with archive and recovery state changes.
+            if (organizationMutationPaths.has(path ?? "") && organizationId) {
               const locked = await adapter.incrementOne({
                 model: "organization",
                 where: [{ field: "id", value: organizationId }],
@@ -415,17 +438,19 @@ export function createOrganizationPolicyPlugin(
               });
               if (!locked) badRequest("ORGANIZATION_NOT_FOUND", "Organization not found.");
               organization = locked;
-              const owners = (
-                await adapter.findMany({
-                  model: "member",
-                  where: [{ field: "organizationId", value: organizationId }],
-                })
-              ).filter((member) => isRecord(member) && isOwnerRole(member.role));
-              if (owners.length !== 1) {
-                badRequest(
-                  "OWNER_STATE_INVALID",
-                  "Organization membership changes require exactly one owner; review existing organization data.",
-                );
+              if (ownerMutationPaths.has(path ?? "")) {
+                const owners = (
+                  await adapter.findMany({
+                    model: "member",
+                    where: [{ field: "organizationId", value: organizationId }],
+                  })
+                ).filter((member) => isRecord(member) && isOwnerRole(member.role));
+                if (owners.length !== 1) {
+                  badRequest(
+                    "OWNER_STATE_INVALID",
+                    "Organization membership changes require exactly one owner; review existing organization data.",
+                  );
+                }
               }
             }
             if (isRecord(organization) && organization.archivedAt) {
@@ -741,6 +766,100 @@ export function createOrganizationPolicyPlugin(
         },
       ],
       after: [
+        {
+          matcher: ({ path }) => path === "/organization/get-full-organization",
+          handler: createAuthMiddleware(async (ctx) => {
+            const returned = ctx.context.returned;
+            let organizationResult: unknown = returned;
+            if (returned instanceof Response) {
+              try {
+                organizationResult = await returned.clone().json();
+              } catch {
+                return;
+              }
+            }
+            if (!isRecord(organizationResult) || !Array.isArray(organizationResult.invitations)) {
+              return;
+            }
+
+            const session = await getSessionFromCtx(ctx).catch(() => null);
+            if (!session || typeof organizationResult.id !== "string") return;
+            const adapter = await getCurrentAdapter(ctx.context.adapter);
+            const membership = await adapter.findOne({
+              model: "member",
+              where: [
+                { field: "organizationId", value: organizationResult.id },
+                { field: "userId", value: session.user.id },
+              ],
+            });
+            if (!isRecord(membership) || typeof membership.role !== "string") return;
+
+            const canViewInvitations = await canViewPendingInvitations(
+              options,
+              ctx,
+              organizationResult.id,
+              membership.role,
+            );
+            if (canViewInvitations) return;
+
+            const safeOrganization = { ...organizationResult, invitations: [] };
+            if (returned instanceof Response) {
+              const headers = new Headers(returned.headers);
+              headers.delete("content-length");
+              ctx.context.returned = new Response(JSON.stringify(safeOrganization), {
+                status: returned.status,
+                statusText: returned.statusText,
+                headers,
+              });
+            } else {
+              ctx.context.returned = safeOrganization;
+            }
+          }),
+        },
+        {
+          matcher: ({ path }) => path === "/organization/list-invitations",
+          handler: createAuthMiddleware(async (ctx) => {
+            const returned = ctx.context.returned;
+            let invitations: unknown = returned;
+            if (returned instanceof Response) {
+              try {
+                invitations = await returned.clone().json();
+              } catch {
+                return;
+              }
+            }
+            if (!Array.isArray(invitations)) return;
+
+            const session = await getSessionFromCtx(ctx).catch(() => null);
+            const query = isRecord(ctx.query) ? ctx.query : {};
+            const organizationId =
+              (typeof query.organizationId === "string" && query.organizationId) ||
+              session?.session.activeOrganizationId;
+            if (!session || !organizationId) return;
+            const adapter = await getCurrentAdapter(ctx.context.adapter);
+            const membership = await adapter.findOne({
+              model: "member",
+              where: [
+                { field: "organizationId", value: organizationId },
+                { field: "userId", value: session.user.id },
+              ],
+            });
+            if (!isRecord(membership) || typeof membership.role !== "string") return;
+            if (await canViewPendingInvitations(options, ctx, organizationId, membership.role))
+              return;
+            if (returned instanceof Response) {
+              const headers = new Headers(returned.headers);
+              headers.delete("content-length");
+              ctx.context.returned = new Response(JSON.stringify([]), {
+                status: returned.status,
+                statusText: returned.statusText,
+                headers,
+              });
+            } else {
+              ctx.context.returned = [];
+            }
+          }),
+        },
         {
           matcher: ({ path }) =>
             path === "/organization/remove-member" || path === "/organization/leave",

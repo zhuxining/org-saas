@@ -21,20 +21,34 @@ export const ownerMutationPaths = new Set([
   "/organization/transfer-ownership",
 ]);
 
+export const organizationMutationPaths = new Set([
+  "/organization/create",
+  "/organization/update",
+  "/organization/delete",
+  "/organization/set-active",
+  "/organization/cancel-invitation",
+  "/organization/reject-invitation",
+  "/organization/create-team",
+  "/organization/update-team",
+  "/organization/remove-team",
+  "/organization/set-active-team",
+  "/organization/add-team-member",
+  "/organization/remove-team-member",
+  "/organization/create-role",
+  "/organization/update-role",
+  "/organization/delete-role",
+  ...ownerMutationPaths,
+]);
+
 export const accountDeletionPaths = new Set([
   "/delete-user",
   "/delete-user/callback",
   "/admin/remove-user",
 ]);
 
-const transactionalHttpPaths = new Set([
-  "/organization/create",
-  ...ownerMutationPaths,
-  ...accountDeletionPaths,
-]);
+const transactionalHttpPaths = new Set([...organizationMutationPaths, ...accountDeletionPaths]);
 
 const ownerMutationApiMethods = new Set([
-  "createOrganization",
   "addMember",
   "createInvitation",
   "acceptInvitation",
@@ -45,6 +59,25 @@ const ownerMutationApiMethods = new Set([
   "deleteUser",
   "deleteUserCallback",
   "removeUser",
+]);
+
+const organizationMutationApiMethods = new Set([
+  "createOrganization",
+  "updateOrganization",
+  "deleteOrganization",
+  "setActiveOrganization",
+  "cancelInvitation",
+  "rejectInvitation",
+  "createTeam",
+  "updateTeam",
+  "removeTeam",
+  "setActiveTeam",
+  "addTeamMember",
+  "removeTeamMember",
+  "createOrgRole",
+  "updateOrgRole",
+  "deleteOrgRole",
+  ...ownerMutationApiMethods,
 ]);
 
 type TransactionCallback = (transactionAdapter: Adapter) => Promise<unknown>;
@@ -79,7 +112,7 @@ class RollbackResponse extends Error {
   }
 }
 
-function isOwnerMutationPath(pathname: string): boolean {
+function isTransactionalHttpPath(pathname: string): boolean {
   return [...transactionalHttpPaths].some((path) => pathname.endsWith(path));
 }
 
@@ -101,7 +134,7 @@ export function withOrganizationMutationTransactions<AuthType extends AuthWithAd
 
   const handler = async (request: Request): Promise<Response> => {
     const path = new URL(request.url).pathname.replace(/\/+$/, "");
-    if (!isOwnerMutationPath(path)) {
+    if (!isTransactionalHttpPath(path)) {
       await adapterReady;
       return Reflect.apply(auth.handler, auth, [request]);
     }
@@ -124,7 +157,7 @@ export function withOrganizationMutationTransactions<AuthType extends AuthWithAd
       const method = Reflect.get(target, property, receiver);
       if (
         typeof property !== "string" ||
-        !ownerMutationApiMethods.has(property) ||
+        !organizationMutationApiMethods.has(property) ||
         typeof method !== "function"
       ) {
         return method;
