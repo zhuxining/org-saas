@@ -1,6 +1,7 @@
 import { createContext } from "@org-saas/api/context";
 import { standardLimiter } from "@org-saas/api/index";
 import { appRouter } from "@org-saas/api/routers/index";
+import { toast } from "@org-saas/ui/components/toast";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { RetryAfterPlugin } from "@orpc/client/plugins";
@@ -10,27 +11,28 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { toast } from "@org-saas/ui/components/toast";
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 分钟，避免挂载时立即重新获取
+export function createQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // 1 分钟，避免挂载时立即重新获取
+      },
     },
-  },
-  queryCache: new QueryCache({
-    onError: (error, query) => {
-      toast.add({
-        title: `Error: ${error.message}`,
-        type: "error",
-        actionProps: {
-          children: "retry",
-          onClick: () => query.invalidate(),
-        },
-      });
-    },
-  }),
-});
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        toast.add({
+          title: `Error: ${error.message}`,
+          type: "error",
+          actionProps: {
+            children: "retry",
+            onClick: () => query.invalidate(),
+          },
+        });
+      },
+    }),
+  });
+}
 
 const getORPCClient = createIsomorphicFn()
   .server(() =>

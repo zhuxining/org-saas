@@ -5,9 +5,10 @@ import "./index.css";
 import { ErrorBoundary, Loader, NotFoundPage } from "@/components/fallback";
 
 import { routeTree } from "./routeTree.gen";
-import { orpc, queryClient } from "./utils/orpc";
+import { createQueryClient, orpc } from "./utils/orpc";
 
 export const getRouter = () => {
+  const queryClient = createQueryClient();
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
