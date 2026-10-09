@@ -28,6 +28,7 @@ async function loadEnvironment() {
   return {
     db: dbModule.db,
     eq: dbModule.eq,
+    and: dbModule.and,
     schema,
     auth: authModule.auth,
     createContext: apiContext.createContext,
@@ -284,9 +285,15 @@ postgresDescribe("restricted organization and platform API", () => {
     );
     await environment.db
       .update(environment.schema.user)
-      .set({ role: "user, platform-admin" })
+      .set({ role: "user,platform-admin" })
       .where(environment.eq(environment.schema.user.id, platformAdmin.userId));
     const adminClient = createCaller(environment, platformAdmin.headers);
+    await expect(
+      adminClient.organization.accessContext({ organizationId: organizationB.id }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      adminClient.organization.resolveBySlug({ slug: organizationB.slug }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
 
     await environment.auth.api.createOrgRole({
       body: {
@@ -323,6 +330,35 @@ postgresDescribe("restricted organization and platform API", () => {
       managerClient.organization.grantableRoles({
         organizationId: organizationA.id,
         operation: "invitation.create",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const managerRoleRow = await environment.db
+      .select({ id: environment.schema.organizationRole.id })
+      .from(environment.schema.organizationRole)
+      .where(
+        environment.and(
+          environment.eq(environment.schema.organizationRole.organizationId, organizationA.id),
+          environment.eq(environment.schema.organizationRole.role, "member-role-manager"),
+        ),
+      );
+    const managerRoleId = managerRoleRow[0]?.id;
+    if (!managerRoleId) throw new Error("Custom manager role is missing");
+    await environment.auth.api.updateOrgRole({
+      body: {
+        organizationId: organizationA.id,
+        roleId: managerRoleId,
+        data: { permission: { team: ["create"] } },
+      },
+      headers: userA.headers,
+    });
+    const refreshedManagerAccess = await managerClient.organization.accessContext({
+      organizationId: organizationA.id,
+    });
+    expect(refreshedManagerAccess.operations.member.update).toBe(false);
+    await expect(
+      managerClient.organization.grantableRoles({
+        organizationId: organizationA.id,
+        operation: "member.update",
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
 
@@ -362,5 +398,88 @@ postgresDescribe("restricted organization and platform API", () => {
       offset: 0,
     });
     expect(platformAdmins.items).toEqual([]);
+
+    await expect(
+      environment.auth.api.setRole({
+        body: { userId: ordinaryUser.userId, role: "platform-admin" },
+        headers: platformAdmin.headers,
+      }),
+    ).rejects.toThrow("You are not allowed to change users role");
+    const setRoleResponse = await environment.auth.handler(
+      new Request("http://localhost:3000/api/auth/admin/set-role", {
+        method: "POST",
+        headers: {
+          cookie: platformAdmin.headers.get("cookie") ?? "",
+          "content-type": "application/json",
+          origin: "http://localhost:3000",
+        },
+        body: JSON.stringify({ userId: ordinaryUser.userId, role: "platform-admin" }),
+      }),
+    );
+    expect(setRoleResponse.status).toBe(403);
+    const unchangedUser = await environment.db
+      .select({ role: environment.schema.user.role })
+      .from(environment.schema.user)
+      .where(environment.eq(environment.schema.user.id, ordinaryUser.userId));
+    expect(unchangedUser[0]?.role).toBe("user");
+
+    await expect(
+      environment.auth.api.listUserSessions({
+        body: { userId: ordinaryUser.userId },
+        headers: ordinaryUser.headers,
+      }),
+    ).rejects.toThrow("You are not allowed to list users sessions");
+    const sessions = await environment.auth.api.listUserSessions({
+      body: { userId: ordinaryUser.userId },
+      headers: platformAdmin.headers,
+    });
+    expect(sessions.sessions).toHaveLength(1);
+    expect(sessions.sessions[0]).not.toHaveProperty("token");
+    const sessionListResponse = await environment.auth.handler(
+      new Request("http://localhost:3000/api/auth/admin/list-user-sessions", {
+        method: "POST",
+        headers: {
+          cookie: platformAdmin.headers.get("cookie") ?? "",
+          "content-type": "application/json",
+          origin: "http://localhost:3000",
+        },
+        body: JSON.stringify({ userId: ordinaryUser.userId }),
+      }),
+    );
+    expect(sessionListResponse.status).toBe(200);
+    const sessionListBody = (await sessionListResponse.json()) as {
+      sessions: Array<Record<string, unknown>>;
+    };
+    expect(sessionListBody.sessions).toHaveLength(1);
+    expect(sessionListBody.sessions[0]).not.toHaveProperty("token");
+
+    await environment.auth.api.revokeUserSessions({
+      body: { userId: ordinaryUser.userId },
+      headers: platformAdmin.headers,
+    });
+    const revokedSessions = await environment.auth.api.listUserSessions({
+      body: { userId: ordinaryUser.userId },
+      headers: platformAdmin.headers,
+    });
+    expect(revokedSessions.sessions).toHaveLength(0);
+
+    await environment.auth.api.banUser({
+      body: { userId: ordinaryUser.userId, banReason: "integration test" },
+      headers: platformAdmin.headers,
+    });
+    const bannedUser = await environment.db
+      .select({ banned: environment.schema.user.banned })
+      .from(environment.schema.user)
+      .where(environment.eq(environment.schema.user.id, ordinaryUser.userId));
+    expect(bannedUser[0]?.banned).toBe(true);
+    await environment.auth.api.unbanUser({
+      body: { userId: ordinaryUser.userId },
+      headers: platformAdmin.headers,
+    });
+    const unbannedUser = await environment.db
+      .select({ banned: environment.schema.user.banned })
+      .from(environment.schema.user)
+      .where(environment.eq(environment.schema.user.id, ordinaryUser.userId));
+    expect(unbannedUser[0]?.banned).toBe(false);
   });
 });

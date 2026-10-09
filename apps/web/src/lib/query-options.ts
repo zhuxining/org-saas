@@ -122,13 +122,31 @@ export const orgListQueryOptions = (userId: string) =>
     },
   });
 
+export const platformQueryKeys = {
+  root: (userId: string) => ["platform", userId] as const,
+  users: (userId: string, input: { search?: string; limit: number; offset: number }) =>
+    ["platform", userId, "users", input] as const,
+  userSessions: (userId: string, targetUserId: string) =>
+    ["platform", userId, "user-sessions", targetUserId] as const,
+};
+
 export const platformUsersQueryOptions = (
   userId: string,
   input: { search?: string; limit: number; offset: number },
 ) =>
   queryOptions({
-    queryKey: ["platform", userId, "users", input] as const,
+    queryKey: platformQueryKeys.users(userId, input),
     queryFn: () => client.platform.listUsers(input),
+  });
+
+export const platformUserSessionsQueryOptions = (userId: string, targetUserId: string) =>
+  queryOptions({
+    queryKey: platformQueryKeys.userSessions(userId, targetUserId),
+    queryFn: async () => {
+      const result = await authClient.admin.listUserSessions({ userId: targetUserId });
+      if (result.error) throw new Error(result.error.message ?? "读取用户会话失败");
+      return result.data.sessions;
+    },
   });
 
 export const platformOrganizationsQueryOptions = (

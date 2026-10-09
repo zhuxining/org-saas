@@ -12,6 +12,9 @@
       "types": "./src/*.ts"
     }
   },
+  "scripts": {
+    "bootstrap:platform-admin": "bun run ./scripts/bootstrap-platform-admin.ts"
+  },
   "dependencies": {
     "@better-auth/core": "1.7.7",
     "@org-saas/db": "workspace:*",
