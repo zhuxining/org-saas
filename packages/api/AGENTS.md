@@ -20,8 +20,8 @@
 
 ## 输入与错误
 
-- 业务 RPC 必须契约优先：先使用 Zod 定义接口契约，再通过 `implement(contract)` 实现；客户端类型从契约推导，不重复声明。
-- 既有 router-first 实现尚未符合该要求，留待后续迁移，不能作为新增接口的规范。
+- 业务 RPC 必须契约优先：先在 `src/contracts/` 按业务领域定义 Zod 输入和输出 schema，再在 `src/contracts/index.ts` 汇总 `apiContract`，路由通过 `implement(apiContract)` 实现；客户端类型从契约推导，不重复声明。
+- 每个契约文件只放对应领域的接口契约；路由实现从契约 implementer 获取 procedure，并复用集中定义的认证和限流 implementer。页面可直接导入领域契约中的输入 schema。
 - 输入 schema 表达接口允许的字段和业务限制，不能直接把完整数据库模型作为可写输入。共享 schema 时保持浏览器可用，避免引入服务端依赖。
 - 页面可以复用契约的输入 schema；服务端通过契约实现执行输入校验，页面校验不能替代它。
 - 预期业务错误抛 `ORPCError`，使用准确的错误码；未知异常按服务端错误处理。

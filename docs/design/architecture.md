@@ -4,6 +4,115 @@
 
 平台采用「个人中心 + 组织管理」的双层结构。用户登录后进入个人 Dashboard，从中选择或创建组织；进入组织后在独立的组织上下文中操作成员、团队、设置等功能。
 
+### 服务部署决策
+
+现阶段由 `apps/web` 的 TanStack Start 服务统一承载 Web 页面、业务 HTTP 接口和认证；文档由 `apps/fumadocs` 独立承载。小程序及未来 App 复用主业务服务，不因增加客户端而单独部署 API 服务。
+
+业务代码按职责拆分为共享包，部署服务先保持统一：`packages/api` 是业务代码包，不是独立运行的服务。HTTP 路由负责协议接入，业务接口契约、输入校验、业务处理与访问检查集中在共享包中。
+
+### 推荐架构图
+
+实线表示现有调用关系；虚线表示小程序及 App 的规划接入。
+
+```mermaid
+flowchart TB
+    Web["Web 浏览器"]
+    Mini["微信小程序（待接入）"]
+    App["App（未来）"]
+    Reader["文档访问者"]
+
+    subgraph Main["主业务服务：TanStack Start · apps/web"]
+        Pages["Web 页面与 SSR"]
+        HTTP["业务 HTTP 入口<br/>oRPC / OpenAPI"]
+        AuthHTTP["认证 HTTP 入口<br/>Better Auth"]
+        API["packages/api<br/>接口契约、输入校验、业务处理<br/>权限与组织访问检查"]
+        Auth["packages/auth<br/>认证、会话、组织与角色"]
+        DB["packages/db<br/>Drizzle 数据访问"]
+
+        Pages -->|"SSR 服务端直接调用"| API
+        Pages -->|"服务端会话与组织操作"| Auth
+        HTTP --> API
+        AuthHTTP --> Auth
+        API -->|"校验会话与权限"| Auth
+        API --> DB
+        Auth --> DB
+    end
+
+    subgraph Docs["独立文档应用：apps/fumadocs"]
+        DocPages["文档页面与搜索<br/>本地 MDX 内容"]
+    end
+
+    Web -->|"页面请求"| Pages
+    Web -->|"业务请求"| HTTP
+    Web -->|"登录与会话、组织操作"| AuthHTTP
+    Mini -.->|"HTTPS 业务请求"| HTTP
+    App -.->|"HTTPS 业务请求"| HTTP
+    Mini -.->|"需适配移动端认证"| AuthHTTP
+    App -.->|"需适配移动端认证"| AuthHTTP
+    Reader --> DocPages
+    DB --> PostgreSQL[("PostgreSQL")]
+```
+
+### 已实现能力与接入计划
+
+| 内容           | 当前状态                                                               | 代码入口                                                  |
+| -------------- | ---------------------------------------------------------------------- | --------------------------------------------------------- |
+| 业务 HTTP 接入 | oRPC 与 OpenAPI handler 复用同一个业务 router                          | [rpc.$.ts](../../apps/web/src/routes/api/rpc.$.ts)        |
+| Web 同构调用   | 浏览器通过 HTTP 调用；SSR 通过 `createRouterClient` 直接调用业务处理器 | [orpc.ts](../../apps/web/src/utils/orpc.ts)               |
+| 认证接入       | GET / POST 请求交给 Better Auth                                        | [auth.$.ts](../../apps/web/src/routes/api/auth.$.ts)      |
+| 小程序         | 已调用 `wx.login`，尚未实现 code 换取服务端会话、业务请求和凭证管理    | [app.js](../../apps/mini/app.js)                          |
+| App            | 未来接入，需确定客户端技术和认证方式                                   | —                                                         |
+| 文档搜索       | 基于本地 MDX 内容，当前不依赖主业务 API                                | [search.ts](../../apps/fumadocs/src/routes/api/search.ts) |
+
+### 多端共用接口的约束
+
+- 多端共用业务通过 `packages/api` 定义契约并实现，不仅放在页面 loader 或页面专属 Server Function 中。Web 的路由守卫和会话读取可继续使用 Server Functions。
+- oRPC 与 OpenAPI 复用业务实现。小程序或非 TypeScript App 接入时，核对 HTTP 路径、序列化方式、错误结构和认证；不能假定可以直接使用 Web 客户端代码。
+- 移动端可能长期使用旧版本，接口字段与行为应保持兼容。发生破坏性变更时明确版本与迁移方案，不能依赖客户端与后端同时发布。
+- 小程序与原生 App 需要适配登录、凭证保存和会话续期，最终复用统一的用户、会话与组织权限体系；不假定浏览器 Cookie 流程可以直接复用。
+- SSR 直接调用与 HTTP 调用复用相同的输入校验和服务端访问检查。组织数据必须验证目标组织的访问资格并限制查询范围。
+
+### 独立 API 服务的拆分条件
+
+| 实际需求                               | 当前统一部署的影响                     | 拆分后的收益                                         |
+| -------------------------------------- | -------------------------------------- | ---------------------------------------------------- |
+| API 流量明显高于页面流量，需要分别扩容 | 页面与 API 一起扩容                    | 可单独分配 API 资源                                  |
+| Web 与 API 需要独立发布、回滚          | 同一服务的发布相互关联                 | 独立控制发布节奏                                     |
+| 页面渲染故障不能影响移动端 API         | 两类请求共享运行资源，故障可能相互影响 | 隔离部分运行与发布故障，数据库等共享依赖仍需单独治理 |
+| 不同团队独立负责 Web 与后端            | 需要协调同一服务的部署                 | 部署职责更符合团队分工                               |
+
+增加小程序或 App 本身不构成拆分理由。出现上述实际需求后，再评估新增 `apps/api`。批量导入、报表生成等长任务可按需引入队列与 Worker，是否增加后台任务服务与是否拆分 API 分别决策。
+
+### 未来拆分架构图
+
+以下为满足拆分条件后的演进方案，尚未实施。
+
+```mermaid
+flowchart LR
+    Browser["Web 浏览器"] --> Web["apps/web<br/>TanStack Start<br/>页面与 SSR"]
+    Web -->|"服务端 HTTP 调用"| Entry
+    Browser -->|"业务与认证请求，可经同源代理"| Entry
+    Mini["微信小程序"] --> Entry
+    App["App"] --> Entry
+
+    subgraph Backend["独立 API 服务：未来 apps/api"]
+        Entry["业务与认证 HTTP 接入"]
+        API["packages/api<br/>业务契约与处理"]
+        Auth["packages/auth<br/>认证与权限"]
+        DB["packages/db"]
+        Entry --> API
+        Entry --> Auth
+        API --> Auth
+        API --> DB
+        Auth --> DB
+    end
+
+    DB --> PostgreSQL[("PostgreSQL")]
+    Reader["文档访问者"] --> Docs["apps/fumadocs"]
+```
+
+拆分主要迁移 HTTP 入口与部署位置，继续复用共享包中的业务实现。Web SSR 改为通过网络访问 API，需处理请求凭证转发、超时和错误；Web 的认证及组织调用也需指向新的服务入口。保持对外接口地址稳定或提供迁移策略，避免要求所有移动客户端同步升级。
+
 ### 职责分层
 
 | 层级              | 职责                                      | 关键约束                                     |
@@ -104,7 +213,7 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 | #   | 位置                                              | 场景                                                |
 | --- | ------------------------------------------------- | --------------------------------------------------- |
 | 1   | `middleware/auth.ts` — `authMiddleware`           | TanStack Start server functions（SSR / beforeLoad） |
-| 2   | `packages/api/src/context.ts` — `createContext()` | oRPC procedures（独立运行时）                       |
+| 2   | `packages/api/src/context.ts` — `createContext()` | oRPC procedures（HTTP / SSR 共用上下文）            |
 
 `authMiddleware` 调用 `auth.api.getSession()` 后，将 `{ session, headers }` 注入 context。下游 server function 从 context 中读取，不再重复调用底层 API。
 
@@ -144,7 +253,7 @@ Better-Auth 不提供的聚合查询或自定义业务逻辑（如多表 join �
 
 #### 通道 D: `orpc.*` (oRPC procedures)
 
-**运行环境**: 客户端 HTTP → `/api/rpc/*`，服务端执行
+**运行环境**: 浏览器通过 HTTP 请求 `/api/rpc/*`；SSR 通过 `createRouterClient` 在服务端直接调用相同的业务处理器。两条路径均执行输入校验与访问检查。
 
 **适用**: Better-Auth 不提供的自定义业务逻辑（多表聚合、复杂查询）
 
