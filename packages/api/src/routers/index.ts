@@ -1,15 +1,15 @@
 import type { RouterClient } from "@orpc/server";
 
-import { protectedProcedure, publicProcedure } from "../index";
+import { publicImplementer, protectedImplementer } from "../index";
 import { betterAuthOpenAPIDocsRouter } from "./better-auth-openapi-docs";
 import { dashboardRouter } from "./dashboard";
 import { userRouter } from "./user";
 
 export const appRouter = {
-  healthCheck: publicProcedure.handler(() => {
+  healthCheck: publicImplementer.healthCheck.handler(() => {
     return "OK";
   }),
-  privateData: protectedProcedure.handler(({ context }) => {
+  privateData: protectedImplementer.privateData.handler(({ context }) => {
     return {
       message: "This is private",
       user: context.session?.user,

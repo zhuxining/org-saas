@@ -104,6 +104,7 @@
         "@org-saas/db": "workspace:*",
         "@org-saas/env": "workspace:*",
         "@orpc/client": "catalog:",
+        "@orpc/contract": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/pino": "catalog:",
         "@orpc/ratelimit": "catalog:",
@@ -206,6 +207,7 @@
   },
   "catalog": {
     "@orpc/client": "^2.0.0-beta.42",
+    "@orpc/contract": "^2.0.0-beta.42",
     "@orpc/openapi": "^2.0.0-beta.42",
     "@orpc/pino": "^2.0.0-beta.42",
     "@orpc/ratelimit": "^2.0.0-beta.42",

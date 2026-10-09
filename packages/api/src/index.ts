@@ -1,10 +1,11 @@
 import { getLogger, type LoggerContext } from "@orpc/pino";
 import { ratelimit, type RateLimiter } from "@orpc/ratelimit";
 import { MemoryRateLimiter } from "@orpc/ratelimit/memory";
-import { ORPCError, os } from "@orpc/server";
+import { implement, ORPCError } from "@orpc/server";
 import pino from "pino";
 
 import type { Context } from "./context";
+import { apiContract } from "./contracts/index";
 
 // 创建 Pino logger
 const logger = pino({
@@ -30,11 +31,11 @@ export interface EnhancedContext extends Context, LoggerContext {
   ratelimiter: RateLimiter;
 }
 
-export const o = os.$context<EnhancedContext>();
+export const implementer = implement(apiContract).$context<EnhancedContext>();
 
-export const publicProcedure = o;
+export const publicImplementer = implementer;
 
-const requireAuth = o.middleware(async ({ context, next }) => {
+const requireAuth = implementer.middleware(async ({ context, next }) => {
   if (!context.session?.user) {
     throw new ORPCError("UNAUTHORIZED");
   }
@@ -46,10 +47,10 @@ const requireAuth = o.middleware(async ({ context, next }) => {
   });
 });
 
-export const protectedProcedure = publicProcedure.use(requireAuth);
+export const protectedImplementer = implementer.use(requireAuth);
 
 // 速率限制中间件
-export const rateLimitedProcedure = protectedProcedure.use(
+export const rateLimitedImplementer = protectedImplementer.use(
   ratelimit({
     limiter: ({ context }) => context.ratelimiter,
     key: ({ context }, _input) => `${context.session.user.id}:global`,

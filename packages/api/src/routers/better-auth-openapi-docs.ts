@@ -1,6 +1,6 @@
 import { auth } from "@org-saas/auth";
 
-import { publicProcedure } from "../index";
+import { publicImplementer } from "../index";
 
 /**
  * Better-Auth API 路由
@@ -11,7 +11,7 @@ export const betterAuthOpenAPIDocsRouter = {
    *
    * 返回所有 Better-Auth 端点的 OpenAPI 规范
    */
-  getOpenAPISchema: publicProcedure.handler(async () => {
+  getOpenAPISchema: publicImplementer.betterAuthOpenAPIDocs.getOpenAPISchema.handler(async () => {
     return auth.api.generateOpenAPISchema();
   }),
 };

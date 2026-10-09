@@ -23,6 +23,7 @@
       "lucide-react": "^1.53.0",
       "pino": "^10.4.0",
       "@orpc/server": "^2.0.0-beta.42",
+      "@orpc/contract": "^2.0.0-beta.42",
       "@orpc/client": "^2.0.0-beta.42",
       "@orpc/openapi": "^2.0.0-beta.42",
       "@orpc/zod": "^2.0.0-beta.42",
