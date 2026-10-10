@@ -1,25 +1,22 @@
 import { Button } from "@org-saas/ui/components/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@org-saas/ui/components/card";
-import { Skeleton } from "@org-saas/ui/components/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, Plus } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";
-import { authClient } from "@/lib/auth-client";
+import { orgListQueryOptions } from "@/lib/query-options";
 
 export const Route = createFileRoute("/_authenticated/me/organizations/")({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(orgListQueryOptions(context.user.id)),
   component: DashboardIndex,
 });
 
 function DashboardIndex() {
   const navigate = useNavigate();
-  const { data, isPending } = useQuery({
-    queryKey: ["organizations"],
-    queryFn: () => authClient.organization.list(),
-  });
-
-  const orgs = data?.data ?? [];
+  const { user } = Route.useRouteContext();
+  const { data: orgs } = useSuspenseQuery(orgListQueryOptions(user.id));
 
   return (
     <div className="p-6">
@@ -36,13 +33,7 @@ function DashboardIndex() {
 
       <h2 className="mb-4 text-lg font-semibold">我的组织</h2>
 
-      {isPending ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
-          ))}
-        </div>
-      ) : orgs.length === 0 ? (
+      {orgs.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-12">
           <Building2 className="text-muted-foreground mb-4 size-12" />
           <CardHeader className="items-center p-0">

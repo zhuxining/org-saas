@@ -23,6 +23,18 @@ function rethrowAuthorizationError(error: unknown): never {
   throw error;
 }
 
+const getOrganizations = createIsomorphicFn()
+  .server(async () =>
+    auth.api.listOrganizations({
+      headers: getRequestHeaders(),
+    }),
+  )
+  .client(async () => {
+    const result = await authClient.organization.list();
+    if (result.error) throw new Error(result.error.message ?? "读取组织列表失败");
+    return result.data;
+  });
+
 const getOrganizationFull = createIsomorphicFn()
   .server(async (organizationId: string) =>
     auth.api.getFullOrganization({
@@ -115,11 +127,7 @@ export const orgFullQueryOptions = organizationFullQueryOptions;
 export const orgListQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ["organizations", userId],
-    queryFn: async () => {
-      const result = await authClient.organization.list();
-      if (result.error) throw new Error(result.error.message ?? "读取组织列表失败");
-      return result.data;
-    },
+    queryFn: () => getOrganizations(),
   });
 
 export const platformQueryKeys = {
