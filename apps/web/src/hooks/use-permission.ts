@@ -1,12 +1,15 @@
-import { authClient } from "@/lib/auth-client";
-import { useOrgContext } from "@/lib/org-context";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-type OrgRole = "admin" | "member" | "owner";
+import { useOrgContext } from "@/lib/org-context";
+import { organizationAccessQueryOptions } from "@/lib/query-options";
 
 export function usePermission(permissions: Record<string, string[]>): boolean {
-  const { role } = useOrgContext();
-  return authClient.organization.checkRolePermission({
-    role: role as OrgRole,
-    permissions,
-  });
+  const { org, userId } = useOrgContext();
+  const { data: access } = useSuspenseQuery(organizationAccessQueryOptions(userId, org.id));
+  const operations = access.operations as Record<string, Record<string, boolean>>;
+  const resourceMap: Record<string, string> = { ac: "roleDefinition" };
+
+  return Object.entries(permissions).every(([resource, actions]) =>
+    actions.every((action) => operations[resourceMap[resource] ?? resource]?.[action] === true),
+  );
 }

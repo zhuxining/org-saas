@@ -3,6 +3,7 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { toast } from "@org-saas/ui/components/toast";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -15,6 +16,7 @@ export default function SignInForm({
   redirectTo: string;
   onSwitchToSignUp: () => void;
 }) {
+  const queryClient = useQueryClient();
   const navigate = useNavigate({
     from: "/",
   });
@@ -31,8 +33,9 @@ export default function SignInForm({
           password: value.password,
         },
         {
-          onSuccess: () => {
-            void navigate({
+          onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ["session"] });
+            await navigate({
               to: redirectTo as string,
             });
             toast.add({ title: "Sign in successful", type: "success" });

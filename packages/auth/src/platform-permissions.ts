@@ -3,6 +3,8 @@ import { defaultStatements } from "better-auth/plugins/admin/access";
 
 const platformAc = createAccessControl(defaultStatements);
 
+export const platformAdminRoles = ["platform-admin"] as const;
+
 const platformAdmin = platformAc.newRole({
   user: ["list", "get", "ban"],
   session: ["list", "revoke"],

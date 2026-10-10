@@ -3,6 +3,7 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { toast } from "@org-saas/ui/components/toast";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -15,6 +16,7 @@ export default function SignUpForm({
   redirectTo: string;
   onSwitchToSignIn: () => void;
 }) {
+  const queryClient = useQueryClient();
   const navigate = useNavigate({
     from: "/",
   });
@@ -33,8 +35,9 @@ export default function SignUpForm({
           name: value.name,
         },
         {
-          onSuccess: () => {
-            void navigate({
+          onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ["session"] });
+            await navigate({
               to: redirectTo as string,
             });
             toast.add({ title: "注册成功！", type: "success" });

@@ -6,7 +6,7 @@ import { Mail, Users, UsersRound } from "lucide-react";
 import { useOrgContext } from "@/lib/org-context";
 import { orpc } from "@/utils/orpc";
 
-export const Route = createFileRoute("/_authenticated/org/$orgSlug/")({
+export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active/")({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(
       orpc.dashboard.orgStats.queryOptions({

@@ -21,7 +21,7 @@
 - 路由专属组件放在同级 `-components/`，避免被识别为路由；跨页面组件放 `src/components/`。组件文件用 kebab-case，导出名用 PascalCase。
 - 保持 SSR / 客户端边界：客户端组件不直接导入数据库、服务端环境变量或认证服务端实现。
 - Server Functions 的认证中间件通过 `@org-saas/auth/session` 创建请求级 session getter；该模块仅在服务端入口使用，getter 不跨请求共享。
-- 页面守卫使用现有 `requireSession`、`requireOrgRole`、`requireAdmin`、`requireOwner`；组织路由入口见 `src/routes/org/$orgSlug/route.tsx` 和 `resolveOrgBySlug`。页面守卫不能替代服务端访问检查。
+- 页面守卫复用现有 `requireSession`、`requireOrgRole`、`requireAdmin`、`requireOwner`、`requirePlatformAdmin`；组织上下文入口是 `src/routes/_authenticated/org/$orgSlug/route.tsx`，按显式 slug 调用 `client.organization.resolveBySlug`。页面守卫不能替代服务端访问检查。
 - `src/routes/api/` 负责 oRPC / Better Auth 的 HTTP 接入，业务处理放对应共享包。
 
 ## 数据交互与表单

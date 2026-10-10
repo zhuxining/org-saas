@@ -1,144 +1,58 @@
-import { Button } from "@org-saas/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@org-saas/ui/components/dropdown-menu";
-import { Separator } from "@org-saas/ui/components/separator";
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, LayoutDashboard, LogOut, Settings, Users, UsersRound } from "lucide-react";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { OrgSwitcher } from "@/components/org-switcher";
-import { UserAvatar } from "@/components/user-avatar";
-import { resolveOrgBySlug } from "@/functions/auth.fn";
-import { authClient } from "@/lib/auth-client";
-import { OrgContext, type OrgContextValue } from "@/lib/org-context";
-import { ForbiddenError } from "@/utils/errors";
+import { OrgContext } from "@/lib/org-context";
+import {
+  organizationAccessQueryOptions,
+  organizationContextBySlugQueryOptions,
+  organizationQueryKeys,
+} from "@/lib/query-options";
 
 export const Route = createFileRoute("/_authenticated/org/$orgSlug")({
-  beforeLoad: async (ctx) => {
-    const result = await resolveOrgBySlug({ data: ctx.params.orgSlug });
-
-    if (!result) {
-      throw new ForbiddenError("您不是此组织的成员或组织不存在");
-    }
+  beforeLoad: async ({ context, params }) => {
+    const user = context.user;
+    const queryClient = context.queryClient;
+    const resolved = await queryClient.fetchQuery(
+      organizationContextBySlugQueryOptions(user.id, params.orgSlug),
+    );
+    const accessOptions = organizationAccessQueryOptions(user.id, resolved.organization.id);
+    queryClient.setQueryData(accessOptions.queryKey, resolved.access);
+    const organizationRootKey = organizationQueryKeys.root(user.id);
+    queryClient.removeQueries({
+      predicate: (query) => {
+        const key = query.queryKey;
+        if (key[0] !== organizationRootKey[0] || key[1] !== organizationRootKey[1]) return false;
+        if (key[2] === "context") return key[3] !== params.orgSlug;
+        return typeof key[2] === "string" && key[2] !== resolved.organization.id;
+      },
+    });
 
     return {
-      user: result.user,
-      org: result.org,
-      role: result.role,
+      user,
+      org: {
+        ...resolved.organization,
+        createdAt: new Date(resolved.organization.createdAt),
+      },
+      role: resolved.access.role,
+      access: resolved.access,
     };
   },
-  component: OrgLayout,
+  component: OrganizationContextLayout,
 });
 
-function OrgLayout() {
-  const { org, role } = Route.useRouteContext();
-  const { user } = Route.useRouteContext();
-  const navigate = useNavigate();
-  const { orgSlug } = Route.useParams();
-
-  const orgContext: OrgContextValue = {
-    org: {
-      id: org.id,
-      name: org.name,
-      slug: org.slug,
-      logo: org.logo ?? null,
-      metadata: org.metadata ?? null,
-      createdAt: org.createdAt,
-    },
-    role,
-  };
-
-  const navItems = [
-    {
-      to: `/org/${orgSlug}`,
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      exact: true,
-    },
-    { to: `/org/${orgSlug}/members`, label: "成员", icon: Users },
-    { to: `/org/${orgSlug}/teams`, label: "团队", icon: UsersRound },
-    { to: `/org/${orgSlug}/settings`, label: "设置", icon: Settings },
-  ];
+function OrganizationContextLayout() {
+  const { access, org, role, user } = Route.useRouteContext();
 
   return (
-    <OrgContext.Provider value={orgContext}>
-      <div className="flex min-h-screen">
-        <aside className="border-border bg-card flex w-64 shrink-0 flex-col border-r">
-          <div className="border-border flex h-14 items-center gap-2 border-b px-4">
-            <Link to="/me" className="text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="size-4" />
-            </Link>
-            <span className="truncate font-bold">{org.name}</span>
-          </div>
-
-          <div className="p-3">
-            <OrgSwitcher activeOrgSlug={orgSlug} />
-          </div>
-
-          <Separator />
-
-          <nav className="flex-1 space-y-1 p-3">
-            {navItems.map(({ to, label, icon: Icon, exact }) => (
-              <Link
-                key={to}
-                to={to}
-                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors"
-                activeProps={{
-                  className: "bg-accent text-accent-foreground font-medium",
-                }}
-                activeOptions={{ exact }}
-              >
-                <Icon className="size-4" />
-                {label}
-              </Link>
-            ))}
-          </nav>
-
-          <Separator />
-
-          <div className="p-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={<Button variant="ghost" className="w-full justify-start gap-2" />}
-              >
-                <UserAvatar name={user.name} image={user.image} size="sm" />
-                <span className="truncate text-sm">{user.name}</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-card w-56" align="start">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate({ to: "/me" })}>
-                  <LayoutDashboard className="size-4" />
-                  个人中心
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => {
-                    void authClient.signOut({
-                      fetchOptions: {
-                        onSuccess: () => navigate({ to: "/" }),
-                      },
-                    });
-                  }}
-                >
-                  <LogOut className="size-4" />
-                  退出登录
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </aside>
-
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
-      </div>
+    <OrgContext.Provider
+      value={{
+        userId: user.id,
+        org,
+        role,
+        isOwner: access.isOwner,
+        access,
+      }}
+    >
+      <Outlet />
     </OrgContext.Provider>
   );
 }

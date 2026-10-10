@@ -12,18 +12,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Building2, ChevronsUpDown, Plus } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client";
+import { orgListQueryOptions } from "@/lib/query-options";
 
 import { UserAvatar } from "./user-avatar";
 
-export function OrgSwitcher({ activeOrgSlug }: { activeOrgSlug?: string }) {
+export function OrgSwitcher({ activeOrgSlug, userId }: { activeOrgSlug?: string; userId: string }) {
   const navigate = useNavigate();
-  const { data, isPending } = useQuery({
-    queryKey: ["organizations"],
-    queryFn: () => authClient.organization.list(),
-  });
-
-  const orgs = data?.data ?? [];
+  const { data: orgs = [], isPending } = useQuery(orgListQueryOptions(userId));
   const activeOrg = orgs.find((o: { slug: string }) => o.slug === activeOrgSlug);
 
   if (isPending) {
@@ -51,7 +46,7 @@ export function OrgSwitcher({ activeOrgSlug }: { activeOrgSlug?: string }) {
       <DropdownMenuContent className="bg-card w-56" align="start">
         <DropdownMenuLabel>组织</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {orgs.map((org: { id: string; name: string; slug: string; logo?: string | null }) => (
+        {orgs.map((org) => (
           <DropdownMenuItem
             key={org.id}
             onClick={() =>

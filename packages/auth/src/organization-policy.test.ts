@@ -5,6 +5,7 @@ import type { OrganizationOptions } from "better-auth/plugins/organization";
 import { describe, expect, it } from "vite-plus/test";
 
 import { createOrganizationPolicyPlugin, hasSingleRole } from "./organization-policy";
+import { withOrganizationMutationTransactions } from "./organization-transaction";
 import { ac, roles } from "./permissions";
 
 const organizationOptions = {
@@ -16,6 +17,13 @@ const organizationOptions = {
         archivedAt: {
           type: "date",
           required: false,
+          input: false,
+          returned: false,
+        },
+        ownerMutationVersion: {
+          type: "number",
+          required: true,
+          defaultValue: 0,
           input: false,
           returned: false,
         },
@@ -41,16 +49,18 @@ function createTestAuth() {
     teamMember: [],
     organizationRole: [],
   };
-  const auth = betterAuth({
-    baseURL: "http://localhost:3000",
-    secret: "test-secret-that-is-long-enough-for-better-auth",
-    database: memoryAdapter(memoryDb),
-    emailAndPassword: { enabled: true },
-    plugins: [
-      organization(organizationOptions),
-      createOrganizationPolicyPlugin(organizationOptions),
-    ],
-  });
+  const auth = withOrganizationMutationTransactions(
+    betterAuth({
+      baseURL: "http://localhost:3000",
+      secret: "test-secret-that-is-long-enough-for-better-auth",
+      database: memoryAdapter(memoryDb),
+      emailAndPassword: { enabled: true },
+      plugins: [
+        organization(organizationOptions),
+        createOrganizationPolicyPlugin(organizationOptions),
+      ],
+    }),
+  );
   return { auth, memoryDb };
 }
 
@@ -109,6 +119,125 @@ describe("organization role assignment policy", () => {
     expect(hasSingleRole("")).toBe(false);
     expect(hasSingleRole(" member ")).toBe(false);
     expect(hasSingleRole("member,admin")).toBe(false);
+  });
+});
+
+describe("organization owner transfer", () => {
+  it("transfers ownership through HTTP and auth.api as one role change", async () => {
+    const { auth } = createTestAuth();
+    const owner = await signUp(auth, "owner-transfer@example.test");
+    const target = await signUp(auth, "target-transfer@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    const member = await auth.api.addMember({
+      body: { organizationId, userId: target.userId, role: "member" },
+      headers: owner.headers,
+    });
+
+    const httpResponse = await post(auth, "/organization/transfer-ownership", owner.headers, {
+      organizationId,
+      newOwnerMemberId: member.id,
+      formerOwnerRole: "admin",
+    });
+    expect(httpResponse.ok).toBe(true);
+    expect(
+      (await auth.api.listMembers({ query: { organizationId }, headers: owner.headers })).members,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: member.id, role: "owner" }),
+        expect.objectContaining({ userId: owner.userId, role: "admin" }),
+      ]),
+    );
+
+    const formerOwnerMember = (
+      await auth.api.listMembers({ query: { organizationId }, headers: target.headers })
+    ).members.find((candidate) => candidate.userId === owner.userId);
+    if (!formerOwnerMember) throw new Error("Former owner member not found");
+    await auth.api.transferOrganizationOwnership({
+      body: {
+        organizationId,
+        newOwnerMemberId: formerOwnerMember.id,
+        formerOwnerRole: "member",
+      },
+      headers: target.headers,
+    });
+    expect(
+      (await auth.api.listMembers({ query: { organizationId }, headers: target.headers })).members,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ userId: owner.userId, role: "owner" }),
+        expect.objectContaining({ id: member.id, role: "member" }),
+      ]),
+    );
+  });
+
+  it("does not allow native membership endpoints to assign, demote, remove, or leave as owner", async () => {
+    const { auth } = createTestAuth();
+    const owner = await signUp(auth, "owner-native-owner@example.test");
+    const target = await signUp(auth, "target-native-owner@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    const member = await auth.api.addMember({
+      body: { organizationId, userId: target.userId, role: "member" },
+      headers: owner.headers,
+    });
+
+    const ownerMember = (
+      await auth.api.listMembers({ query: { organizationId }, headers: owner.headers })
+    ).members.find((candidate) => candidate.userId === owner.userId);
+    if (!ownerMember) throw new Error("Owner member not found");
+
+    await expect(
+      auth.api.transferOrganizationOwnership({
+        body: {
+          organizationId,
+          newOwnerMemberId: "missing-member",
+          formerOwnerRole: "member",
+        },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("The new owner must be another organization member.");
+    expect(
+      (await auth.api.listMembers({ query: { organizationId }, headers: owner.headers })).members,
+    ).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: ownerMember.id, role: "owner" })]),
+    );
+
+    await expect(
+      auth.api.addMember({
+        body: { organizationId, userId: target.userId, role: "owner" },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("Ownership can only change through an explicit transfer.");
+    await expect(
+      auth.api.createInvitation({
+        body: { organizationId, email: "another-owner@example.test", role: "owner" },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("Ownership can only change through an explicit transfer.");
+
+    expect(
+      (
+        await post(auth, "/organization/update-member-role", owner.headers, {
+          organizationId,
+          memberId: member.id,
+          role: "owner",
+        })
+      ).status,
+    ).toBe(403);
+    await expect(
+      auth.api.updateMemberRole({
+        body: { organizationId, memberId: ownerMember.id, role: "admin" },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("Ownership can only change through an explicit transfer.");
+    await expect(
+      auth.api.removeMember({
+        body: { organizationId, memberIdOrEmail: "owner-native-owner@example.test" },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("Transfer ownership before removing the owner.");
+    await expect(
+      auth.api.leaveOrganization({ body: { organizationId }, headers: owner.headers }),
+    ).rejects.toThrow("Transfer ownership before leaving the organization.");
   });
 });
 
@@ -282,6 +411,49 @@ describe("organization policy plugin endpoint coverage", () => {
     ).toBe(1);
   });
 
+  it("prevents deleting a role referenced by a member through HTTP and auth.api", async () => {
+    const { auth, memoryDb } = createTestAuth();
+    const owner = await signUp(auth, "owner-member-role-delete@example.test");
+    const member = await signUp(auth, "member-role-delete@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    expect(
+      (
+        await post(auth, "/organization/create-role", owner.headers, {
+          organizationId,
+          role: "support",
+          permission: {},
+        })
+      ).ok,
+    ).toBe(true);
+    const memberRecord = await auth.api.addMember({
+      body: { organizationId, userId: member.userId, role: "member" },
+      headers: owner.headers,
+    });
+    const updatedMember = await post(auth, "/organization/update-member-role", owner.headers, {
+      organizationId,
+      memberId: memberRecord.id,
+      role: "support",
+    });
+    expect(updatedMember.ok).toBe(true);
+
+    const deletion = await post(auth, "/organization/delete-role", owner.headers, {
+      organizationId,
+      roleName: "support",
+    });
+    expect(deletion.status).toBe(400);
+    await expect(
+      auth.api.deleteOrgRole({
+        body: { organizationId, roleName: "support" },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("A role assigned to an organization member cannot be deleted.");
+    expect(
+      memoryDb.organizationRole?.some(
+        (candidate: unknown) => isRecord(candidate) && candidate.role === "support",
+      ),
+    ).toBe(true);
+  });
+
   it("prevents deleting a role referenced by a pending invitation", async () => {
     const { auth } = createTestAuth();
     const owner = await signUp(auth, "owner-role-delete@example.test");
@@ -310,6 +482,67 @@ describe("organization policy plugin endpoint coverage", () => {
         headers: owner.headers,
       }),
     ).rejects.toThrow("A role assigned to a pending invitation cannot be deleted.");
+  });
+
+  it("hides pending invitations from ordinary members on HTTP and auth.api", async () => {
+    const { auth } = createTestAuth();
+    const owner = await signUp(auth, "owner-full-org-visibility@example.test");
+    const ordinaryMember = await signUp(auth, "member-full-org-visibility@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    await auth.api.addMember({
+      body: { organizationId, userId: ordinaryMember.userId, role: "member" },
+      headers: owner.headers,
+    });
+    await auth.api.createInvitation({
+      body: { organizationId, email: "pending-full-org-visibility@example.test", role: "member" },
+      headers: owner.headers,
+    });
+
+    const memberOrganization = await auth.api.getFullOrganization({
+      query: { organizationId },
+      headers: ordinaryMember.headers,
+    });
+    expect(memberOrganization?.invitations).toEqual([]);
+    expect(
+      await auth.api.listInvitations({
+        query: { organizationId },
+        headers: ordinaryMember.headers,
+      }),
+    ).toEqual([]);
+    expect(
+      await auth.api.listInvitations({ query: { organizationId }, headers: owner.headers }),
+    ).toHaveLength(1);
+    await expect(
+      auth.api.listOrgRoles({
+        query: { organizationId },
+        headers: ordinaryMember.headers,
+      }),
+    ).rejects.toThrow("You are not allowed to list a role");
+
+    const ownerOrganization = await auth.api.getFullOrganization({
+      query: { organizationId },
+      headers: owner.headers,
+    });
+    expect(ownerOrganization?.invitations).toHaveLength(1);
+
+    const httpResponse = await auth.handler(
+      new Request(
+        `http://localhost:3000/api/auth/organization/get-full-organization?organizationId=${organizationId}`,
+        { headers: { cookie: ordinaryMember.headers.get("cookie") ?? "" } },
+      ),
+    );
+    expect(httpResponse.ok).toBe(true);
+    const httpOrganization = (await httpResponse.json()) as { invitations?: unknown[] };
+    expect(httpOrganization.invitations).toEqual([]);
+
+    const httpInvitationsResponse = await auth.handler(
+      new Request(
+        `http://localhost:3000/api/auth/organization/list-invitations?organizationId=${organizationId}`,
+        { headers: { cookie: ordinaryMember.headers.get("cookie") ?? "" } },
+      ),
+    );
+    expect(httpInvitationsResponse.ok).toBe(true);
+    await expect(httpInvitationsResponse.json()).resolves.toEqual([]);
   });
 
   it("blocks accepting an archived organization invitation by invitation ID", async () => {

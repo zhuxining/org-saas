@@ -52,8 +52,7 @@ function InvitePage() {
         setFeedback(result.error.message ?? "退出登录失败，请重试");
         return;
       }
-      queryClient.removeQueries({ queryKey: ["session"] });
-      queryClient.removeQueries({ queryKey: ["invitation", token] });
+      queryClient.clear();
       await navigate({ to: "/login", search: { redirect: invitePath } });
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "退出登录失败，请重试");
