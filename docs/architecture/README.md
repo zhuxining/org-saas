@@ -11,6 +11,7 @@
 | 3    | [代码组织](code-organization.md)     | 代码如何划分，职责与依赖方向是什么？           |
 | 4    | [请求与数据流](request-data-flow.md) | 浏览器、SSR 和接口如何读取、修改并同步数据？   |
 | 5    | [权限架构](authorization.md)         | 谁可以对哪些数据执行什么操作？                 |
+| 6    | [异常反馈](error-feedback.md)        | API 错误如何表达、展示、恢复并关联排查？       |
 
 按问题选择专题即可，无需每次读取全部文档。涉及权限或组织生命周期时，优先阅读权限架构。
 
@@ -32,7 +33,7 @@
 | 决策记录 | 难以逆转或容易被误解的设计选择及原因     | [组织归档决策](../adr/0001-archive-organizations.md)                                           |
 | 实施计划 | 改动入口、阶段、模型处理、验收与待办     | [权限体系](../implementation/permissions.md)、[Web 路由重构](../implementation/web-routing.md) |
 
-当前不单独维护 `docs/development/`。Web 的加载、缓存更新、表单、对话框和错误反馈规则放在 [Web 约定](../../apps/web/AGENTS.md)，共享组件、主题及样式规则放在 [UI 约定](../../packages/ui/AGENTS.md)。未来出现需要独立讲解的长篇教程时，再增加指南，并从对应约定链接过去。
+当前不单独维护 `docs/development/`。异常反馈的目标设计见 [异常反馈](error-feedback.md)；Web 的加载、缓存更新、表单、对话框和错误反馈编码规则放在 [Web 约定](../../apps/web/AGENTS.md)，共享组件、主题及样式规则放在 [UI 约定](../../packages/ui/AGENTS.md)。未来出现需要独立讲解的长篇教程时，再增加指南，并从对应约定链接过去。
 
 ## 维护方式
 

@@ -3,9 +3,8 @@ import type { ApiContractClient } from "@org-saas/api/contracts/index";
 import { standardLimiter } from "@org-saas/api/index";
 import { appRouter } from "@org-saas/api/routers/index";
 import { toast } from "@org-saas/ui/components/toast";
-import { createORPCClient } from "@orpc/client";
+import { COMMON_ERROR_STATUS_MAP, createORPCClient, ORPCError } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import { RetryAfterPlugin } from "@orpc/client/plugins";
 import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
@@ -13,25 +12,46 @@ import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
 export function createQueryClient(): QueryClient {
-  return new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000, // 1 分钟，避免挂载时立即重新获取
+        retry: false,
       },
     },
     queryCache: new QueryCache({
       onError: (error, query) => {
+        if (query.state.data === undefined) return;
+        const status =
+          error instanceof ORPCError
+            ? COMMON_ERROR_STATUS_MAP[error.code as keyof typeof COMMON_ERROR_STATUS_MAP]
+            : undefined;
+        const data: unknown = error instanceof ORPCError ? error.data : undefined;
+        const requestId =
+          typeof data === "object" && data !== null && "requestId" in data
+            ? data.requestId
+            : undefined;
         toast.add({
-          title: `Error: ${error.message}`,
+          title:
+            status !== undefined && status >= 400 && status < 500 && error.message.trim()
+              ? error.message
+              : "暂时无法完成请求，请稍后重试",
+          description:
+            typeof requestId === "string" && /^[a-zA-Z0-9_-]{8,128}$/.test(requestId)
+              ? `问题编号：${requestId}`
+              : undefined,
           type: "error",
           actionProps: {
-            children: "retry",
-            onClick: () => query.invalidate(),
+            children: "重试",
+            onClick: () => {
+              void queryClient.refetchQueries({ queryKey: query.queryKey, exact: true });
+            },
           },
         });
       },
     }),
   });
+  return queryClient;
 }
 
 const getORPCClient = createIsomorphicFn()
@@ -58,16 +78,6 @@ const getORPCClient = createIsomorphicFn()
     const link = new RPCLink({
       origin: window.location.origin,
       url: "/api/rpc",
-      plugins: [
-        new RetryAfterPlugin({
-          condition: (response, _options) => {
-            // Override condition to determine if a request should be retried
-            return response.status === 429 || response.status === 503;
-          },
-          maxAttempts: 5, // Maximum retry attempts
-          timeout: 5 * 60 * 1000, // Maximum time to spend retrying (ms)
-        }),
-      ],
       fetch(url, options) {
         return fetch(url, {
           ...options,

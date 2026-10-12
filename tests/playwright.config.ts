@@ -4,11 +4,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = "http://127.0.0.1:4317";
 
-if (process.env.ORG_SAAS_E2E !== "1" && !process.argv.includes("--list")) {
-  throw new Error("Run browser tests with bun run test:e2e to create an isolated database.");
-}
+const isolatedRun = process.env.ORG_SAAS_E2E === "1";
 
 export default defineConfig({
+  globalSetup: "./scripts/require-isolated-browser-run.ts",
   testDir: "./browser",
   testMatch: "**/*.test.ts",
   fullyParallel: false,
@@ -23,13 +22,16 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: "vp preview --host 127.0.0.1 --port 4317 --strictPort",
-    cwd: fileURLToPath(new URL("../apps/web", import.meta.url)),
-    url: `${baseURL}/login`,
-    reuseExistingServer: false,
-    timeout: 60_000,
-    stdout: "pipe",
-    stderr: "pipe",
-  },
+  // 配置加载和测试发现无需隔离环境；实际执行由 globalSetup 检查。
+  webServer: isolatedRun
+    ? {
+        command: "vp preview --host 127.0.0.1 --port 4317 --strictPort",
+        cwd: fileURLToPath(new URL("../apps/web", import.meta.url)),
+        url: `${baseURL}/login`,
+        reuseExistingServer: false,
+        timeout: 60_000,
+        stdout: "pipe",
+        stderr: "pipe",
+      }
+    : undefined,
 });

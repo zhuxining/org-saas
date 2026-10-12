@@ -17,8 +17,10 @@ interface ErrorBoundaryProps {
 
 export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   const router = useRouter();
-  const errorMessage =
-    error instanceof Error ? error.message : typeof error === "string" ? error : "未知错误";
+  const data =
+    typeof error === "object" && error !== null && "data" in error ? error.data : undefined;
+  const requestId =
+    typeof data === "object" && data !== null && "requestId" in data ? data.requestId : undefined;
 
   const handleReset = () => {
     reset?.();
@@ -40,11 +42,12 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
           <CardDescription>应用遇到了一个意外错误。请尝试刷新页面或返回首页。</CardDescription>
         </CardHeader>
         <CardContent>
-          {errorMessage && (
-            <div className="bg-muted rounded-md p-3">
-              <p className="text-muted-foreground text-sm wrap-break-word">{errorMessage}</p>
-            </div>
-          )}
+          <div className="bg-muted rounded-md p-3">
+            <p className="text-muted-foreground text-sm">暂时无法完成请求，请稍后重试</p>
+            {typeof requestId === "string" && /^[a-zA-Z0-9_-]{8,128}$/.test(requestId) && (
+              <p className="text-muted-foreground mt-2 text-xs">问题编号：{requestId}</p>
+            )}
+          </div>
         </CardContent>
         <CardFooter className="flex gap-2">
           <Button variant="outline" onClick={handleGoHome} className="flex-1">

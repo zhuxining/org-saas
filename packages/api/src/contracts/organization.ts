@@ -2,6 +2,23 @@ import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import { z } from "zod";
 
+const organizationErrorData = z
+  .object({
+    reason: z.enum([
+      "OWNER_STATE_INVALID",
+      "OWNER_REQUIRED",
+      "ORGANIZATION_NOT_ARCHIVED",
+      "ORGANIZATION_MEMBERSHIP_REQUIRED",
+      "ORGANIZATION_OPERATION_FORBIDDEN",
+      "PLATFORM_ADMIN_REQUIRED",
+    ]),
+  })
+  .optional();
+
+function apiError(message: string) {
+  return { message, data: organizationErrorData };
+}
+
 const organizationIdInput = z.object({ organizationId: z.string().min(1).max(200) });
 
 const organizationStatusOutput = z.object({
@@ -50,10 +67,10 @@ export const organizationContract = {
       }),
     )
     .errors({
-      UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "您无权访问此组织" },
-      NOT_FOUND: { message: "组织不存在" },
-      CONFLICT: { message: "组织所有权状态需要审查" },
+      UNAUTHORIZED: apiError("请先登录"),
+      FORBIDDEN: apiError("您无权访问此组织"),
+      NOT_FOUND: apiError("组织不存在"),
+      CONFLICT: apiError("组织所有权状态需要审查"),
     })
     .input(z.object({ slug: z.string().min(1).max(200) }))
     .output(
@@ -72,10 +89,10 @@ export const organizationContract = {
       }),
     )
     .errors({
-      UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "您无权访问此组织" },
-      NOT_FOUND: { message: "组织不存在" },
-      CONFLICT: { message: "组织所有权状态需要审查" },
+      UNAUTHORIZED: apiError("请先登录"),
+      FORBIDDEN: apiError("您无权访问此组织"),
+      NOT_FOUND: apiError("组织不存在"),
+      CONFLICT: apiError("组织所有权状态需要审查"),
     })
     .input(organizationIdInput)
     .output(organizationAccessOutput),
@@ -89,10 +106,10 @@ export const organizationContract = {
       }),
     )
     .errors({
-      UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "您无权在此组织授予角色" },
-      NOT_FOUND: { message: "组织不存在" },
-      CONFLICT: { message: "组织所有权状态需要审查" },
+      UNAUTHORIZED: apiError("请先登录"),
+      FORBIDDEN: apiError("您无权在此组织授予角色"),
+      NOT_FOUND: apiError("组织不存在"),
+      CONFLICT: apiError("组织所有权状态需要审查"),
     })
     .input(
       organizationIdInput.extend({
@@ -110,10 +127,10 @@ export const organizationContract = {
       }),
     )
     .errors({
-      UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "仅当前组织所有者可以归档组织" },
-      NOT_FOUND: { message: "组织不存在" },
-      CONFLICT: { message: "组织所有权状态需要审查" },
+      UNAUTHORIZED: apiError("请先登录"),
+      FORBIDDEN: apiError("仅当前组织所有者可以归档组织"),
+      NOT_FOUND: apiError("组织不存在"),
+      CONFLICT: apiError("组织所有权状态需要审查"),
     })
     .input(organizationIdInput)
     .output(organizationStatusOutput),
@@ -127,10 +144,10 @@ export const organizationContract = {
       }),
     )
     .errors({
-      UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "仅当前组织所有者可以恢复组织" },
-      NOT_FOUND: { message: "组织不存在" },
-      CONFLICT: { message: "组织当前状态不允许恢复" },
+      UNAUTHORIZED: apiError("请先登录"),
+      FORBIDDEN: apiError("仅当前组织所有者可以恢复组织"),
+      NOT_FOUND: apiError("组织不存在"),
+      CONFLICT: apiError("组织当前状态不允许恢复"),
     })
     .input(organizationIdInput)
     .output(organizationStatusOutput),
@@ -144,10 +161,10 @@ export const organizationContract = {
       }),
     )
     .errors({
-      UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "仅当前组织所有者可以查看归档状态" },
-      NOT_FOUND: { message: "已归档组织不存在" },
-      CONFLICT: { message: "组织所有权状态需要审查" },
+      UNAUTHORIZED: apiError("请先登录"),
+      FORBIDDEN: apiError("仅当前组织所有者可以查看归档状态"),
+      NOT_FOUND: apiError("已归档组织不存在"),
+      CONFLICT: apiError("组织所有权状态需要审查"),
     })
     .input(organizationIdInput)
     .output(

@@ -1,12 +1,17 @@
-import { createSessionGetter } from "@org-saas/auth/session";
+import { createSessionGetter, type SessionGetter } from "@org-saas/auth/session";
 
-export function createContext(input: { req: Request } | { headers: Headers }) {
+export interface Context {
+  headers: Headers;
+  requestId: string;
+  getSession: SessionGetter;
+}
+
+export function createContext(input: { req: Request } | { headers: Headers }): Context {
   const headers = "req" in input ? input.req.headers : input.headers;
 
   return {
     headers,
+    requestId: crypto.randomUUID(),
     getSession: createSessionGetter(headers),
   };
 }
-
-export type Context = ReturnType<typeof createContext>;

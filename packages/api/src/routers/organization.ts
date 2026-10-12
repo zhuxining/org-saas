@@ -8,8 +8,12 @@ import type { EffectiveOrganizationOperations } from "../contracts/organization"
 import { protectedImplementer } from "../index";
 import { getRoleStatements, roleAllows } from "../organization-permissions";
 
-function fail(code: "CONFLICT" | "FORBIDDEN" | "NOT_FOUND", message: string): never {
-  throw new ORPCError(code, { message });
+function fail(
+  code: "CONFLICT" | "FORBIDDEN" | "NOT_FOUND",
+  message: string,
+  reason?: string,
+): never {
+  throw new ORPCError(code, { message, data: reason ? { reason } : undefined });
 }
 
 function emptyOperations(): EffectiveOrganizationOperations {
@@ -82,7 +86,12 @@ async function loadOrganizationAccess(organizationId: string, userId: string) {
     .from(member)
     .where(and(eq(member.organizationId, organizationId), eq(member.userId, userId)))
     .limit(1);
-  if (!membership) fail("FORBIDDEN", "You are not a member of this organization.");
+  if (!membership)
+    fail(
+      "FORBIDDEN",
+      "You are not a member of this organization.",
+      "ORGANIZATION_MEMBERSHIP_REQUIRED",
+    );
 
   const owners = await db
     .select({ userId: member.userId, role: member.role })
@@ -90,12 +99,20 @@ async function loadOrganizationAccess(organizationId: string, userId: string) {
     .where(eq(member.organizationId, organizationId));
   const ownerMembers = owners.filter((candidate) => candidate.role.split(",").includes("owner"));
   if (ownerMembers.length !== 1 || ownerMembers[0]?.role !== "owner") {
-    fail("CONFLICT", "Organization ownership requires review before permission data is available.");
+    fail(
+      "CONFLICT",
+      "Organization ownership requires review before permission data is available.",
+      "OWNER_STATE_INVALID",
+    );
   }
 
   const isOwner = membership.role === "owner";
   if (organizationRow.archivedAt && !isOwner) {
-    fail("FORBIDDEN", "Only the organization owner may access archived organization status.");
+    fail(
+      "FORBIDDEN",
+      "Only the organization owner may access archived organization status.",
+      "OWNER_REQUIRED",
+    );
   }
 
   const [customRole] = await db
@@ -159,7 +176,8 @@ function isPlatformAdmin(role: unknown): boolean {
 }
 
 function requirePlatformAdmin(role: unknown): void {
-  if (!isPlatformAdmin(role)) fail("FORBIDDEN", "Platform administrator access is required.");
+  if (!isPlatformAdmin(role))
+    fail("FORBIDDEN", "Platform administrator access is required.", "PLATFORM_ADMIN_REQUIRED");
 }
 
 function containsPattern(value: string): string {
@@ -203,7 +221,11 @@ export const organizationRouter = {
       const access = await loadOrganizationAccess(input.organizationId, context.session.user.id);
       const [resource, action] = input.operation.split(".");
       if (!roleAllows(access.statements, resource ?? "", action ?? "")) {
-        fail("FORBIDDEN", "You are not allowed to assign organization roles.");
+        fail(
+          "FORBIDDEN",
+          "You are not allowed to assign organization roles.",
+          "ORGANIZATION_OPERATION_FORBIDDEN",
+        );
       }
 
       const customRoles = await db
@@ -249,10 +271,14 @@ export const organizationRouter = {
         candidate.role.split(",").includes("owner"),
       );
       if (ownerMembers.length !== 1 || ownerMembers[0]?.role !== "owner") {
-        fail("CONFLICT", "Organization ownership requires review before archiving.");
+        fail(
+          "CONFLICT",
+          "Organization ownership requires review before archiving.",
+          "OWNER_STATE_INVALID",
+        );
       }
       if (ownerMembers[0]?.userId !== context.session.user.id) {
-        fail("FORBIDDEN", "Only the current organization owner may archive it.");
+        fail("FORBIDDEN", "Only the current organization owner may archive it.", "OWNER_REQUIRED");
       }
 
       const archivedAt = lockedOrganization.archivedAt ?? new Date();
@@ -286,13 +312,17 @@ export const organizationRouter = {
         candidate.role.split(",").includes("owner"),
       );
       if (ownerMembers.length !== 1 || ownerMembers[0]?.role !== "owner") {
-        fail("CONFLICT", "Organization ownership requires review before recovery.");
+        fail(
+          "CONFLICT",
+          "Organization ownership requires review before recovery.",
+          "OWNER_STATE_INVALID",
+        );
       }
       if (ownerMembers[0]?.userId !== context.session.user.id) {
-        fail("FORBIDDEN", "Only the current organization owner may restore it.");
+        fail("FORBIDDEN", "Only the current organization owner may restore it.", "OWNER_REQUIRED");
       }
       if (!lockedOrganization.archivedAt) {
-        fail("CONFLICT", "Organization is not archived.");
+        fail("CONFLICT", "Organization is not archived.", "ORGANIZATION_NOT_ARCHIVED");
       }
 
       await tx
@@ -310,7 +340,11 @@ export const organizationRouter = {
     async ({ context, input }) => {
       const access = await loadOrganizationAccess(input.organizationId, context.session.user.id);
       if (!access.isOwner)
-        fail("FORBIDDEN", "Only the organization owner may view archived status.");
+        fail(
+          "FORBIDDEN",
+          "Only the organization owner may view archived status.",
+          "OWNER_REQUIRED",
+        );
       if (!access.archivedAt) fail("NOT_FOUND", "Archived organization not found.");
 
       const [organizationRow] = await db

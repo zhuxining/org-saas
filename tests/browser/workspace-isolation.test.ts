@@ -79,16 +79,15 @@ test("退出并换账号后，旧组织数据不能通过缓存或直接地址�
   await expect(page.getByText(account.organization.name, { exact: true })).toHaveCount(0);
 
   await page.goto(firstPath);
-  await expect(
-    page.getByText("You are not a member of this organization.", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("暂时无法完成请求，请稍后重试", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: account.organization.name, exact: true }),
   ).toHaveCount(0);
   await page.reload();
+  await expect(page.getByText("暂时无法完成请求，请稍后重试", { exact: true })).toBeVisible();
   await expect(
-    page.getByText("You are not a member of this organization.", { exact: true }),
-  ).toBeVisible();
+    page.getByRole("heading", { name: account.organization.name, exact: true }),
+  ).toHaveCount(0);
 
   await page.goto(`/org/${secondSlug}`);
   await expect(page.getByRole("heading", { name: secondName, exact: true })).toBeVisible();

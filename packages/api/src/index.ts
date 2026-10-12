@@ -2,7 +2,7 @@ import { env } from "@org-saas/env/server";
 import { getLogger, type LoggerContext } from "@orpc/pino";
 import { ratelimit, type RateLimiter } from "@orpc/ratelimit";
 import { MemoryRateLimiter } from "@orpc/ratelimit/memory";
-import { implement, ORPCError } from "@orpc/server";
+import { COMMON_ERROR_STATUS_MAP, implement, ORPCError } from "@orpc/server";
 import pino from "pino";
 
 import type { Context } from "./context";
@@ -34,7 +34,31 @@ export interface EnhancedContext extends Context, LoggerContext {
 
 export const implementer = implement(apiContract).$context<EnhancedContext>();
 
-export const publicImplementer = implementer;
+const errorBoundary = implementer.middleware(async ({ context, next }) => {
+  try {
+    return await next();
+  } catch (error) {
+    const status =
+      error instanceof ORPCError
+        ? COMMON_ERROR_STATUS_MAP[error.code as keyof typeof COMMON_ERROR_STATUS_MAP]
+        : undefined;
+    if (error instanceof ORPCError && status !== undefined && status < 500) throw error;
+
+    logger.error({ err: error, requestId: context.requestId }, "Unhandled API error");
+    throw new ORPCError(
+      error instanceof ORPCError && status !== undefined && status >= 500
+        ? error.code
+        : "INTERNAL_SERVER_ERROR",
+      {
+        message: "服务暂时出现问题，请稍后重试",
+        data: { requestId: context.requestId },
+        cause: error,
+      },
+    );
+  }
+});
+
+export const publicImplementer = implementer.use(errorBoundary);
 
 const requireAuth = implementer.middleware(async ({ context, errors, next }) => {
   const session = await context.getSession();
@@ -54,7 +78,7 @@ const requireAuth = implementer.middleware(async ({ context, errors, next }) => 
   });
 });
 
-export const protectedImplementer = implementer.use(requireAuth);
+export const protectedImplementer = publicImplementer.use(requireAuth);
 
 // 速率限制中间件
 export const rateLimitedImplementer = protectedImplementer.use(
