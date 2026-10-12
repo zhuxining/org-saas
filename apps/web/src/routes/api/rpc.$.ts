@@ -1,16 +1,17 @@
 import { createContext } from "@org-saas/api/context";
-import { standardLimiter } from "@org-saas/api/index";
+import { createHTTPPlugins } from "@org-saas/api/http-plugins";
+import { logger, standardLimiter, type EnhancedContext } from "@org-saas/api/index";
 import { appRouter } from "@org-saas/api/routers/index";
+import { env } from "@org-saas/env/server";
 import { OpenAPIGenerator } from "@orpc/openapi";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferenceHandlerPlugin } from "@orpc/openapi/plugins";
-import { RateLimitHandlerPlugin } from "@orpc/ratelimit";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod";
 import { createFileRoute } from "@tanstack/react-router";
 
 const rpcHandler = new RPCHandler(appRouter, {
-  plugins: [new RateLimitHandlerPlugin()],
+  plugins: createHTTPPlugins<EnhancedContext>({ origin: env.CORS_ORIGIN, logger, protocol: "rpc" }),
 });
 
 const openAPISpec = new OpenAPIGenerator({
@@ -25,7 +26,10 @@ const openAPISpec = new OpenAPIGenerator({
 });
 
 const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [new OpenAPIReferenceHandlerPlugin({ spec: openAPISpec })],
+  plugins: [
+    ...createHTTPPlugins<EnhancedContext>({ origin: env.CORS_ORIGIN, logger, protocol: "openapi" }),
+    new OpenAPIReferenceHandlerPlugin({ spec: openAPISpec }),
+  ],
 });
 
 async function handle({ request }: { request: Request }) {
@@ -38,13 +42,19 @@ async function handle({ request }: { request: Request }) {
     prefix: "/api/rpc",
     context,
   });
-  if (rpcResult.response) return rpcResult.response;
+  if (rpcResult.response) {
+    rpcResult.response.headers.set("X-Request-Id", context.requestId);
+    return rpcResult.response;
+  }
 
   const apiResult = await apiHandler.handle(request, {
     prefix: "/api/rpc/api-docs", // `http://localhost:3001/api/rpc/api-docs/spec.json`
     context,
   });
-  if (apiResult.response) return apiResult.response;
+  if (apiResult.response) {
+    apiResult.response.headers.set("X-Request-Id", context.requestId);
+    return apiResult.response;
+  }
 
   return new Response("Not found", { status: 404 });
 }
@@ -52,6 +62,7 @@ async function handle({ request }: { request: Request }) {
 export const Route = createFileRoute("/api/rpc/$")({
   server: {
     handlers: {
+      OPTIONS: handle,
       HEAD: handle,
       GET: handle,
       POST: handle,

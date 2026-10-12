@@ -12,10 +12,12 @@
     "@org-saas/config": "workspace:*",
     "@org-saas/db": "workspace:*",
     "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@playwright/test": "1.64.0",
     "@types/node": "catalog:",
     "better-auth": "catalog:",
+    "pino": "catalog:",
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   }

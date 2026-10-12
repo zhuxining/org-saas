@@ -1,10 +1,10 @@
+import { createRPCClient } from "@org-saas/api/client";
 import { createContext } from "@org-saas/api/context";
-import type { ApiContractClient } from "@org-saas/api/contracts/index";
+import { apiContract, type ApiContractClient } from "@org-saas/api/contracts/index";
 import { standardLimiter } from "@org-saas/api/index";
 import { appRouter } from "@org-saas/api/routers/index";
 import { toast } from "@org-saas/ui/components/toast";
-import { COMMON_ERROR_STATUS_MAP, createORPCClient, ORPCError } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
+import { COMMON_ERROR_STATUS_MAP, ORPCError } from "@orpc/client";
 import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
@@ -74,20 +74,12 @@ const getORPCClient = createIsomorphicFn()
       },
     }),
   )
-  .client((): ApiContractClient => {
-    const link = new RPCLink({
+  .client((): ApiContractClient =>
+    createRPCClient(apiContract, {
       origin: window.location.origin,
       url: "/api/rpc",
-      fetch(url, options) {
-        return fetch(url, {
-          ...options,
-          credentials: "include",
-        });
-      },
-    });
-
-    return createORPCClient(link);
-  });
+    }),
+  );
 
 export const client: ApiContractClient = getORPCClient();
 export const orpc = createTanstackQueryUtils(client);

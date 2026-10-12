@@ -87,6 +87,14 @@ flowchart TB
 
 [HTTP 入口](../../apps/web/src/routes/api/rpc.$.ts)同时挂载 oRPC 与 OpenAPI handler，复用同一业务 router；外部客户端使用 HTTP，也必须经过相同服务端授权。handler 负责协议接入，具体业务位于共享 API 包。
 
+HTTP 插件集中在 [http-plugins.ts](../../packages/api/src/http-plugins.ts)：两个入口均配置请求解压、解压后 1 MiB 请求体限制、最多 10 个子请求的批处理、30 秒请求取消信号、5 分钟流响应取消信号、原型污染防护、GET CSRF 防护、请求／响应头、Pino 请求日志、限流响应头和响应压缩。超时只触发取消信号，业务处理器及下游操作需配合信号才能提前停止；不能据此认定数据库写入已取消。CORS 只允许 `CORS_ORIGIN` 的 origin，允许携带凭证，并暴露请求编号与限流响应头；HTTP 路由处理 OPTIONS 预检。
+
+OpenAPI 入口另启用 Smart Coercion 和 Method Override：输入按 Zod Schema 转换；POST 的 `method` 查询参数仅允许覆盖为 PUT、PATCH、DELETE。RPC 保持默认方法策略，不因契约标记 GET 就将浏览器请求改成 GET。
+
+浏览器的 [RPC 客户端工厂](../../packages/api/src/client.ts)加载共享契约进行请求／响应校验。仅契约明确标记 GET 的查询参与去重、批处理和自动重试；临时网络故障或 502／503／504 最多重试一次，认证拒绝和其他业务错误直接返回。写操作独立发送，不去重、不批处理、不自动重试，避免重复提交和丢失子响应 Cookie。当前查询均返回有限 JSON DTO，批处理采用 buffered 模式，使批量响应可以压缩；未来引入长时间流查询时需单独选择传输策略。请求超过压缩阈值时使用 gzip，响应由浏览器 Fetch 原生解压。
+
+请求头通过 `context.reqHeaders` 读取，HTTP 响应头通过 `context.resHeaders` 设置。SSR 直接调用也提供 `reqHeaders`，但没有 HTTP 响应，不提供 `resHeaders`。HTTP 响应统一携带 `X-Request-Id`，与 Pino 请求日志及异常编号关联；SSR 直接调用保留业务错误日志，HTTP 插件不作用于该通道。
+
 当前公共处理器与受保护处理器分别从 `publicImplementer` 和 `protectedImplementer` 实现。受保护处理器先检查登录；组织业务再按明确的组织 ID 检查成员资格、动态权限和归档状态，平台操作独立检查平台管理员角色。归档、恢复及角色操作使用相应服务端契约；页面布局不会改变 API 的协议和授权入口。
 
 ## 请求级 Session 提取

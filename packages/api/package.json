@@ -16,6 +16,7 @@
     "@org-saas/env": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",
+    "@orpc/json-schema": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/pino": "catalog:",
     "@orpc/ratelimit": "catalog:",
