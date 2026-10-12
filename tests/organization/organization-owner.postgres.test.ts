@@ -1,4 +1,7 @@
 import { runWithTransaction } from "@better-auth/core/context";
+import { createOrganizationPolicyPlugin } from "@org-saas/auth/organization-policy";
+import { withOrganizationMutationTransactions } from "@org-saas/auth/organization-transaction";
+import { ac, roles } from "@org-saas/auth/permissions";
 import { betterAuth, getCurrentAdapter } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
@@ -8,10 +11,6 @@ import { defaultStatements } from "better-auth/plugins/admin/access";
 import { organization } from "better-auth/plugins/organization";
 import type { OrganizationOptions } from "better-auth/plugins/organization";
 import { describe, expect, it } from "vite-plus/test";
-
-import { createOrganizationPolicyPlugin } from "./organization-policy";
-import { withOrganizationMutationTransactions } from "./organization-transaction";
-import { ac, roles } from "./permissions";
 
 const permissionTestDatabaseUrl = process.env.PERMISSION_TEST_DATABASE_URL;
 const postgresDescribe = permissionTestDatabaseUrl ? describe : describe.skip;

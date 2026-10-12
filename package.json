@@ -4,7 +4,8 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "packages/*"
+      "packages/*",
+      "tests"
     ],
     "catalog": {
       "typescript": "^7.0.2",
@@ -64,6 +65,7 @@
     "db:generate": "vp run --filter @org-saas/db db:generate",
     "db:migrate": "vp run --filter @org-saas/db db:migrate",
     "check": "vp check --fix",
+    "test:e2e": "vp run --filter @org-saas/tests test:e2e",
     "clean": "git clean -xdf -- ':(glob)**/node_modules/**' ':(glob)**/.dist/**' ':(glob)**/.output/**' ':(glob)**/.tanstack/**' ':(glob)**/.wrangler/**'"
   },
   "dependencies": {

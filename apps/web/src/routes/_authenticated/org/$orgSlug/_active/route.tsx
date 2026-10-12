@@ -2,6 +2,7 @@ import { Button } from "@org-saas/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -92,42 +93,44 @@ function ActiveOrganizationLayout() {
               <span className="truncate text-sm">{user.name}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-card w-56" align="start">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate({ to: "/me" })}>
-                <LayoutDashboard className="size-4" />
-                个人中心
-              </DropdownMenuItem>
-              {isOwner && canArchive && (
-                <DropdownMenuItem
-                  onClick={() =>
-                    navigate({ to: "/org/$orgSlug/settings", params: { orgSlug: org.slug } })
-                  }
-                >
-                  <Settings className="size-4" />
-                  组织设置
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate({ to: "/me" })}>
+                  <LayoutDashboard className="size-4" />
+                  个人中心
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => {
-                  void authClient.signOut({
-                    fetchOptions: {
-                      onSuccess: () => {
-                        queryClient.clear();
-                        void navigate({ to: "/" });
+                {isOwner && canArchive && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      navigate({ to: "/org/$orgSlug/settings", params: { orgSlug: org.slug } })
+                    }
+                  >
+                    <Settings className="size-4" />
+                    组织设置
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    void authClient.signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          queryClient.clear();
+                          void navigate({ to: "/" });
+                        },
+                        onError: (error) => {
+                          toast.add({ title: error.error.message ?? "退出失败", type: "error" });
+                        },
                       },
-                      onError: (error) => {
-                        toast.add({ title: error.error.message ?? "退出失败", type: "error" });
-                      },
-                    },
-                  });
-                }}
-              >
-                <LogOut className="size-4" />
-                退出登录
-              </DropdownMenuItem>
+                    });
+                  }}
+                >
+                  <LogOut className="size-4" />
+                  退出登录
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

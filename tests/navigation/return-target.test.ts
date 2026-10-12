@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { getSafeReturnTarget, getSignInDestination } from "./return-target";
+import { getSafeReturnTarget, getSignInDestination } from "../../apps/web/src/utils/return-target";
 
 describe("safe sign-in return targets", () => {
   it("keeps a valid same-site path, search, and fragment", () => {

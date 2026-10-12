@@ -1,0 +1,15 @@
+{
+  "extends": "@org-saas/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "noEmit": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "references": [
+    { "path": "../packages/db" },
+    { "path": "../packages/auth" },
+    { "path": "../packages/api" }
+  ]
+}

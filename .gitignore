@@ -6,6 +6,10 @@ dist
 build
 *.tsbuildinfo
 
+# Browser test artifacts
+/tests/playwright-report/
+/tests/test-results/
+
 # Environment variables
 .env
 .env*.local

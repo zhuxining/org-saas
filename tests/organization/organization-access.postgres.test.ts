@@ -1,10 +1,9 @@
+import type { ApiContractClient } from "@org-saas/api/contracts/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createRouterClient } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { describe, expect, it } from "vite-plus/test";
-
-import type { ApiContractClient } from "../contracts/index";
 
 const permissionTestDatabaseUrl = process.env.PERMISSION_TEST_DATABASE_URL;
 const postgresDescribe = permissionTestDatabaseUrl ? describe : describe.skip;
@@ -20,9 +19,9 @@ async function loadEnvironment() {
     import("@org-saas/db"),
     import("@org-saas/db/schema/auth"),
     import("@org-saas/auth"),
-    import("../context"),
-    import("../index"),
-    import("./index"),
+    import("@org-saas/api/context"),
+    import("@org-saas/api"),
+    import("@org-saas/api/routers/index"),
   ]);
 
   return {

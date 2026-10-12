@@ -1,0 +1,22 @@
+{
+  "name": "@org-saas/tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "node scripts/run-browser-tests.ts"
+  },
+  "devDependencies": {
+    "@better-auth/core": "1.7.7",
+    "@org-saas/api": "workspace:*",
+    "@org-saas/auth": "workspace:*",
+    "@org-saas/config": "workspace:*",
+    "@org-saas/db": "workspace:*",
+    "@orpc/client": "catalog:",
+    "@orpc/server": "catalog:",
+    "@playwright/test": "1.64.0",
+    "@types/node": "catalog:",
+    "better-auth": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

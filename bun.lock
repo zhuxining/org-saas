@@ -203,6 +203,23 @@
         "typescript": "catalog:",
       },
     },
+    "tests": {
+      "name": "@org-saas/tests",
+      "devDependencies": {
+        "@better-auth/core": "1.7.7",
+        "@org-saas/api": "workspace:*",
+        "@org-saas/auth": "workspace:*",
+        "@org-saas/config": "workspace:*",
+        "@org-saas/db": "workspace:*",
+        "@orpc/client": "catalog:",
+        "@orpc/server": "catalog:",
+        "@playwright/test": "1.64.0",
+        "@types/node": "catalog:",
+        "better-auth": "catalog:",
+        "typescript": "catalog:",
+        "vite-plus": "catalog:",
+      },
+    },
   },
   "overrides": {
     "vite": "catalog:",
@@ -512,6 +529,8 @@
 
     "@org-saas/mini": ["@org-saas/mini@workspace:apps/mini"],
 
+    "@org-saas/tests": ["@org-saas/tests@workspace:tests"],
+
     "@org-saas/ui": ["@org-saas/ui@workspace:packages/ui"],
 
     "@orpc/client": ["@orpc/client@2.0.0-beta.43", "", { "dependencies": { "@orpc/shared": "2.0.0-beta.43", "@standard-server/core": "~0.10.2", "@standard-server/fetch": "~0.10.2", "@standard-server/peer": "~0.10.2" } }, "sha512-176u4pmmoXGyjHRTuJFSQVN4Ucuau5mfn3LkxBs+kyTcNHOZD9XmDW8DAr0NJwhfUBDT/E62q1y9aEgiKUcJsA=="],
@@ -707,6 +726,8 @@
     "@oxlint/plugins": ["@oxlint/plugins@1.79.0", "", {}, "sha512-S0uyoxakDINJ4DPgqxGlEEvrdSMeQb7Z2lKVjxoY2gwsbZbfg2Xr8Klfeo5ZeraHmmdBCELFUHkSe6KEmBpMvg=="],
 
     "@pinojs/redact": ["@pinojs/redact@0.4.0", "https://registry.npmmirror.com/@pinojs/redact/-/redact-0.4.0.tgz", {}, "sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg=="],
+
+    "@playwright/test": ["@playwright/test@1.64.0", "", { "dependencies": { "playwright": "1.64.0" }, "bin": { "playwright": "cli.js" } }, "sha512-oTN9FNYuN6bqQMwiho6jJKLCG2/QOYCixGXuCjRmzOq23eODeukuY2XiAVoVpAECbuezMt1MHQjAiQxK8F+Y+g=="],
 
     "@polka/url": ["@polka/url@1.0.0-next.29", "", {}, "sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww=="],
 
@@ -1959,6 +1980,10 @@
     "pkce-challenge": ["pkce-challenge@5.0.1", "https://registry.npmmirror.com/pkce-challenge/-/pkce-challenge-5.0.1.tgz", {}, "sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ=="],
 
     "pkg-up": ["pkg-up@3.1.0", "", { "dependencies": { "find-up": "^3.0.0" } }, "sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA=="],
+
+    "playwright": ["playwright@1.64.0", "", { "dependencies": { "playwright-core": "1.64.0" }, "bin": { "playwright": "cli.js" } }, "sha512-kVzTnYFYEyQ9RGzBjNCd2+yEqWmVbxl3AHPynv3qQ6JTjv4a+kwRcnqQwIpuP3NnrnIrE/Q6wWAIAvMfIE2/Yg=="],
+
+    "playwright-core": ["playwright-core@1.64.0", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg=="],
 
     "pngjs": ["pngjs@7.0.0", "", {}, "sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow=="],
 

@@ -1,12 +1,11 @@
+import { createOrganizationPolicyPlugin, hasSingleRole } from "@org-saas/auth/organization-policy";
+import { withOrganizationMutationTransactions } from "@org-saas/auth/organization-transaction";
+import { ac, roles } from "@org-saas/auth/permissions";
 import { betterAuth } from "better-auth";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { organization } from "better-auth/plugins/organization";
 import type { OrganizationOptions } from "better-auth/plugins/organization";
 import { describe, expect, it } from "vite-plus/test";
-
-import { createOrganizationPolicyPlugin, hasSingleRole } from "./organization-policy";
-import { withOrganizationMutationTransactions } from "./organization-transaction";
-import { ac, roles } from "./permissions";
 
 const organizationOptions = {
   allowUserToCreateOrganization: true,

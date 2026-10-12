@@ -8,9 +8,9 @@
 
 | 边界                                  | 验证方式                                                                       | 结果                                                                                                                                                                                               |
 | ------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Better Auth 直接 HTTP 与 `auth.api.*` | `packages/auth/src/organization-policy.test.ts`                                | 成员、邀请、动态角色、归档阻断、owner 保护和权限不足均按预期拒绝或允许；覆盖 HTTP handler 与服务端 API 调用。                                                                                      |
-| owner 原子转让及并发保留              | `packages/auth/src/organization-owner.postgres.test.ts`，临时 PostgreSQL       | 转让与移除、退出、账号操作并发时保持唯一 owner；失败回滚；异常存量状态 fail closed。                                                                                                               |
-| oRPC HTTP 与 SSR/server 直接处理      | `packages/api/src/routers/organization.postgres.test.ts`                       | `RPCHandler` HTTP 请求与 `createRouterClient` 服务端直调共用 handler；覆盖跨组织、归档、权限授予边界及平台／组织身份分离。                                                                         |
+| Better Auth 直接 HTTP 与 `auth.api.*` | `tests/organization/organization-policy.test.ts`                               | 成员、邀请、动态角色、归档阻断、owner 保护和权限不足均按预期拒绝或允许；覆盖 HTTP handler 与服务端 API 调用。                                                                                      |
+| owner 原子转让及并发保留              | `tests/organization/organization-owner.postgres.test.ts`，临时 PostgreSQL      | 转让与移除、退出、账号操作并发时保持唯一 owner；失败回滚；异常存量状态 fail closed。                                                                                                               |
+| oRPC HTTP 与 SSR/server 直接处理      | `tests/organization/organization-access.postgres.test.ts`                      | `RPCHandler` HTTP 请求与 `createRouterClient` 服务端直调共用 handler；覆盖跨组织、归档、权限授予边界及平台／组织身份分离。                                                                         |
 | 平台管理员权限边界                    | API 集成测试中的 Better Auth HTTP 与 `auth.api.*`                              | `set-role` 通过 HTTP 和服务端 API 均被拒绝，用户角色没有变化；普通用户无法读取会话。                                                                                                               |
 | 会话凭证输出                          | `/admin/list-user-sessions` HTTP 响应及 `auth.api.listUserSessions`            | 返回会话元数据，不包含 `token`；授权撤销后会话列表为空。                                                                                                                                           |
 | 平台用户操作                          | `auth.api.banUser`／`unbanUser`                                                | 管理员可封禁和解封普通用户；实际数据库标记符合预期。管理员用户列表排除平台管理员。                                                                                                                 |
@@ -23,10 +23,10 @@
 ```sh
 PERMISSION_TEST_DATABASE_URL=postgres://postgres@127.0.0.1:55440/org_saas_issue15 \
   vp test \
-  packages/auth/src/permissions.test.ts \
-  packages/auth/src/organization-policy.test.ts \
-  packages/auth/src/organization-owner.postgres.test.ts \
-  packages/api/src/routers/organization.postgres.test.ts
+  tests/auth/permissions.test.ts \
+  tests/organization/organization-policy.test.ts \
+  tests/organization/organization-owner.postgres.test.ts \
+  tests/organization/organization-access.postgres.test.ts
 ```
 
 最后一次完整运行：4 个测试文件、28 项通过。bootstrap 使用另一个新建的临时数据库，先以 `vp run --filter @org-saas/db db:push` 建立测试 schema。

@@ -1,7 +1,6 @@
+import { roles } from "@org-saas/auth/permissions";
+import { platformRoles } from "@org-saas/auth/platform-permissions";
 import { describe, expect, it } from "vite-plus/test";
-
-import { roles } from "./permissions";
-import { platformRoles } from "./platform-permissions";
 
 describe("organization role permissions", () => {
   it("does not grant management writes to members", () => {

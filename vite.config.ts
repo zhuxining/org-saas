@@ -23,5 +23,9 @@ export default defineConfig({
     sortImports: true,
     sortTailwindcss: true,
   },
+  test: {
+    include: ["tests/**/*.test.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "**/.git/**", "tests/browser/**"],
+  },
   resolve: { tsconfigPaths: true },
 });
