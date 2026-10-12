@@ -83,7 +83,7 @@ function ArchivedOrganizationPage() {
               <ArchiveRestore data-icon="inline-start" />
               {restoreMutation.isPending ? "恢复中..." : "恢复组织"}
             </Button>
-            <Button variant="outline" render={<a href="/me/organizations" />}>
+            <Button nativeButton={false} variant="outline" render={<a href="/me/organizations" />}>
               <ArrowLeft data-icon="inline-start" />
               返回我的组织
             </Button>

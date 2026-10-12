@@ -35,7 +35,11 @@ function PersonalOverview() {
             <Building2 className="text-muted-foreground mb-2 size-5" />
             <CardTitle>我的组织</CardTitle>
             <CardDescription>查看你可以访问的组织，或创建新组织</CardDescription>
-            <Button render={<Link to="/me/organizations" />} className="mt-2 w-fit">
+            <Button
+              nativeButton={false}
+              render={<Link to="/me/organizations" />}
+              className="mt-2 w-fit"
+            >
               查看组织
             </Button>
           </CardHeader>
@@ -47,6 +51,7 @@ function PersonalOverview() {
             <CardDescription>更新你的姓名和头像</CardDescription>
             <Button
               variant="outline"
+              nativeButton={false}
               render={<Link to="/me/settings/profile" />}
               className="mt-2 w-fit"
             >

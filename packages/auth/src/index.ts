@@ -75,9 +75,9 @@ const authInstance = betterAuth({
       adminRoles: [...platformAdminRoles],
     }),
     openAPI(), // `http://localhost:3001/api/auth/reference`
-    tanstackStartCookies(),
     organization(organizationOptions),
     createOrganizationPolicyPlugin(organizationOptions, platformAdminRoles),
+    tanstackStartCookies(),
   ],
 });
 

@@ -2,6 +2,7 @@ import { Button } from "@org-saas/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -44,21 +45,23 @@ export function OrgSwitcher({ activeOrgSlug, userId }: { activeOrgSlug?: string;
         <ChevronsUpDown className="ml-auto size-4 shrink-0" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card w-56" align="start">
-        <DropdownMenuLabel>组织</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {orgs.map((org) => (
-          <DropdownMenuItem
-            key={org.id}
-            onClick={() =>
-              void navigate({
-                to: `/org/${org.slug}`,
-              })
-            }
-          >
-            <UserAvatar name={org.name} image={org.logo} size="sm" />
-            <span className="truncate">{org.name}</span>
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>组织</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {orgs.map((org) => (
+            <DropdownMenuItem
+              key={org.id}
+              onClick={() =>
+                void navigate({
+                  to: `/org/${org.slug}`,
+                })
+              }
+            >
+              <UserAvatar name={org.name} image={org.logo} size="sm" />
+              <span className="truncate">{org.name}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate({ to: "/me/organizations/new" })}>
           <Plus className="size-4" />
