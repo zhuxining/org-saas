@@ -46,7 +46,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "jsdom": "^30.1.2",
+    "jsdom": "^30.1.3",
     "oxc-transform-react": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
