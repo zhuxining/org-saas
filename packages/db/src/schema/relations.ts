@@ -14,6 +14,7 @@ export const relations = defineRelations(schema, (helpers) => {
     organizationRole,
     team,
     teamMember,
+    auditLog,
   } = helpers;
 
   return {
@@ -35,6 +36,7 @@ export const relations = defineRelations(schema, (helpers) => {
       invitations: many.invitation(),
       roles: many.organizationRole(),
       teams: many.team(),
+      auditLogs: many.auditLog(),
     },
     member: {
       user: one.user({ from: member.userId, to: user.id }),
@@ -63,6 +65,12 @@ export const relations = defineRelations(schema, (helpers) => {
         to: organization.id,
       }),
       members: many.teamMember(),
+    },
+    auditLog: {
+      organization: one.organization({
+        from: auditLog.organizationId,
+        to: organization.id,
+      }),
     },
     teamMember: {
       team: one.team({ from: teamMember.teamId, to: team.id }),

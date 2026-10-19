@@ -1,4 +1,5 @@
 import type { auth } from "@org-saas/auth";
+import { organizationPolicyClient } from "@org-saas/auth/organization-policy-client";
 import { platformAc, platformRoles } from "@org-saas/auth/platform-permissions";
 import { createAuthClient } from "better-auth/client";
 import { adminClient, organizationClient } from "better-auth/client/plugins";
@@ -15,6 +16,7 @@ export const authClient = createAuthClient({
         enabled: true,
       },
     }),
+    organizationPolicyClient(),
   ],
 });
 

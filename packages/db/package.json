@@ -14,7 +14,8 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "audit:prune": "bun run src/scripts/prune-audit-logs.ts"
   },
   "dependencies": {
     "@org-saas/env": "workspace:*",

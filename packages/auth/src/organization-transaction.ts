@@ -46,7 +46,18 @@ export const accountDeletionPaths = new Set([
   "/admin/remove-user",
 ]);
 
-const transactionalHttpPaths = new Set([...organizationMutationPaths, ...accountDeletionPaths]);
+const platformAuditPaths = new Set([
+  "/admin/ban-user",
+  "/admin/unban-user",
+  "/admin/revoke-user-session",
+  "/admin/revoke-user-sessions",
+]);
+
+const transactionalHttpPaths = new Set([
+  ...organizationMutationPaths,
+  ...accountDeletionPaths,
+  ...platformAuditPaths,
+]);
 
 const ownerMutationApiMethods = new Set([
   "addMember",
@@ -61,7 +72,7 @@ const ownerMutationApiMethods = new Set([
   "removeUser",
 ]);
 
-const organizationMutationApiMethods = new Set([
+const transactionalApiMethods = new Set([
   "createOrganization",
   "updateOrganization",
   "deleteOrganization",
@@ -78,6 +89,10 @@ const organizationMutationApiMethods = new Set([
   "updateOrgRole",
   "deleteOrgRole",
   ...ownerMutationApiMethods,
+  "banUser",
+  "unbanUser",
+  "revokeUserSession",
+  "revokeUserSessions",
 ]);
 
 type TransactionCallback = (transactionAdapter: Adapter) => Promise<unknown>;
@@ -157,7 +172,7 @@ export function withOrganizationMutationTransactions<AuthType extends AuthWithAd
       const method = Reflect.get(target, property, receiver);
       if (
         typeof property !== "string" ||
-        !organizationMutationApiMethods.has(property) ||
+        !transactionalApiMethods.has(property) ||
         typeof method !== "function"
       ) {
         return method;

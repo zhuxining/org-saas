@@ -26,7 +26,6 @@ const requiredOperationPermissions: Record<string, Record<string, string[]>> = {
   "/organization/invite-member": { invitation: ["create"] },
   "/organization/remove-member": { member: ["delete"] },
   "/organization/update-member-role": { member: ["update"] },
-  "/organization/leave": { member: ["delete"] },
   "/organization/update": { organization: ["update"] },
   "/organization/delete": { organization: ["delete"] },
   "/organization/create-team": { team: ["create"] },
@@ -216,6 +215,129 @@ function createOwnershipTransferEndpoint(options: OrganizationOptions) {
   );
 }
 
+const auditedEndpointDefinitions: Record<
+  string,
+  { action: string; scope: "organization" | "platform"; targetType: string }
+> = {
+  "/organization/create": {
+    action: "organization.created",
+    scope: "organization",
+    targetType: "organization",
+  },
+  "/organization/update": {
+    action: "organization.updated",
+    scope: "organization",
+    targetType: "organization",
+  },
+  "/organization/transfer-ownership": {
+    action: "organization.ownership_transferred",
+    scope: "organization",
+    targetType: "member",
+  },
+  "/organization/add-member": {
+    action: "member.added",
+    scope: "organization",
+    targetType: "member",
+  },
+  "/organization/invite-member": {
+    action: "invitation.sent",
+    scope: "organization",
+    targetType: "invitation",
+  },
+  "/organization/accept-invitation": {
+    action: "invitation.accepted",
+    scope: "organization",
+    targetType: "invitation",
+  },
+  "/organization/cancel-invitation": {
+    action: "invitation.canceled",
+    scope: "organization",
+    targetType: "invitation",
+  },
+  "/organization/reject-invitation": {
+    action: "invitation.rejected",
+    scope: "organization",
+    targetType: "invitation",
+  },
+  "/organization/remove-member": {
+    action: "member.removed",
+    scope: "organization",
+    targetType: "member",
+  },
+  "/organization/leave": { action: "member.left", scope: "organization", targetType: "member" },
+  "/organization/update-member-role": {
+    action: "member.role_changed",
+    scope: "organization",
+    targetType: "member",
+  },
+  "/organization/create-team": {
+    action: "team.created",
+    scope: "organization",
+    targetType: "team",
+  },
+  "/organization/update-team": {
+    action: "team.updated",
+    scope: "organization",
+    targetType: "team",
+  },
+  "/organization/remove-team": {
+    action: "team.deleted",
+    scope: "organization",
+    targetType: "team",
+  },
+  "/organization/add-team-member": {
+    action: "team.member_added",
+    scope: "organization",
+    targetType: "member",
+  },
+  "/organization/remove-team-member": {
+    action: "team.member_removed",
+    scope: "organization",
+    targetType: "member",
+  },
+  "/organization/create-role": {
+    action: "role.created",
+    scope: "organization",
+    targetType: "role",
+  },
+  "/organization/update-role": {
+    action: "role.updated",
+    scope: "organization",
+    targetType: "role",
+  },
+  "/organization/delete-role": {
+    action: "role.deleted",
+    scope: "organization",
+    targetType: "role",
+  },
+  "/admin/ban-user": { action: "user.banned", scope: "platform", targetType: "user" },
+  "/admin/unban-user": { action: "user.unbanned", scope: "platform", targetType: "user" },
+  "/admin/revoke-user-session": {
+    action: "session.revoked",
+    scope: "platform",
+    targetType: "user",
+  },
+  "/admin/revoke-user-sessions": {
+    action: "session.revoked_all",
+    scope: "platform",
+    targetType: "user",
+  },
+};
+
+function readAuditRecord(value: unknown): Record<string, unknown> | null {
+  return isRecord(value) ? value : null;
+}
+
+function stringField(record: Record<string, unknown> | null, field: string): string | undefined {
+  const value = record?.[field];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function changedFieldNames(value: unknown, allowed: readonly string[]): string[] {
+  const record = isRecord(value) ? value : {};
+  return allowed.filter((field) => Object.hasOwn(record, field));
+}
+
 export function createOrganizationPolicyPlugin(
   options: OrganizationOptions,
   platformAdminRoles: readonly string[] = [],
@@ -225,6 +347,22 @@ export function createOrganizationPolicyPlugin(
     endpoints: { transferOrganizationOwnership: createOwnershipTransferEndpoint(options) },
     hooks: {
       before: [
+        {
+          matcher: ({ path }) => path === "/admin/revoke-user-session",
+          handler: createAuthMiddleware(async (ctx) => {
+            const body = isRecord(ctx.body) ? ctx.body : {};
+            if (typeof body.token !== "string") return;
+            const adapter = await getCurrentAdapter(ctx.context.adapter);
+            const session = await adapter.findOne({
+              model: "session",
+              where: [{ field: "token", value: body.token }],
+            });
+            if (isRecord(session) && typeof session.userId === "string") {
+              (ctx.context as unknown as Record<string, unknown>).auditTargetUserId =
+                session.userId;
+            }
+          }),
+        },
         {
           matcher: (context) =>
             (typeof context.path === "string" &&
@@ -316,9 +454,12 @@ export function createOrganizationPolicyPlugin(
               }
               return;
             }
-            const explicitId = [input.organizationId, input.id].find(
-              (value): value is string => typeof value === "string",
-            );
+            const explicitId =
+              path === "/organization/get-invitation"
+                ? undefined
+                : [input.organizationId, input.id].find(
+                    (value): value is string => typeof value === "string",
+                  );
             let organizationId = explicitId;
             let organization = explicitId
               ? await adapter.findOne({
@@ -326,16 +467,36 @@ export function createOrganizationPolicyPlugin(
                   where: [{ field: "id", value: explicitId }],
                 })
               : null;
+            if (path === "/organization/get-invitation" && typeof input.id === "string") {
+              const invitation = await adapter.findOne({
+                model: "invitation",
+                where: [{ field: "id", value: input.id }],
+              });
+              if (isRecord(invitation) && typeof invitation.organizationId === "string") {
+                organizationId = invitation.organizationId;
+                organization = await adapter.findOne({
+                  model: "organization",
+                  where: [{ field: "id", value: invitation.organizationId }],
+                });
+              }
+            }
             const slug = [input.organizationSlug, input.slug].find(
               (value): value is string => typeof value === "string",
             );
-            if (!organization && slug) {
-              organization = await adapter.findOne({
+            if (slug) {
+              const organizationFromSlug = await adapter.findOne({
                 model: "organization",
                 where: [{ field: "slug", value: slug }],
               });
-              if (isRecord(organization) && typeof organization.id === "string") {
-                organizationId ??= organization.id;
+              if (isRecord(organizationFromSlug) && typeof organizationFromSlug.id === "string") {
+                if (organizationId && organizationId !== organizationFromSlug.id) {
+                  forbidden(
+                    "ORGANIZATION_REFERENCE_MISMATCH",
+                    "The organization ID and slug must identify the same organization.",
+                  );
+                }
+                organizationId ??= organizationFromSlug.id;
+                organization ??= organizationFromSlug;
               }
             }
 
@@ -471,6 +632,99 @@ export function createOrganizationPolicyPlugin(
               ],
             });
             if (!isRecord(actor) || typeof actor.role !== "string") {
+              if (
+                path === "/organization/accept-invitation" &&
+                typeof body.invitationId === "string"
+              ) {
+                const invite = await adapter.findOne({
+                  model: "invitation",
+                  where: [{ field: "id", value: body.invitationId }],
+                });
+                if (
+                  isRecord(invite) &&
+                  invite.status === "pending" &&
+                  typeof invite.organizationId === "string" &&
+                  typeof invite.inviterId === "string" &&
+                  typeof invite.role === "string"
+                ) {
+                  if (isOwnerRole(invite.role)) {
+                    forbidden(
+                      "OWNER_TRANSFER_REQUIRED",
+                      "Ownership can only change through an explicit transfer.",
+                    );
+                  }
+                  const inviter = await adapter.findOne({
+                    model: "member",
+                    where: [
+                      { field: "organizationId", value: invite.organizationId },
+                      { field: "userId", value: invite.inviterId },
+                    ],
+                  });
+                  if (!isRecord(inviter) || typeof inviter.role !== "string") {
+                    forbidden(
+                      "INVITATION_GRANTER_NO_LONGER_MEMBER",
+                      "The invitation sender is no longer a member of this organization.",
+                    );
+                  }
+                  const assignedRole = Object.hasOwn(options.roles ?? {}, invite.role)
+                    ? options.roles?.[
+                        invite.role as keyof NonNullable<OrganizationOptions["roles"]>
+                      ]?.statements
+                    : parsePermissions(
+                        (
+                          (await adapter.findOne({
+                            model: "organizationRole",
+                            where: [
+                              { field: "organizationId", value: invite.organizationId },
+                              { field: "role", value: invite.role },
+                            ],
+                          })) as Record<string, unknown> | null
+                        )?.permission,
+                      );
+                  if (!assignedRole) {
+                    forbidden(
+                      "INVITATION_ROLE_UNAVAILABLE",
+                      "The invited organization role is no longer available.",
+                    );
+                  }
+                  for (const [resource, action] of rolePermissionEntries(assignedRole)) {
+                    const inviterCanGrant = await hasPermission(
+                      {
+                        options,
+                        organizationId: invite.organizationId,
+                        role: inviter.role,
+                        permissions: { [resource]: [action] },
+                      },
+                      ctx,
+                    );
+                    if (!inviterCanGrant) {
+                      forbidden(
+                        "INVITATION_GRANT_EXCEEDS_SENDER",
+                        "The invitation sender no longer has permission to grant this role.",
+                      );
+                    }
+                  }
+                  const adminPermissions = options.roles?.admin?.statements;
+                  const assignedRoleIsAdmin =
+                    !!adminPermissions &&
+                    Object.keys(adminPermissions).length > 0 &&
+                    (await hasPermission(
+                      {
+                        options,
+                        organizationId: invite.organizationId,
+                        role: invite.role,
+                        permissions: adminPermissions,
+                      },
+                      ctx,
+                    ));
+                  if (assignedRoleIsAdmin && !isOwnerRole(inviter.role)) {
+                    forbidden(
+                      "INVITATION_ADMIN_ROLE_OWNER_REQUIRED",
+                      "Only an organization owner may invite an administrator role.",
+                    );
+                  }
+                }
+              }
               if (operationPermission) {
                 forbidden(
                   "ORGANIZATION_MEMBERSHIP_REQUIRED",
@@ -638,6 +892,39 @@ export function createOrganizationPolicyPlugin(
                     "Only an owner may change or remove this member.",
                   );
                 }
+                if (!actorIsOwner) {
+                  const staticPermissions =
+                    options.roles?.[target.role as keyof NonNullable<OrganizationOptions["roles"]>]
+                      ?.statements;
+                  const dynamicPermissions = staticPermissions
+                    ? null
+                    : await targetRole(target.role);
+                  const permissions =
+                    staticPermissions ?? parsePermissions(dynamicPermissions?.permission);
+                  if (!permissions) {
+                    forbidden(
+                      "TARGET_ROLE_PERMISSIONS_INVALID",
+                      "The target member's role permissions cannot be verified safely.",
+                    );
+                  }
+                  for (const [resource, action] of rolePermissionEntries(permissions)) {
+                    const actorCanGrantPermission = await hasPermission(
+                      {
+                        options,
+                        organizationId,
+                        role: actor.role,
+                        permissions: { [resource]: [action] },
+                      },
+                      ctx,
+                    );
+                    if (!actorCanGrantPermission) {
+                      forbidden(
+                        "TARGET_ROLE_EXCEEDS_ACTOR",
+                        "You cannot change or remove a member whose role exceeds your permissions.",
+                      );
+                    }
+                  }
+                }
               }
             }
 
@@ -767,6 +1054,157 @@ export function createOrganizationPolicyPlugin(
         },
       ],
       after: [
+        {
+          matcher: ({ path, body }) => {
+            if (typeof path === "string" && Object.hasOwn(auditedEndpointDefinitions, path))
+              return true;
+            const data = isRecord(body) ? body : {};
+            return (
+              (path === undefined || path === "/") &&
+              typeof data.userId === "string" &&
+              data.role !== undefined
+            );
+          },
+          handler: createAuthMiddleware(async (ctx) => {
+            const body = isRecord(ctx.body) ? ctx.body : {};
+            const path =
+              (ctx.path === "/" || ctx.path === undefined) &&
+              typeof body.userId === "string" &&
+              body.role !== undefined
+                ? "/organization/add-member"
+                : typeof ctx.path === "string"
+                  ? ctx.path
+                  : "";
+            const definition = auditedEndpointDefinitions[path];
+            if (!definition) return;
+            const session = await getSessionFromCtx(ctx).catch(() => null);
+            if (!session) return;
+            const adapter = await getCurrentAdapter(ctx.context.adapter);
+            let result: unknown = ctx.context.returned;
+            if (result instanceof Response) {
+              if (!result.ok) return;
+              try {
+                result = await result.clone().json();
+              } catch {
+                result = null;
+              }
+            }
+            const output = readAuditRecord(result);
+            const returnedMember = readAuditRecord(output?.member);
+            const returnedInvitation = readAuditRecord(output?.invitation);
+            const organizationId =
+              (path === "/organization/create" ? stringField(output, "id") : undefined) ??
+              stringField(body, "organizationId") ??
+              stringField(readAuditRecord(body.data), "organizationId") ??
+              stringField(output, "organizationId") ??
+              (definition.scope === "organization"
+                ? session.session.activeOrganizationId
+                : undefined);
+            let targetId: string | undefined;
+            if (definition.scope === "platform") {
+              targetId =
+                stringField(body, "userId") ??
+                stringField(ctx.context as unknown as Record<string, unknown>, "auditTargetUserId");
+            } else {
+              switch (path) {
+                case "/organization/create":
+                case "/organization/invite-member":
+                case "/organization/create-team":
+                case "/organization/create-role":
+                  targetId = stringField(output, "id");
+                  break;
+                case "/organization/update":
+                  targetId = organizationId;
+                  break;
+                case "/organization/transfer-ownership":
+                  targetId = stringField(body, "newOwnerMemberId");
+                  break;
+                case "/organization/add-member":
+                case "/organization/add-team-member":
+                case "/organization/remove-team-member":
+                  targetId = stringField(body, "userId");
+                  break;
+                case "/organization/accept-invitation":
+                case "/organization/cancel-invitation":
+                case "/organization/reject-invitation":
+                  targetId = stringField(body, "invitationId");
+                  break;
+                case "/organization/remove-member":
+                  targetId =
+                    stringField(returnedMember, "id") ??
+                    stringField(body, "memberId") ??
+                    stringField(body, "memberIdOrEmail");
+                  break;
+                case "/organization/leave":
+                  targetId = session.user.id;
+                  break;
+                case "/organization/update-member-role":
+                  targetId = stringField(body, "memberId");
+                  break;
+                case "/organization/update-team":
+                case "/organization/remove-team":
+                  targetId = stringField(body, "teamId");
+                  break;
+                case "/organization/update-role":
+                case "/organization/delete-role":
+                  targetId = stringField(body, "roleId") ?? stringField(body, "roleName");
+                  break;
+              }
+            }
+            if (targetId?.includes("@")) targetId = undefined;
+            let resolvedOrganizationId = organizationId;
+            const invitationId =
+              stringField(body, "invitationId") ??
+              (path === "/organization/invite-member" ? stringField(output, "id") : undefined);
+            if (definition.scope === "organization" && invitationId) {
+              const invitation = await adapter.findOne({
+                model: "invitation",
+                where: [{ field: "id", value: invitationId }],
+              });
+              const invitationOrganizationId = stringField(
+                readAuditRecord(invitation),
+                "organizationId",
+              );
+              if (invitationOrganizationId) resolvedOrganizationId = invitationOrganizationId;
+            }
+            if (definition.scope === "organization" && !resolvedOrganizationId) return;
+
+            const summary: Record<string, string | string[]> = {};
+            const role =
+              stringField(body, "role") ??
+              stringField(body, "formerOwnerRole") ??
+              stringField(returnedInvitation, "role");
+            if (role) summary.role = role;
+            if (path === "/organization/transfer-ownership") {
+              const formerRole = stringField(body, "formerOwnerRole");
+              if (formerRole) summary.formerOwnerRole = formerRole;
+            }
+            const changedFields =
+              path === "/organization/update"
+                ? changedFieldNames(body, ["name", "slug", "logo"])
+                : path === "/organization/update-team"
+                  ? changedFieldNames(body.data, ["name"])
+                  : path === "/organization/update-role"
+                    ? changedFieldNames(body.data, ["roleName", "permission"])
+                    : [];
+            if (changedFields.length) summary.changedFields = changedFields;
+
+            await adapter.create({
+              model: "auditLog",
+              data: {
+                id: crypto.randomUUID(),
+                scope: definition.scope,
+                organizationId: definition.scope === "organization" ? resolvedOrganizationId : null,
+                actorId: session.user.id,
+                actorName: session.user.name,
+                action: definition.action,
+                targetType: definition.targetType,
+                targetId: targetId ?? null,
+                summary,
+              },
+            });
+          }),
+        },
         {
           matcher: ({ path }) => path === "/organization/get-full-organization",
           handler: createAuthMiddleware(async (ctx) => {

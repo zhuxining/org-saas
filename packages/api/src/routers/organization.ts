@@ -1,7 +1,7 @@
 import { roles } from "@org-saas/auth/permissions";
 import { platformAdminRoles } from "@org-saas/auth/platform-permissions";
 import { and, asc, count, db, desc, eq, ilike, isNull, not, or, sql } from "@org-saas/db";
-import { member, organization, organizationRole, user } from "@org-saas/db/schema/auth";
+import { auditLog, member, organization, organizationRole, user } from "@org-saas/db/schema/auth";
 import { ORPCError } from "@orpc/server";
 
 import type { EffectiveOrganizationOperations } from "../contracts/organization";
@@ -23,6 +23,7 @@ function emptyOperations(): EffectiveOrganizationOperations {
     invitation: { create: false, cancel: false, viewPending: false },
     team: { create: false, update: false, delete: false },
     roleDefinition: { read: false, create: false, update: false, delete: false },
+    audit: { read: false },
   };
 }
 
@@ -35,6 +36,7 @@ function resolveOperations(
     return {
       ...emptyOperations(),
       organization: { update: false, archive: false, restore: isOwner },
+      audit: { read: isOwner },
     };
   }
 
@@ -67,10 +69,11 @@ function resolveOperations(
       update: roleAllows(statements, "ac", "update"),
       delete: roleAllows(statements, "ac", "delete"),
     },
+    audit: { read: roleAllows(statements, "audit", "read") },
   };
 }
 
-async function loadOrganizationAccess(organizationId: string, userId: string) {
+export async function loadOrganizationAccess(organizationId: string, userId: string) {
   const [organizationRow] = await db
     .select({
       id: organization.id,
@@ -287,6 +290,17 @@ export const organizationRouter = {
           .update(organization)
           .set({ archivedAt })
           .where(eq(organization.id, input.organizationId));
+        await tx.insert(auditLog).values({
+          id: crypto.randomUUID(),
+          scope: "organization",
+          organizationId: input.organizationId,
+          actorId: context.session.user.id,
+          actorName: context.session.user.name,
+          action: "organization.archived",
+          targetType: "organization",
+          targetId: input.organizationId,
+          summary: {},
+        });
       }
       return {
         organizationId: input.organizationId,
@@ -329,6 +343,17 @@ export const organizationRouter = {
         .update(organization)
         .set({ archivedAt: null })
         .where(eq(organization.id, input.organizationId));
+      await tx.insert(auditLog).values({
+        id: crypto.randomUUID(),
+        scope: "organization",
+        organizationId: input.organizationId,
+        actorId: context.session.user.id,
+        actorName: context.session.user.name,
+        action: "organization.restored",
+        targetType: "organization",
+        targetId: input.organizationId,
+        summary: {},
+      });
       return {
         organizationId: input.organizationId,
         status: "active" as const,

@@ -1,7 +1,10 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -103,6 +106,35 @@ export const organization = pgTable("organization", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: text("id").primaryKey(),
+    scope: text("scope").notNull(),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "restrict",
+    }),
+    actorId: text("actor_id").notNull(),
+    actorName: text("actor_name").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id"),
+    summary: jsonb("summary").$type<Record<string, string | string[]>>().notNull().default({}),
+    occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("audit_log_scope_occurred_at_idx").on(table.scope, table.occurredAt),
+    index("audit_log_organization_occurred_at_idx").on(table.organizationId, table.occurredAt),
+    index("audit_log_actor_occurred_at_idx").on(table.actorId, table.occurredAt),
+    index("audit_log_occurred_at_idx").on(table.occurredAt),
+    check("audit_log_scope_check", sql`${table.scope} in ('organization', 'platform')`),
+    check(
+      "audit_log_scope_organization_check",
+      sql`(${table.scope} = 'organization' and ${table.organizationId} is not null) or (${table.scope} = 'platform' and ${table.organizationId} is null)`,
+    ),
+  ],
+);
 
 export const member = pgTable(
   "member",

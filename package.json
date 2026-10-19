@@ -66,6 +66,7 @@
     "db:studio": "vp run --filter @org-saas/db db:studio",
     "db:generate": "vp run --filter @org-saas/db db:generate",
     "db:migrate": "vp run --filter @org-saas/db db:migrate",
+    "audit:prune": "vp run --filter @org-saas/db audit:prune",
     "check": "vp check --fix",
     "test:e2e": "vp run --filter @org-saas/tests test:e2e",
     "clean": "git clean -xdf -- ':(glob)**/node_modules/**' ':(glob)**/.dist/**' ':(glob)**/.output/**' ':(glob)**/.tanstack/**' ':(glob)**/.wrangler/**'"

@@ -1,0 +1,3 @@
+CREATE INDEX "audit_log_occurred_at_idx" ON "audit_log" ("occurred_at");--> statement-breakpoint
+ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_scope_check" CHECK ("scope" in ('organization', 'platform'));--> statement-breakpoint
+ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_scope_organization_check" CHECK (("scope" = 'organization' and "organization_id" is not null) or ("scope" = 'platform' and "organization_id" is null));

@@ -1,3 +1,14 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@org-saas/ui/components/alert-dialog";
 import { Badge } from "@org-saas/ui/components/badge";
 import { Button } from "@org-saas/ui/components/button";
 import {
@@ -16,7 +27,8 @@ import {
 } from "@org-saas/ui/components/table";
 import { toast } from "@org-saas/ui/components/toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, UserMinus, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { LogOut, MoreHorizontal, UserMinus, X } from "lucide-react";
 import { useState } from "react";
 
 import { RoleBadge } from "@/components/role-badge";
@@ -27,6 +39,7 @@ import { useOrgContext } from "@/lib/org-context";
 import { organizationQueryKeys } from "@/lib/query-options";
 
 import { RoleSelect } from "./role-select";
+import { TransferOwnershipDialog } from "./transfer-ownership-dialog";
 
 interface MemberTableProps {
   members: Array<{
@@ -46,8 +59,9 @@ interface MemberTableProps {
 }
 
 export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
-  const { userId } = useOrgContext();
+  const { userId, isOwner } = useOrgContext();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const canUpdateMembers = usePermission({ member: ["update"] });
   const canDeleteMembers = usePermission({ member: ["delete"] });
@@ -83,6 +97,21 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
     }
   };
 
+  const handleLeaveOrganization = async () => {
+    setPendingAction("leave");
+    try {
+      const result = await authClient.organization.leave({ organizationId: orgId });
+      if (result.error) throw new Error(result.error.message ?? "退出组织失败");
+      toast.add({ title: "已退出组织", type: "success" });
+      queryClient.removeQueries({ queryKey: organizationQueryKeys.root(userId) });
+      await navigate({ to: "/me/organizations" });
+    } catch (error) {
+      toast.add({ title: error instanceof Error ? error.message : "退出组织失败", type: "error" });
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
   const handleCancelInvitation = async (invitationId: string) => {
     setPendingAction(invitationId);
     try {
@@ -106,6 +135,36 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
           正在处理组织成员操作…
         </p>
       )}
+      <div className="flex justify-end gap-2">
+        {!isOwner && (
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={<Button variant="outline" disabled={pendingAction === "leave"} />}
+            >
+              <LogOut data-icon="inline-start" />
+              退出组织
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>退出当前组织？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  退出后你将无法继续访问该组织。重新加入需要组织管理员再次邀请。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={pendingAction === "leave"}>取消</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={pendingAction === "leave"}
+                  onClick={() => void handleLeaveOrganization()}
+                >
+                  {pendingAction === "leave" ? "退出中…" : "确认退出"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+        {isOwner && <TransferOwnershipDialog members={members} orgId={orgId} />}
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -127,7 +186,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                {canUpdateMembers ? (
+                {canUpdateMembers && m.role !== "owner" ? (
                   <RoleSelect memberId={m.id} currentRole={m.role} />
                 ) : (
                   <RoleBadge role={m.role} />

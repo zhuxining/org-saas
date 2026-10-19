@@ -12,6 +12,14 @@ import {
 import { Button } from "@org-saas/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@org-saas/ui/components/card";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@org-saas/ui/components/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -22,7 +30,7 @@ import {
 import { toast } from "@org-saas/ui/components/toast";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { UserAvatar } from "@/components/user-avatar";
@@ -30,6 +38,8 @@ import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
 import { organizationFullQueryOptions, organizationQueryKeys } from "@/lib/query-options";
+
+import { EditTeamDialog } from "./-components/edit-team-dialog";
 
 export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active/teams/$teamId")({
   loader: async ({ context }) => {
@@ -44,9 +54,13 @@ function TeamDetailPage() {
   const { org, userId } = useOrgContext();
   const { orgSlug, teamId } = Route.useParams();
   const canDeleteTeam = usePermission({ team: ["delete"] });
+  const canUpdateTeam = usePermission({ team: ["update"] });
+  const canManageTeamMembers = usePermission({ member: ["update"] });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState("");
   const { data } = useSuspenseQuery(organizationFullQueryOptions(userId, org.id));
   const teams = data?.teams as unknown as
     | Array<{
@@ -60,6 +74,38 @@ function TeamDetailPage() {
     | undefined;
   const team = teams?.find((candidate) => candidate.id === teamId);
   const teamMembers = team?.members ?? [];
+  const organizationMembers = data?.members ?? [];
+  const assignedUserIds = new Set(teamMembers.map((member) => member.userId));
+  const availableMembers = organizationMembers.filter(
+    (member) => !assignedUserIds.has(member.userId),
+  );
+
+  const teamMemberMutation = useMutation({
+    mutationFn: async (input: { userId: string; action: "add" | "remove" }) => {
+      const result =
+        input.action === "add"
+          ? await authClient.organization.addTeamMember({
+              teamId,
+              userId: input.userId,
+              organizationId: org.id,
+            })
+          : await authClient.organization.removeTeamMember({
+              teamId,
+              userId: input.userId,
+              organizationId: org.id,
+            });
+      if (result.error) throw new Error(result.error.message ?? "团队成员更新失败");
+    },
+    onSuccess: async (_, input) => {
+      toast.add({
+        title: input.action === "add" ? "成员已加入团队" : "成员已移出团队",
+        type: "success",
+      });
+      if (input.action === "add") setSelectedUserId("");
+      await queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, org.id) });
+    },
+    onError: (error) => toast.add({ title: error.message || "团队成员更新失败", type: "error" }),
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -99,40 +145,76 @@ function TeamDetailPage() {
         </Link>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{team.name}</h1>
-          {canDeleteTeam && (
-            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-              <AlertDialogTrigger
-                render={
-                  <Button variant="destructive" size="sm" disabled={deleteMutation.isPending} />
-                }
-              >
-                <Trash2 data-icon="inline-start" />
-                删除团队
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>删除团队“{team.name}”？</AlertDialogTitle>
-                  <AlertDialogDescription>团队成员关系会被移除。</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={deleteMutation.isPending}>取消</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    disabled={deleteMutation.isPending}
-                    onClick={() => deleteMutation.mutate()}
-                  >
-                    {deleteMutation.isPending ? "删除中…" : "确认删除"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+          <div className="flex items-center gap-2">
+            {canUpdateTeam && (
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Pencil data-icon="inline-start" />
+                修改名称
+              </Button>
+            )}
+            {canDeleteTeam && (
+              <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <AlertDialogTrigger
+                  render={
+                    <Button variant="destructive" size="sm" disabled={deleteMutation.isPending} />
+                  }
+                >
+                  <Trash2 data-icon="inline-start" />
+                  删除团队
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>删除团队“{team.name}”？</AlertDialogTitle>
+                    <AlertDialogDescription>团队成员关系会被移除。</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deleteMutation.isPending}>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate()}
+                    >
+                      {deleteMutation.isPending ? "删除中…" : "确认删除"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between gap-4">
           <CardTitle className="text-base">团队成员</CardTitle>
+          {canManageTeamMembers && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={selectedUserId}
+                onValueChange={(value) => setSelectedUserId(value ?? "")}
+              >
+                <SelectTrigger aria-label="选择要加入团队的组织成员" className="min-w-56">
+                  <SelectValue placeholder="选择组织成员" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {availableMembers.map((member) => (
+                      <SelectItem key={member.userId} value={member.userId}>
+                        {member.user.name}（{member.user.email}）
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                disabled={!selectedUserId || teamMemberMutation.isPending}
+                onClick={() => teamMemberMutation.mutate({ userId: selectedUserId, action: "add" })}
+              >
+                {teamMemberMutation.isPending ? "处理中…" : "加入团队"}
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {teamMembers.length === 0 ? (
@@ -142,6 +224,7 @@ function TeamDetailPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>成员</TableHead>
+                  {canManageTeamMembers && <TableHead className="w-24">操作</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -156,6 +239,20 @@ function TeamDetailPage() {
                         </div>
                       </div>
                     </TableCell>
+                    {canManageTeamMembers && (
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={teamMemberMutation.isPending}
+                          onClick={() =>
+                            teamMemberMutation.mutate({ userId: member.userId, action: "remove" })
+                          }
+                        >
+                          移出团队
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -163,6 +260,13 @@ function TeamDetailPage() {
           )}
         </CardContent>
       </Card>
+      <EditTeamDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        orgId={org.id}
+        teamId={team.id}
+        teamName={team.name}
+      />
     </div>
   );
 }

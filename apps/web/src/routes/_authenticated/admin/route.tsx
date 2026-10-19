@@ -1,6 +1,6 @@
 import { Separator } from "@org-saas/ui/components/separator";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { Building2, Users } from "lucide-react";
+import { Activity, Building2, Users } from "lucide-react";
 
 import { requirePlatformAdmin } from "@/utils/guards";
 
@@ -14,6 +14,7 @@ function PlatformAdminLayout() {
   const links = [
     { to: "/admin/users", label: "用户", icon: Users },
     { to: "/admin/organizations", label: "组织", icon: Building2 },
+    { to: "/admin/audit", label: "审计", icon: Activity },
   ] as const;
 
   return (

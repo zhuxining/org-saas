@@ -12,7 +12,15 @@ import { Separator } from "@org-saas/ui/components/separator";
 import { toast } from "@org-saas/ui/components/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, LayoutDashboard, LogOut, Settings, Users, UsersRound } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
+  UsersRound,
+} from "lucide-react";
 
 import { OrgSwitcher } from "@/components/org-switcher";
 import { UserAvatar } from "@/components/user-avatar";
@@ -22,9 +30,11 @@ import { useOrgContext } from "@/lib/org-context";
 
 export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active")({
   ssr: "data-only",
-  beforeLoad: ({ context, params }) => {
+  beforeLoad: ({ context, params, location }) => {
     const { access } = context;
-    if (access.status === "archived") {
+    const canReadArchivedAudit =
+      location.pathname.endsWith("/audit") && access.operations.audit.read;
+    if (access.status === "archived" && !canReadArchivedAudit) {
       throw redirect({ to: "/org/$orgSlug/archived", params });
     }
   },
@@ -38,12 +48,14 @@ function ActiveOrganizationLayout() {
   const canUpdateSettings = usePermission({ organization: ["update"] });
   const canArchive = usePermission({ organization: ["archive"] });
   const canReadRoles = usePermission({ ac: ["read"] });
+  const canReadAudit = usePermission({ audit: ["read"] });
 
   const navItems = [
     { to: `/org/${org.slug}`, label: "概览", icon: LayoutDashboard, exact: true },
     { to: `/org/${org.slug}/members`, label: "成员", icon: Users },
     { to: `/org/${org.slug}/teams`, label: "团队", icon: UsersRound },
     ...(canReadRoles ? [{ to: `/org/${org.slug}/roles`, label: "角色", icon: Settings }] : []),
+    ...(canReadAudit ? [{ to: `/org/${org.slug}/audit`, label: "审计", icon: ClipboardList }] : []),
     ...(canUpdateSettings || canArchive
       ? [{ to: `/org/${org.slug}/settings`, label: "设置", icon: Settings }]
       : []),

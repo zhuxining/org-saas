@@ -169,6 +169,28 @@ describe("organization owner transfer", () => {
     );
   });
 
+  it("allows a regular member to leave while preserving the sole owner", async () => {
+    const { auth } = createTestAuth();
+    const owner = await signUp(auth, "owner-leave-member@example.test");
+    const leavingMember = await signUp(auth, "member-leave@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    await auth.api.addMember({
+      body: { organizationId, userId: leavingMember.userId, role: "member" },
+      headers: owner.headers,
+    });
+
+    const response = await post(auth, "/organization/leave", leavingMember.headers, {
+      organizationId,
+    });
+
+    expect(response.ok).toBe(true);
+    const members = (
+      await auth.api.listMembers({ query: { organizationId }, headers: owner.headers })
+    ).members;
+    expect(members).toHaveLength(1);
+    expect(members[0]).toMatchObject({ userId: owner.userId, role: "owner" });
+  });
+
   it("does not allow native membership endpoints to assign, demote, remove, or leave as owner", async () => {
     const { auth } = createTestAuth();
     const owner = await signUp(auth, "owner-native-owner@example.test");
@@ -325,6 +347,11 @@ describe("organization policy plugin endpoint coverage", () => {
       body: { organizationId, userId: customAdmin.userId, role: "operations-admin" },
       headers: owner.headers,
     });
+    const roleManager = await signUp(auth, "role-manager@example.test");
+    await addMember({
+      body: { organizationId, userId: roleManager.userId, role: "role-manager" },
+      headers: owner.headers,
+    });
 
     await expect(
       auth.api.createInvitation({
@@ -361,6 +388,12 @@ describe("organization policy plugin endpoint coverage", () => {
         headers: adminUser.headers,
       }),
     ).rejects.toThrow("Only an owner may change or remove this member.");
+    await expect(
+      auth.api.removeMember({
+        body: { organizationId, memberIdOrEmail: "role-manager@example.test" },
+        headers: adminUser.headers,
+      }),
+    ).rejects.toThrow("You cannot change or remove a member whose role exceeds your permissions.");
     await expect(
       auth.api.removeMember({
         body: { organizationId, memberIdOrEmail: "custom-admin@example.test" },
@@ -544,6 +577,40 @@ describe("organization policy plugin endpoint coverage", () => {
     await expect(httpInvitationsResponse.json()).resolves.toEqual([]);
   });
 
+  it("rejects accepting an invitation after its sender leaves the organization", async () => {
+    const { auth, memoryDb } = createTestAuth();
+    const owner = await signUp(auth, "owner-stale-invite@example.test");
+    const inviter = await signUp(auth, "inviter-stale-invite@example.test");
+    const invitee = await signUp(auth, "invitee-stale-invite@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    await auth.api.addMember({
+      body: { organizationId, userId: inviter.userId, role: "admin" },
+      headers: owner.headers,
+    });
+    const invitationResponse = await post(auth, "/organization/invite-member", inviter.headers, {
+      organizationId,
+      email: "invitee-stale-invite@example.test",
+      role: "member",
+    });
+    expect(invitationResponse.ok).toBe(true);
+    const invitation = (await invitationResponse.json()) as { id: string };
+    await auth.api.removeMember({
+      body: { organizationId, memberIdOrEmail: "inviter-stale-invite@example.test" },
+      headers: owner.headers,
+    });
+
+    await expect(
+      auth.api.acceptInvitation({
+        body: { invitationId: invitation.id },
+        headers: invitee.headers,
+      }),
+    ).rejects.toThrow("The invitation sender is no longer a member of this organization.");
+    const invitationRow = memoryDb.invitation?.find(
+      (candidate: unknown) => isRecord(candidate) && candidate.id === invitation.id,
+    );
+    expect(invitationRow).toMatchObject({ status: "pending" });
+  });
+
   it("blocks accepting an archived organization invitation by invitation ID", async () => {
     const { auth, memoryDb } = createTestAuth();
     const owner = await signUp(auth, "owner-archive-invite@example.test");
@@ -563,11 +630,40 @@ describe("organization policy plugin endpoint coverage", () => {
     organizationRow.archivedAt = new Date();
 
     await expect(
+      auth.api.getInvitation({ query: { id: invitation.id }, headers: invitee.headers }),
+    ).rejects.toThrow("This organization is archived.");
+
+    await expect(
       auth.api.acceptInvitation({
         body: { invitationId: invitation.id },
         headers: invitee.headers,
       }),
     ).rejects.toThrow("This organization is archived.");
+  });
+
+  it("rejects organization IDs and slugs that point to different organizations", async () => {
+    const { auth, memoryDb } = createTestAuth();
+    const owner = await signUp(auth, "owner-mismatched-org-reference@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    const secondOrganization = await auth.api.createOrganization({
+      body: {
+        name: "Archived organization",
+        slug: `archived-${crypto.randomUUID()}`,
+      },
+      headers: owner.headers,
+    });
+    const archivedRow = memoryDb.organization?.find(
+      (candidate: unknown) => isRecord(candidate) && candidate.id === secondOrganization.id,
+    );
+    if (!isRecord(archivedRow)) throw new Error("Second organization row not found");
+    archivedRow.archivedAt = new Date();
+
+    await expect(
+      auth.api.getFullOrganization({
+        query: { organizationId, organizationSlug: secondOrganization.slug },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("The organization ID and slug must identify the same organization.");
   });
 
   it("blocks archived organizations through direct HTTP, auth.api, and activation", async () => {

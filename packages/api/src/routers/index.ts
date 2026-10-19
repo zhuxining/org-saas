@@ -1,5 +1,6 @@
 import type { ApiContractClient } from "../contracts/index";
 import { publicImplementer, protectedImplementer } from "../index";
+import { auditRouter } from "./audit";
 import { betterAuthOpenAPIDocsRouter } from "./better-auth-openapi-docs";
 import { dashboardRouter } from "./dashboard";
 import { organizationRouter, platformRouter } from "./organization";
@@ -27,6 +28,7 @@ const router = {
   dashboard: dashboardRouter,
   organization: organizationRouter,
   platform: platformRouter,
+  audit: auditRouter,
 };
 
 export const appRouter = publicImplementer.router(router);
