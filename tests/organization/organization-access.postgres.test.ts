@@ -248,6 +248,26 @@ postgresDescribe("restricted organization and platform API", () => {
     expect(activeStatus[0]?.archivedAt).toBeNull();
   });
 
+  it("does not disclose organization statistics when the owner row contains combined roles", async () => {
+    const environment = await loadEnvironment();
+    const owner = await signUp(
+      environment,
+      `api-invalid-owner-${crypto.randomUUID()}@example.test`,
+    );
+    const organization = await environment.auth.api.createOrganization({
+      body: { name: "Invalid owner state", slug: `invalid-owner-${crypto.randomUUID()}` },
+      headers: owner.headers,
+    });
+    await environment.db
+      .update(environment.schema.member)
+      .set({ role: "owner,admin" })
+      .where(environment.eq(environment.schema.member.userId, owner.userId));
+
+    await expect(
+      createCaller(environment, owner.headers).dashboard.orgStats({ orgId: organization.id }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+
   it("rejects cross-organization identifiers and returns basic platform DTOs", async () => {
     const environment = await loadEnvironment();
     const userA = await signUp(environment, `api-a-${crypto.randomUUID()}@example.test`);

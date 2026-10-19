@@ -13,6 +13,7 @@ import { useState } from "react";
 
 import { getSession } from "@/functions/auth.fn";
 import { authClient } from "@/lib/auth-client";
+import { syncOrganizationListCacheAfterChange } from "@/lib/organization-cache";
 
 export const Route = createFileRoute("/invite/$token")({
   component: InvitePage,
@@ -93,6 +94,9 @@ function InvitePage() {
         return;
       }
 
+      if (session?.user?.id) {
+        await syncOrganizationListCacheAfterChange(queryClient, session.user.id);
+      }
       await navigate({ to: `/org/${organization.slug}` as string });
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "接受邀请失败");

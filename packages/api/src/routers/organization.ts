@@ -1,154 +1,13 @@
+import { auditEvents, createAuditRecord } from "@org-saas/auth/audit-records";
+import { resolveOrganizationOwner } from "@org-saas/auth/organization-owner";
 import { roles } from "@org-saas/auth/permissions";
-import { platformAdminRoles } from "@org-saas/auth/platform-permissions";
+import { hasPlatformAdminRole } from "@org-saas/auth/platform-permissions";
 import { and, asc, count, db, desc, eq, ilike, isNull, not, or, sql } from "@org-saas/db";
-import { auditLog, member, organization, organizationRole, user } from "@org-saas/db/schema/auth";
-import { ORPCError } from "@orpc/server";
+import { member, organization, organizationRole, user, auditLog } from "@org-saas/db/schema/auth";
 
-import type { EffectiveOrganizationOperations } from "../contracts/organization";
 import { protectedImplementer } from "../index";
+import { accessContextOutput, fail, loadOrganizationAccess } from "../organization-access";
 import { getRoleStatements, roleAllows } from "../organization-permissions";
-
-function fail(
-  code: "CONFLICT" | "FORBIDDEN" | "NOT_FOUND",
-  message: string,
-  reason?: string,
-): never {
-  throw new ORPCError(code, { message, data: reason ? { reason } : undefined });
-}
-
-function emptyOperations(): EffectiveOrganizationOperations {
-  return {
-    organization: { update: false, archive: false, restore: false },
-    member: { create: false, update: false, delete: false },
-    invitation: { create: false, cancel: false, viewPending: false },
-    team: { create: false, update: false, delete: false },
-    roleDefinition: { read: false, create: false, update: false, delete: false },
-    audit: { read: false },
-  };
-}
-
-function resolveOperations(
-  statements: Record<string, string[]>,
-  isOwner: boolean,
-  archived: boolean,
-): EffectiveOrganizationOperations {
-  if (archived) {
-    return {
-      ...emptyOperations(),
-      organization: { update: false, archive: false, restore: isOwner },
-      audit: { read: isOwner },
-    };
-  }
-
-  const canCreateInvitations = roleAllows(statements, "invitation", "create");
-  const canCancelInvitations = roleAllows(statements, "invitation", "cancel");
-  return {
-    organization: {
-      update: roleAllows(statements, "organization", "update"),
-      archive: isOwner,
-      restore: false,
-    },
-    member: {
-      create: roleAllows(statements, "member", "create"),
-      update: roleAllows(statements, "member", "update"),
-      delete: roleAllows(statements, "member", "delete"),
-    },
-    invitation: {
-      create: canCreateInvitations,
-      cancel: canCancelInvitations,
-      viewPending: canCreateInvitations || canCancelInvitations,
-    },
-    team: {
-      create: roleAllows(statements, "team", "create"),
-      update: roleAllows(statements, "team", "update"),
-      delete: roleAllows(statements, "team", "delete"),
-    },
-    roleDefinition: {
-      read: roleAllows(statements, "ac", "read"),
-      create: roleAllows(statements, "ac", "create"),
-      update: roleAllows(statements, "ac", "update"),
-      delete: roleAllows(statements, "ac", "delete"),
-    },
-    audit: { read: roleAllows(statements, "audit", "read") },
-  };
-}
-
-export async function loadOrganizationAccess(organizationId: string, userId: string) {
-  const [organizationRow] = await db
-    .select({
-      id: organization.id,
-      archivedAt: organization.archivedAt,
-    })
-    .from(organization)
-    .where(eq(organization.id, organizationId))
-    .limit(1);
-  if (!organizationRow) fail("NOT_FOUND", "Organization not found.");
-
-  const [membership] = await db
-    .select({ role: member.role })
-    .from(member)
-    .where(and(eq(member.organizationId, organizationId), eq(member.userId, userId)))
-    .limit(1);
-  if (!membership)
-    fail(
-      "FORBIDDEN",
-      "You are not a member of this organization.",
-      "ORGANIZATION_MEMBERSHIP_REQUIRED",
-    );
-
-  const owners = await db
-    .select({ userId: member.userId, role: member.role })
-    .from(member)
-    .where(eq(member.organizationId, organizationId));
-  const ownerMembers = owners.filter((candidate) => candidate.role.split(",").includes("owner"));
-  if (ownerMembers.length !== 1 || ownerMembers[0]?.role !== "owner") {
-    fail(
-      "CONFLICT",
-      "Organization ownership requires review before permission data is available.",
-      "OWNER_STATE_INVALID",
-    );
-  }
-
-  const isOwner = membership.role === "owner";
-  if (organizationRow.archivedAt && !isOwner) {
-    fail(
-      "FORBIDDEN",
-      "Only the organization owner may access archived organization status.",
-      "OWNER_REQUIRED",
-    );
-  }
-
-  const [customRole] = await db
-    .select({ permission: organizationRole.permission })
-    .from(organizationRole)
-    .where(
-      and(
-        eq(organizationRole.organizationId, organizationId),
-        eq(organizationRole.role, membership.role),
-      ),
-    )
-    .limit(1);
-  const statements = getRoleStatements(membership.role, customRole?.permission);
-
-  return {
-    organizationId,
-    role: membership.role,
-    isOwner,
-    archivedAt: organizationRow.archivedAt,
-    operations: resolveOperations(statements, isOwner, Boolean(organizationRow.archivedAt)),
-    statements,
-  };
-}
-
-function accessContextOutput(access: Awaited<ReturnType<typeof loadOrganizationAccess>>) {
-  return {
-    organizationId: access.organizationId,
-    role: access.role,
-    isOwner: access.isOwner,
-    status: access.archivedAt ? ("archived" as const) : ("active" as const),
-    operations: access.operations,
-  };
-}
 
 function containsPermissions(
   candidate: Record<string, string[]>,
@@ -168,18 +27,8 @@ function isAdminEquivalent(candidate: Record<string, string[]>): boolean {
   );
 }
 
-function isPlatformAdmin(role: unknown): boolean {
-  return (
-    typeof role === "string" &&
-    role
-      .split(",")
-      .map((entry) => entry.trim())
-      .some((entry) => platformAdminRoles.includes(entry as (typeof platformAdminRoles)[number]))
-  );
-}
-
 function requirePlatformAdmin(role: unknown): void {
-  if (!isPlatformAdmin(role))
+  if (!hasPlatformAdminRole(role))
     fail("FORBIDDEN", "Platform administrator access is required.", "PLATFORM_ADMIN_REQUIRED");
 }
 
@@ -270,17 +119,15 @@ export const organizationRouter = {
         .select({ userId: member.userId, role: member.role })
         .from(member)
         .where(eq(member.organizationId, input.organizationId));
-      const ownerMembers = owners.filter((candidate) =>
-        candidate.role.split(",").includes("owner"),
-      );
-      if (ownerMembers.length !== 1 || ownerMembers[0]?.role !== "owner") {
+      const ownerState = resolveOrganizationOwner(owners);
+      if (ownerState.status !== "valid") {
         fail(
           "CONFLICT",
           "Organization ownership requires review before archiving.",
           "OWNER_STATE_INVALID",
         );
       }
-      if (ownerMembers[0]?.userId !== context.session.user.id) {
+      if (ownerState.owner.userId !== context.session.user.id) {
         fail("FORBIDDEN", "Only the current organization owner may archive it.", "OWNER_REQUIRED");
       }
 
@@ -290,17 +137,17 @@ export const organizationRouter = {
           .update(organization)
           .set({ archivedAt })
           .where(eq(organization.id, input.organizationId));
-        await tx.insert(auditLog).values({
-          id: crypto.randomUUID(),
-          scope: "organization",
-          organizationId: input.organizationId,
-          actorId: context.session.user.id,
-          actorName: context.session.user.name,
-          action: "organization.archived",
-          targetType: "organization",
-          targetId: input.organizationId,
-          summary: {},
-        });
+        await tx.insert(auditLog).values(
+          createAuditRecord({
+            scope: "organization",
+            organizationId: input.organizationId,
+            actorId: context.session.user.id,
+            actorName: context.session.user.name,
+            action: auditEvents.organizationArchived.action,
+            targetType: auditEvents.organizationArchived.targetType,
+            targetId: input.organizationId,
+          }),
+        );
       }
       return {
         organizationId: input.organizationId,
@@ -322,17 +169,15 @@ export const organizationRouter = {
         .select({ userId: member.userId, role: member.role })
         .from(member)
         .where(eq(member.organizationId, input.organizationId));
-      const ownerMembers = owners.filter((candidate) =>
-        candidate.role.split(",").includes("owner"),
-      );
-      if (ownerMembers.length !== 1 || ownerMembers[0]?.role !== "owner") {
+      const ownerState = resolveOrganizationOwner(owners);
+      if (ownerState.status !== "valid") {
         fail(
           "CONFLICT",
           "Organization ownership requires review before recovery.",
           "OWNER_STATE_INVALID",
         );
       }
-      if (ownerMembers[0]?.userId !== context.session.user.id) {
+      if (ownerState.owner.userId !== context.session.user.id) {
         fail("FORBIDDEN", "Only the current organization owner may restore it.", "OWNER_REQUIRED");
       }
       if (!lockedOrganization.archivedAt) {
@@ -343,17 +188,17 @@ export const organizationRouter = {
         .update(organization)
         .set({ archivedAt: null })
         .where(eq(organization.id, input.organizationId));
-      await tx.insert(auditLog).values({
-        id: crypto.randomUUID(),
-        scope: "organization",
-        organizationId: input.organizationId,
-        actorId: context.session.user.id,
-        actorName: context.session.user.name,
-        action: "organization.restored",
-        targetType: "organization",
-        targetId: input.organizationId,
-        summary: {},
-      });
+      await tx.insert(auditLog).values(
+        createAuditRecord({
+          scope: "organization",
+          organizationId: input.organizationId,
+          actorId: context.session.user.id,
+          actorName: context.session.user.name,
+          action: auditEvents.organizationRestored.action,
+          targetType: auditEvents.organizationRestored.targetType,
+          targetId: input.organizationId,
+        }),
+      );
       return {
         organizationId: input.organizationId,
         status: "active" as const,

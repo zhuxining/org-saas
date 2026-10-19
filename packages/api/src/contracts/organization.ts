@@ -2,7 +2,7 @@ import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import { z } from "zod";
 
-const organizationErrorData = z
+export const organizationErrorData = z
   .object({
     reason: z.enum([
       "OWNER_STATE_INVALID",

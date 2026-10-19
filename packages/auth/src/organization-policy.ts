@@ -9,6 +9,8 @@ import {
 import { hasPermission, type OrganizationOptions } from "better-auth/plugins/organization";
 import { z } from "zod";
 
+import { auditedEndpointDefinitions, buildAuditSummary, createAuditRecord } from "./audit-records";
+import { hasOrganizationOwnerRole, resolveOrganizationOwner } from "./organization-owner";
 import {
   accountDeletionPaths,
   organizationMutationPaths,
@@ -98,7 +100,7 @@ function parsePermissions(value: unknown): Record<string, string[]> | null {
 }
 
 function isOwnerRole(role: unknown): boolean {
-  return roleNames(role).includes("owner");
+  return hasOrganizationOwnerRole(role);
 }
 
 function forbidden(code: string, message: string): never {
@@ -156,15 +158,15 @@ function createOwnershipTransferEndpoint(options: OrganizationOptions) {
         model: "member",
         where: [{ field: "organizationId", value: ctx.body.organizationId }],
       });
-      const owners = members.filter((member) => isRecord(member) && isOwnerRole(member.role));
-      const formerOwner = owners[0];
-      if (owners.length !== 1) {
+      const ownerState = resolveOrganizationOwner(members.filter(isRecord));
+      if (ownerState.status !== "valid") {
         badRequest(
           "OWNER_STATE_INVALID",
           "Ownership transfer requires exactly one current owner; review existing organization data.",
         );
       }
-      if (!isRecord(formerOwner) || formerOwner.userId !== session.user.id) {
+      const formerOwner = ownerState.owner;
+      if (formerOwner.userId !== session.user.id) {
         forbidden("OWNER_REQUIRED", "Only the current owner may transfer ownership.");
       }
       const target = await adapter.findOne({
@@ -215,115 +217,6 @@ function createOwnershipTransferEndpoint(options: OrganizationOptions) {
   );
 }
 
-const auditedEndpointDefinitions: Record<
-  string,
-  { action: string; scope: "organization" | "platform"; targetType: string }
-> = {
-  "/organization/create": {
-    action: "organization.created",
-    scope: "organization",
-    targetType: "organization",
-  },
-  "/organization/update": {
-    action: "organization.updated",
-    scope: "organization",
-    targetType: "organization",
-  },
-  "/organization/transfer-ownership": {
-    action: "organization.ownership_transferred",
-    scope: "organization",
-    targetType: "member",
-  },
-  "/organization/add-member": {
-    action: "member.added",
-    scope: "organization",
-    targetType: "member",
-  },
-  "/organization/invite-member": {
-    action: "invitation.sent",
-    scope: "organization",
-    targetType: "invitation",
-  },
-  "/organization/accept-invitation": {
-    action: "invitation.accepted",
-    scope: "organization",
-    targetType: "invitation",
-  },
-  "/organization/cancel-invitation": {
-    action: "invitation.canceled",
-    scope: "organization",
-    targetType: "invitation",
-  },
-  "/organization/reject-invitation": {
-    action: "invitation.rejected",
-    scope: "organization",
-    targetType: "invitation",
-  },
-  "/organization/remove-member": {
-    action: "member.removed",
-    scope: "organization",
-    targetType: "member",
-  },
-  "/organization/leave": { action: "member.left", scope: "organization", targetType: "member" },
-  "/organization/update-member-role": {
-    action: "member.role_changed",
-    scope: "organization",
-    targetType: "member",
-  },
-  "/organization/create-team": {
-    action: "team.created",
-    scope: "organization",
-    targetType: "team",
-  },
-  "/organization/update-team": {
-    action: "team.updated",
-    scope: "organization",
-    targetType: "team",
-  },
-  "/organization/remove-team": {
-    action: "team.deleted",
-    scope: "organization",
-    targetType: "team",
-  },
-  "/organization/add-team-member": {
-    action: "team.member_added",
-    scope: "organization",
-    targetType: "member",
-  },
-  "/organization/remove-team-member": {
-    action: "team.member_removed",
-    scope: "organization",
-    targetType: "member",
-  },
-  "/organization/create-role": {
-    action: "role.created",
-    scope: "organization",
-    targetType: "role",
-  },
-  "/organization/update-role": {
-    action: "role.updated",
-    scope: "organization",
-    targetType: "role",
-  },
-  "/organization/delete-role": {
-    action: "role.deleted",
-    scope: "organization",
-    targetType: "role",
-  },
-  "/admin/ban-user": { action: "user.banned", scope: "platform", targetType: "user" },
-  "/admin/unban-user": { action: "user.unbanned", scope: "platform", targetType: "user" },
-  "/admin/revoke-user-session": {
-    action: "session.revoked",
-    scope: "platform",
-    targetType: "user",
-  },
-  "/admin/revoke-user-sessions": {
-    action: "session.revoked_all",
-    scope: "platform",
-    targetType: "user",
-  },
-};
-
 function readAuditRecord(value: unknown): Record<string, unknown> | null {
   return isRecord(value) ? value : null;
 }
@@ -331,11 +224,6 @@ function readAuditRecord(value: unknown): Record<string, unknown> | null {
 function stringField(record: Record<string, unknown> | null, field: string): string | undefined {
   const value = record?.[field];
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function changedFieldNames(value: unknown, allowed: readonly string[]): string[] {
-  const record = isRecord(value) ? value : {};
-  return allowed.filter((field) => Object.hasOwn(record, field));
 }
 
 export function createOrganizationPolicyPlugin(
@@ -422,13 +310,13 @@ export function createOrganizationPolicyPlugin(
                   increment: { ownerMutationVersion: 1 },
                 });
                 if (!locked) badRequest("ORGANIZATION_NOT_FOUND", "Organization not found.");
-                const owners = (
+                const membershipsForOrganization = (
                   await adapter.findMany({
                     model: "member",
                     where: [{ field: "organizationId", value: organizationId }],
                   })
-                ).filter((member) => isRecord(member) && isOwnerRole(member.role));
-                if (owners.length !== 1) {
+                ).filter(isRecord);
+                if (resolveOrganizationOwner(membershipsForOrganization).status !== "valid") {
                   badRequest(
                     "OWNER_STATE_INVALID",
                     "Account changes require exactly one owner in every organization; review existing organization data.",
@@ -601,13 +489,13 @@ export function createOrganizationPolicyPlugin(
               if (!locked) badRequest("ORGANIZATION_NOT_FOUND", "Organization not found.");
               organization = locked;
               if (ownerMutationPaths.has(path ?? "")) {
-                const owners = (
+                const membershipsForOrganization = (
                   await adapter.findMany({
                     model: "member",
                     where: [{ field: "organizationId", value: organizationId }],
                   })
-                ).filter((member) => isRecord(member) && isOwnerRole(member.role));
-                if (owners.length !== 1) {
+                ).filter(isRecord);
+                if (resolveOrganizationOwner(membershipsForOrganization).status !== "valid") {
                   badRequest(
                     "OWNER_STATE_INVALID",
                     "Organization membership changes require exactly one owner; review existing organization data.",
@@ -1169,39 +1057,33 @@ export function createOrganizationPolicyPlugin(
             }
             if (definition.scope === "organization" && !resolvedOrganizationId) return;
 
-            const summary: Record<string, string | string[]> = {};
-            const role =
-              stringField(body, "role") ??
-              stringField(body, "formerOwnerRole") ??
-              stringField(returnedInvitation, "role");
-            if (role) summary.role = role;
-            if (path === "/organization/transfer-ownership") {
-              const formerRole = stringField(body, "formerOwnerRole");
-              if (formerRole) summary.formerOwnerRole = formerRole;
-            }
-            const changedFields =
+            const changedData =
               path === "/organization/update"
-                ? changedFieldNames(body, ["name", "slug", "logo"])
-                : path === "/organization/update-team"
-                  ? changedFieldNames(body.data, ["name"])
-                  : path === "/organization/update-role"
-                    ? changedFieldNames(body.data, ["roleName", "permission"])
-                    : [];
-            if (changedFields.length) summary.changedFields = changedFields;
+                ? body
+                : path === "/organization/update-team" || path === "/organization/update-role"
+                  ? body.data
+                  : undefined;
+            const summary = buildAuditSummary(definition.action, {
+              role:
+                stringField(body, "role") ??
+                stringField(body, "formerOwnerRole") ??
+                stringField(returnedInvitation, "role"),
+              formerOwnerRole: stringField(body, "formerOwnerRole"),
+              changedData,
+            });
 
             await adapter.create({
               model: "auditLog",
-              data: {
-                id: crypto.randomUUID(),
+              data: createAuditRecord({
                 scope: definition.scope,
                 organizationId: definition.scope === "organization" ? resolvedOrganizationId : null,
                 actorId: session.user.id,
                 actorName: session.user.name,
                 action: definition.action,
                 targetType: definition.targetType,
-                targetId: targetId ?? null,
+                targetId,
                 summary,
-              },
+              }),
             });
           }),
         },

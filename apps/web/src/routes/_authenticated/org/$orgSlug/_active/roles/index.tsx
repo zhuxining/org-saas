@@ -35,11 +35,8 @@ import { useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import {
-  organizationFullQueryOptions,
-  organizationQueryKeys,
-  organizationRolesQueryOptions,
-} from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
+import { organizationFullQueryOptions, organizationRolesQueryOptions } from "@/lib/query-options";
 import { ForbiddenError } from "@/utils/errors";
 
 import { RoleEditorDialog, type RoleDraft } from "./-components/role-editor-dialog";
@@ -79,20 +76,6 @@ function OrganizationRolesPage() {
   const canUpdate = access.operations.roleDefinition.update;
   const canDelete = access.operations.roleDefinition.delete;
 
-  const invalidateRoleData = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.roles(userId, org.id) }),
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, org.id) }),
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, org.id) }),
-      queryClient.invalidateQueries({
-        queryKey: organizationQueryKeys.grantableRoles(userId, org.id, "member.update"),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: organizationQueryKeys.grantableRoles(userId, org.id, "invitation.create"),
-      }),
-    ]);
-  };
-
   const saveMutation = useMutation({
     mutationFn: async (value: RoleDraft) => {
       if (value.id) {
@@ -112,9 +95,12 @@ function OrganizationRolesPage() {
       }
     },
     onSuccess: async () => {
-      toast.add({ title: "角色已保存", type: "success" });
-      setDraft(null);
-      await invalidateRoleData();
+      await syncOrganizationCacheAfterChange(
+        queryClient,
+        userId,
+        org.id,
+        "role-definition-changed",
+      );
     },
     onError: (error) => {
       const message = error.message || "角色保存失败，请重试";
@@ -132,9 +118,12 @@ function OrganizationRolesPage() {
       if (result.error) throw new Error(result.error.message ?? "删除角色失败");
     },
     onSuccess: async () => {
-      toast.add({ title: "角色已删除", type: "success" });
-      setDeleteTarget(null);
-      await invalidateRoleData();
+      await syncOrganizationCacheAfterChange(
+        queryClient,
+        userId,
+        org.id,
+        "role-definition-changed",
+      );
     },
     onError: (error) => {
       const message = error.message || "角色仍被成员或待处理邀请引用";

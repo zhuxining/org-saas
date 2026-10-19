@@ -35,6 +35,25 @@ const organizationOptions = {
   roles,
 } as const satisfies OrganizationOptions;
 
+const auditSchemaPlugin = {
+  id: "test-audit-schema",
+  schema: {
+    auditLog: {
+      fields: {
+        scope: { type: "string" },
+        organizationId: { type: "string", required: false },
+        actorId: { type: "string" },
+        actorName: { type: "string" },
+        action: { type: "string" },
+        targetType: { type: "string" },
+        targetId: { type: "string", required: false },
+        summary: { type: "json" },
+        occurredAt: { type: "date", defaultValue: () => new Date() },
+      },
+    },
+  },
+} as const;
+
 function createTestAuth() {
   const memoryDb: Parameters<typeof memoryAdapter>[0] = {
     user: [],
@@ -47,6 +66,7 @@ function createTestAuth() {
     team: [],
     teamMember: [],
     organizationRole: [],
+    auditLog: [],
   };
   const auth = withOrganizationMutationTransactions(
     betterAuth({
@@ -56,6 +76,7 @@ function createTestAuth() {
       emailAndPassword: { enabled: true },
       plugins: [
         organization(organizationOptions),
+        auditSchemaPlugin,
         createOrganizationPolicyPlugin(organizationOptions),
       ],
     }),
@@ -121,6 +142,38 @@ describe("organization role assignment policy", () => {
   });
 });
 
+describe("organization audit records", () => {
+  it("stores invitation events by organization without recording the invitee email", async () => {
+    const { auth, memoryDb } = createTestAuth();
+    const owner = await signUp(auth, "audit-owner@example.test");
+    const inviteeEmail = "private-invitee@example.test";
+    const organizationId = await createOrganization(auth, owner.headers);
+
+    await auth.api.createInvitation({
+      body: { organizationId, email: inviteeEmail, role: "member" },
+      headers: owner.headers,
+    });
+
+    const invitationAudit = memoryDb.auditLog?.find(
+      (candidate: unknown) => isRecord(candidate) && candidate.action === "invitation.sent",
+    );
+    if (!isRecord(invitationAudit)) throw new Error("Invitation audit record was not created");
+    expect(invitationAudit).toMatchObject({
+      scope: "organization",
+      organizationId,
+      actorId: owner.userId,
+      action: "invitation.sent",
+      targetType: "invitation",
+    });
+    const summary =
+      typeof invitationAudit.summary === "string"
+        ? (JSON.parse(invitationAudit.summary) as unknown)
+        : invitationAudit.summary;
+    expect(summary).toEqual({ role: "member" });
+    expect(JSON.stringify(invitationAudit)).not.toContain(inviteeEmail);
+  });
+});
+
 describe("organization owner transfer", () => {
   it("transfers ownership through HTTP and auth.api as one role change", async () => {
     const { auth } = createTestAuth();
@@ -167,6 +220,30 @@ describe("organization owner transfer", () => {
         expect.objectContaining({ id: member.id, role: "member" }),
       ]),
     );
+  });
+
+  it("fails closed when an owner row combines the owner role with another role", async () => {
+    const { auth, memoryDb } = createTestAuth();
+    const owner = await signUp(auth, "combined-owner-role@example.test");
+    const newMember = await signUp(auth, "combined-owner-new-member@example.test");
+    const organizationId = await createOrganization(auth, owner.headers);
+    const ownerRow = memoryDb.member?.find(
+      (candidate: unknown) => isRecord(candidate) && candidate.organizationId === organizationId,
+    );
+    if (!isRecord(ownerRow)) throw new Error("Owner membership row not found");
+    ownerRow.role = "owner,admin";
+
+    await expect(
+      auth.api.addMember({
+        body: { organizationId, userId: newMember.userId, role: "member" },
+        headers: owner.headers,
+      }),
+    ).rejects.toThrow("Organization membership changes require exactly one owner");
+    expect(
+      memoryDb.member?.some(
+        (candidate: unknown) => isRecord(candidate) && candidate.userId === newMember.userId,
+      ),
+    ).toBe(false);
   });
 
   it("allows a regular member to leave while preserving the sole owner", async () => {

@@ -5,6 +5,16 @@ const platformAc = createAccessControl(defaultStatements);
 
 export const platformAdminRoles = ["platform-admin"] as const;
 
+export function hasPlatformAdminRole(role: unknown): boolean {
+  return (
+    typeof role === "string" &&
+    role
+      .split(",")
+      .map((entry) => entry.trim())
+      .some((entry) => platformAdminRoles.includes(entry as (typeof platformAdminRoles)[number]))
+  );
+}
+
 const platformAdmin = platformAc.newRole({
   user: ["list", "get", "ban"],
   session: ["list", "revoke"],

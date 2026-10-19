@@ -11,7 +11,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { grantableRolesQueryOptions, organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
+import { grantableRolesQueryOptions } from "@/lib/query-options";
 
 interface RoleSelectProps {
   memberId: string;
@@ -37,13 +38,7 @@ export function RoleSelect({ memberId, currentRole }: RoleSelectProps) {
     },
     onSuccess: async () => {
       toast.add({ title: "角色已更新", type: "success" });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, org.id) }),
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, org.id) }),
-        queryClient.invalidateQueries({
-          queryKey: organizationQueryKeys.grantableRoles(userId, org.id, "member.update"),
-        }),
-      ]);
+      await syncOrganizationCacheAfterChange(queryClient, userId, org.id, "member-role-updated");
     },
     onError: (error) => toast.add({ title: error.message || "角色更新失败", type: "error" }),
   });

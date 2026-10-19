@@ -10,10 +10,12 @@ import { Input } from "@org-saas/ui/components/input";
 import { Label } from "@org-saas/ui/components/label";
 import { toast } from "@org-saas/ui/components/toast";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
+import { syncOrganizationListCacheAfterChange } from "@/lib/organization-cache";
 
 export const Route = createFileRoute("/_authenticated/me/organizations/new")({
   component: NewOrgPage,
@@ -21,6 +23,8 @@ export const Route = createFileRoute("/_authenticated/me/organizations/new")({
 
 function NewOrgPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = Route.useRouteContext();
 
   const form = useForm({
     defaultValues: {
@@ -39,6 +43,7 @@ function NewOrgPage() {
       }
 
       toast.add({ title: "组织创建成功", type: "success" });
+      await syncOrganizationListCacheAfterChange(queryClient, user.id);
       void navigate({ to: `/org/${value.slug}` as string });
     },
     validators: {

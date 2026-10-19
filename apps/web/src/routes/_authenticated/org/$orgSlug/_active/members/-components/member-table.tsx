@@ -1,3 +1,4 @@
+import { hasOrganizationOwnerRole } from "@org-saas/auth/organization-owner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +37,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
 
 import { RoleSelect } from "./role-select";
 import { TransferOwnershipDialog } from "./transfer-ownership-dialog";
@@ -67,19 +68,6 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
   const canDeleteMembers = usePermission({ member: ["delete"] });
   const canCancelInvite = usePermission({ invitation: ["cancel"] });
 
-  const invalidateOrg = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, orgId) }),
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, orgId) }),
-      queryClient.invalidateQueries({
-        queryKey: organizationQueryKeys.grantableRoles(userId, orgId, "member.update"),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: organizationQueryKeys.grantableRoles(userId, orgId, "invitation.create"),
-      }),
-    ]);
-  };
-
   const handleRemoveMember = async (memberIdOrEmail: string) => {
     setPendingAction(memberIdOrEmail);
     try {
@@ -89,7 +77,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       });
       if (result.error) throw new Error(result.error.message ?? "移除失败");
       toast.add({ title: "成员已移除", type: "success" });
-      await invalidateOrg();
+      await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "member-removed");
     } catch (error) {
       toast.add({ title: error instanceof Error ? error.message : "移除失败", type: "error" });
     } finally {
@@ -103,7 +91,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       const result = await authClient.organization.leave({ organizationId: orgId });
       if (result.error) throw new Error(result.error.message ?? "退出组织失败");
       toast.add({ title: "已退出组织", type: "success" });
-      queryClient.removeQueries({ queryKey: organizationQueryKeys.root(userId) });
+      await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "organization-left");
       await navigate({ to: "/me/organizations" });
     } catch (error) {
       toast.add({ title: error instanceof Error ? error.message : "退出组织失败", type: "error" });
@@ -118,7 +106,7 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
       const result = await authClient.organization.cancelInvitation({ invitationId });
       if (result.error) throw new Error(result.error.message ?? "取消失败");
       toast.add({ title: "邀请已取消", type: "success" });
-      await invalidateOrg();
+      await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "invitation-canceled");
     } catch (error) {
       toast.add({ title: error instanceof Error ? error.message : "取消失败", type: "error" });
     } finally {
@@ -186,14 +174,14 @@ export function MemberTable({ members, invitations, orgId }: MemberTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                {canUpdateMembers && m.role !== "owner" ? (
+                {canUpdateMembers && !hasOrganizationOwnerRole(m.role) ? (
                   <RoleSelect memberId={m.id} currentRole={m.role} />
                 ) : (
                   <RoleBadge role={m.role} />
                 )}
               </TableCell>
               <TableCell>
-                {canDeleteMembers && m.role !== "owner" && (
+                {canDeleteMembers && !hasOrganizationOwnerRole(m.role) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
                       <MoreHorizontal className="size-4" />

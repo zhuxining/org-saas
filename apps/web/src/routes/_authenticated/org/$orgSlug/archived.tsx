@@ -13,7 +13,8 @@ import { createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/rea
 import { ArchiveRestore, ArrowLeft } from "lucide-react";
 
 import { useOrgContext } from "@/lib/org-context";
-import { organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
+import { organizationQueryKeys } from "@/lib/organization-query-keys";
 import { ForbiddenError } from "@/utils/errors";
 import { client } from "@/utils/orpc";
 
@@ -27,11 +28,7 @@ export const Route = createFileRoute("/_authenticated/org/$orgSlug/archived")({
     }
   },
   loader: async ({ context }) => {
-    const queryKey = [
-      ...organizationQueryKeys.root(context.user.id),
-      context.org.id,
-      "archived-status",
-    ] as const;
+    const queryKey = organizationQueryKeys.archivedStatus(context.user.id, context.org.id);
     await context.queryClient.ensureQueryData({
       queryKey,
       queryFn: () => client.organization.archivedStatus({ organizationId: context.org.id }),
@@ -45,7 +42,7 @@ function ArchivedOrganizationPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const queryKey = [...organizationQueryKeys.root(userId), org.id, "archived-status"] as const;
+  const queryKey = organizationQueryKeys.archivedStatus(userId, org.id);
   const { data } = useSuspenseQuery({
     queryKey,
     queryFn: () => client.organization.archivedStatus({ organizationId: org.id }),
@@ -55,7 +52,7 @@ function ArchivedOrganizationPage() {
     mutationFn: () => client.organization.restore({ organizationId: org.id }),
     onSuccess: async () => {
       toast.add({ title: "组织已恢复", type: "success" });
-      await queryClient.invalidateQueries({ queryKey: organizationQueryKeys.root(userId) });
+      await syncOrganizationCacheAfterChange(queryClient, userId, org.id, "organization-restored");
       await router.invalidate();
       await navigate({ to: "/org/$orgSlug", params: { orgSlug: data.slug } });
     },

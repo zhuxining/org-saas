@@ -29,7 +29,8 @@ import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { grantableRolesQueryOptions, organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
+import { grantableRolesQueryOptions } from "@/lib/query-options";
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -60,9 +61,7 @@ export function InviteMemberDialog({ open, onOpenChange, orgId }: InviteMemberDi
         toast.add({ title: `已向 ${value.email} 发送邀请`, type: "success" });
         onOpenChange(false);
         form.reset();
-        await queryClient.invalidateQueries({
-          queryKey: organizationQueryKeys.full(userId, orgId),
-        });
+        await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "invitation-created");
       } catch (error) {
         toast.add({
           title: error instanceof Error ? error.message : "邀请失败，请重试",

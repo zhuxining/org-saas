@@ -5,8 +5,19 @@ import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { authClient } from "@/lib/auth-client";
+import {
+  organizationListQueryKey,
+  organizationQueryKeys,
+  platformQueryKeys,
+} from "@/lib/organization-query-keys";
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/utils/errors";
 import { client } from "@/utils/orpc";
+
+export {
+  organizationListQueryKey,
+  organizationQueryKeys,
+  platformQueryKeys,
+} from "@/lib/organization-query-keys";
 
 function rethrowAuthorizationError(error: unknown): never {
   const details =
@@ -49,20 +60,6 @@ const getOrganizationFull = createIsomorphicFn()
     if (result.error) rethrowAuthorizationError(result.error);
     return result.data;
   });
-
-export const organizationQueryKeys = {
-  root: (userId: string) => ["organization", userId] as const,
-  contextBySlug: (userId: string, slug: string) =>
-    ["organization", userId, "context", slug] as const,
-  access: (userId: string, organizationId: string) =>
-    ["organization", userId, organizationId, "access"] as const,
-  full: (userId: string, organizationId: string) =>
-    ["organization", userId, organizationId, "full"] as const,
-  roles: (userId: string, organizationId: string) =>
-    ["organization", userId, organizationId, "roles"] as const,
-  grantableRoles: (userId: string, organizationId: string, operation: string) =>
-    ["organization", userId, organizationId, "grantable-roles", operation] as const,
-};
 
 export const organizationContextBySlugQueryOptions = (userId: string, slug: string) =>
   queryOptions({
@@ -126,17 +123,9 @@ export const orgFullQueryOptions = organizationFullQueryOptions;
 
 export const orgListQueryOptions = (userId: string) =>
   queryOptions({
-    queryKey: ["organizations", userId],
+    queryKey: organizationListQueryKey(userId),
     queryFn: () => getOrganizations(),
   });
-
-export const platformQueryKeys = {
-  root: (userId: string) => ["platform", userId] as const,
-  users: (userId: string, input: { search?: string; limit: number; offset: number }) =>
-    ["platform", userId, "users", input] as const,
-  userSessions: (userId: string, targetUserId: string) =>
-    ["platform", userId, "user-sessions", targetUserId] as const,
-};
 
 export const platformUsersQueryOptions = (
   userId: string,
@@ -162,7 +151,7 @@ export const platformOrganizationsQueryOptions = (
   input: { search?: string; limit: number; offset: number },
 ) =>
   queryOptions({
-    queryKey: ["platform", userId, "organizations", input] as const,
+    queryKey: platformQueryKeys.organizations(userId, input),
     queryFn: () => client.platform.listOrganizations(input),
   });
 

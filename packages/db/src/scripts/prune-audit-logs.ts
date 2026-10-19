@@ -1,9 +1,10 @@
 import { inArray, lt } from "drizzle-orm";
 
+import { getAuditLogRetentionCutoff } from "../audit-retention";
 import { db } from "../index";
 import { auditLog } from "../schema/auth";
 
-const retentionCutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+const retentionCutoff = getAuditLogRetentionCutoff();
 const batchSize = 1_000;
 let deletedCount = 0;
 

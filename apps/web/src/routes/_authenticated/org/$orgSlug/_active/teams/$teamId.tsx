@@ -37,7 +37,8 @@ import { UserAvatar } from "@/components/user-avatar";
 import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { organizationFullQueryOptions, organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
+import { organizationFullQueryOptions } from "@/lib/query-options";
 
 import { EditTeamDialog } from "./-components/edit-team-dialog";
 
@@ -102,7 +103,7 @@ function TeamDetailPage() {
         type: "success",
       });
       if (input.action === "add") setSelectedUserId("");
-      await queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, org.id) });
+      await syncOrganizationCacheAfterChange(queryClient, userId, org.id, "team-member-changed");
     },
     onError: (error) => toast.add({ title: error.message || "团队成员更新失败", type: "error" }),
   });
@@ -115,10 +116,7 @@ function TeamDetailPage() {
     onSuccess: async () => {
       toast.add({ title: "团队已删除", type: "success" });
       setDeleteOpen(false);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, org.id) }),
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, org.id) }),
-      ]);
+      await syncOrganizationCacheAfterChange(queryClient, userId, org.id, "team-deleted");
       await navigate({ to: "/org/$orgSlug/teams", params: { orgSlug } });
     },
     onError: (error) => toast.add({ title: error.message || "删除失败，请重试", type: "error" }),

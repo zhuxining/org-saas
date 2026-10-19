@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Mail, Users, UsersRound } from "lucide-react";
 
 import { useOrgContext } from "@/lib/org-context";
+import { organizationQueryKeys } from "@/lib/organization-query-keys";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active/")({
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active/")({
     await context.queryClient.ensureQueryData(
       orpc.dashboard.orgStats.queryOptions({
         input: { orgId: context.org.id },
+        queryKey: organizationQueryKeys.dashboardStats(context.user.id, context.org.id),
       }),
     );
   },
@@ -18,10 +20,13 @@ export const Route = createFileRoute("/_authenticated/org/$orgSlug/_active/")({
 });
 
 function OrgDashboard() {
-  const { org } = useOrgContext();
+  const { org, userId } = useOrgContext();
 
   const { data: stats } = useSuspenseQuery(
-    orpc.dashboard.orgStats.queryOptions({ input: { orgId: org.id } }),
+    orpc.dashboard.orgStats.queryOptions({
+      input: { orgId: org.id },
+      queryKey: organizationQueryKeys.dashboardStats(userId, org.id),
+    }),
   );
 
   const statCards = [

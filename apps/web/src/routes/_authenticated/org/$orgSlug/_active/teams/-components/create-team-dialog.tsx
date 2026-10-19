@@ -15,7 +15,7 @@ import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { organizationFullQueryOptions, organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
 
 interface CreateTeamDialogProps {
   open: boolean;
@@ -41,10 +41,7 @@ export function CreateTeamDialog({ open, onOpenChange, orgId }: CreateTeamDialog
       toast.add({ title: "团队创建成功", type: "success" });
       onOpenChange(false);
       form.reset();
-      await queryClient.invalidateQueries(organizationFullQueryOptions(userId, orgId));
-      await queryClient.invalidateQueries({
-        queryKey: organizationQueryKeys.access(userId, orgId),
-      });
+      await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "team-created");
     },
     validators: {
       onSubmit: z.object({ name: z.string().min(2, "团队名称至少 2 个字符") }),

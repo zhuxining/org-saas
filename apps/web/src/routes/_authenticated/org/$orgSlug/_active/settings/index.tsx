@@ -30,7 +30,7 @@ import { z } from "zod";
 import { usePermission } from "@/hooks/use-permission";
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
 import { ForbiddenError } from "@/utils/errors";
 import { client } from "@/utils/orpc";
 
@@ -52,14 +52,6 @@ function SettingsPage() {
   const canUpdate = usePermission({ organization: ["update"] });
   const canArchive = usePermission({ organization: ["archive"] });
 
-  const invalidateOrganization = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.root(userId) }),
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, org.id) }),
-      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, org.id) }),
-    ]);
-  };
-
   const form = useForm({
     defaultValues: { name: org.name, slug: org.slug },
     onSubmit: async ({ value }) => {
@@ -73,7 +65,12 @@ function SettingsPage() {
       }
 
       toast.add({ title: "组织设置已更新", type: "success" });
-      await invalidateOrganization();
+      await syncOrganizationCacheAfterChange(
+        queryClient,
+        userId,
+        org.id,
+        "organization-settings-changed",
+      );
       await router.invalidate();
       if (value.slug !== org.slug) {
         await navigate({ to: "/org/$orgSlug/settings", params: { orgSlug: value.slug } });
@@ -95,7 +92,7 @@ function SettingsPage() {
     onSuccess: async () => {
       toast.add({ title: "组织已归档", type: "success" });
       setArchiveOpen(false);
-      await invalidateOrganization();
+      await syncOrganizationCacheAfterChange(queryClient, userId, org.id, "organization-archived");
       await router.invalidate();
       await navigate({ to: "/org/$orgSlug/archived", params: { orgSlug: org.slug } });
     },

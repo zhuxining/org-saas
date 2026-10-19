@@ -15,7 +15,7 @@ import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
 
 interface EditTeamDialogProps {
   open: boolean;
@@ -48,10 +48,7 @@ export function EditTeamDialog({
       toast.add({ title: "团队名称已更新", type: "success" });
       form.setFieldValue("name", value.name);
       onOpenChange(false);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, orgId) }),
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, orgId) }),
-      ]);
+      await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "team-updated");
     },
     validators: {
       onSubmit: z.object({ name: z.string().trim().min(2, "团队名称至少 2 个字符") }),

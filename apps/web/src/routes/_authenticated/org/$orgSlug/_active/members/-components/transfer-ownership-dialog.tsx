@@ -1,3 +1,4 @@
+import { hasOrganizationOwnerRole } from "@org-saas/auth/organization-owner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,8 @@ import { useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
 import { useOrgContext } from "@/lib/org-context";
-import { grantableRolesQueryOptions, organizationQueryKeys } from "@/lib/query-options";
+import { syncOrganizationCacheAfterChange } from "@/lib/organization-cache";
+import { grantableRolesQueryOptions } from "@/lib/query-options";
 
 interface TransferOwnershipDialogProps {
   members: Array<{
@@ -42,8 +44,8 @@ export function TransferOwnershipDialog({ members, orgId }: TransferOwnershipDia
   const { userId } = useOrgContext();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const currentOwner = members.find((member) => member.role === "owner");
-  const candidates = members.filter((member) => member.role !== "owner");
+  const currentOwner = members.find((member) => hasOrganizationOwnerRole(member.role));
+  const candidates = members.filter((member) => !hasOrganizationOwnerRole(member.role));
   const [targetMemberId, setTargetMemberId] = useState(candidates[0]?.id ?? "");
   const [formerOwnerRole, setFormerOwnerRole] = useState("member");
   const [open, setOpen] = useState(false);
@@ -63,14 +65,7 @@ export function TransferOwnershipDialog({ members, orgId }: TransferOwnershipDia
       if (result.error) throw new Error(result.error.message ?? "所有权转让失败");
       toast.add({ title: "组织所有权已转让", type: "success" });
       setOpen(false);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.full(userId, orgId) }),
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.access(userId, orgId) }),
-        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.roles(userId, orgId) }),
-        queryClient.invalidateQueries({
-          queryKey: organizationQueryKeys.grantableRoles(userId, orgId, "member.update"),
-        }),
-      ]);
+      await syncOrganizationCacheAfterChange(queryClient, userId, orgId, "ownership-transferred");
       await router.invalidate();
     } catch (error) {
       toast.add({

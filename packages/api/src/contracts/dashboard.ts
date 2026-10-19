@@ -2,6 +2,8 @@ import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import { z } from "zod";
 
+import { organizationErrorData } from "./organization";
+
 export const dashboardContract = {
   orgStats: oc
     .meta(
@@ -14,7 +16,9 @@ export const dashboardContract = {
     )
     .errors({
       UNAUTHORIZED: { message: "请先登录" },
-      FORBIDDEN: { message: "您无权访问此组织" },
+      FORBIDDEN: { message: "您无权访问此组织", data: organizationErrorData },
+      NOT_FOUND: { message: "组织不存在", data: organizationErrorData },
+      CONFLICT: { message: "组织所有权状态需要审查", data: organizationErrorData },
     })
     .input(z.object({ orgId: z.string() }))
     .output(
