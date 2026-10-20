@@ -2,7 +2,7 @@ import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import { z } from "zod";
 
-import { organizationErrorData } from "./organization";
+import { organizationErrorData, organizationIdSchema } from "./organization";
 
 export const dashboardContract = {
   orgStats: oc
@@ -20,7 +20,7 @@ export const dashboardContract = {
       NOT_FOUND: { message: "组织不存在", data: organizationErrorData },
       CONFLICT: { message: "组织所有权状态需要审查", data: organizationErrorData },
     })
-    .input(z.object({ orgId: z.string() }))
+    .input(z.object({ orgId: organizationIdSchema }))
     .output(
       z.object({
         memberCount: z.number(),

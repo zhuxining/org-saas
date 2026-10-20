@@ -32,7 +32,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "Org SaaS",
       },
     ],
     links: [
@@ -70,22 +70,24 @@ function RootDocument() {
               <Outlet /> <Toaster />
             </TooltipProvider>
           </div>
-          <TanStackDevtools
-            plugins={[
-              {
-                name: "TanStack Query",
-                render: <ReactQueryDevtoolsPanel />,
-              },
-              {
-                name: "TanStack Router",
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              {
-                name: "TanStack Form",
-                render: <FormDevtoolsPanel />,
-              },
-            ]}
-          />
+          {import.meta.env.DEV && (
+            <TanStackDevtools
+              plugins={[
+                {
+                  name: "TanStack Query",
+                  render: <ReactQueryDevtoolsPanel />,
+                },
+                {
+                  name: "TanStack Router",
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                {
+                  name: "TanStack Form",
+                  render: <FormDevtoolsPanel />,
+                },
+              ]}
+            />
+          )}
         </ThemeProvider>
         <Scripts />
       </body>

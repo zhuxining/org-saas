@@ -19,12 +19,6 @@ export default function Footer() {
           <Link to="/about" className="hover:text-foreground transition-colors hover:underline">
             About
           </Link>
-          <Link to="/" className="hover:text-foreground transition-colors hover:underline">
-            Terms
-          </Link>
-          <Link to="/" className="hover:text-foreground transition-colors hover:underline">
-            Privacy
-          </Link>
         </nav>
       </div>
     </footer>

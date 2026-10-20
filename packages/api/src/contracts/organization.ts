@@ -19,7 +19,8 @@ function apiError(message: string) {
   return { message, data: organizationErrorData };
 }
 
-const organizationIdInput = z.object({ organizationId: z.string().min(1).max(200) });
+export const organizationIdSchema = z.string().min(1).max(200);
+const organizationIdInput = z.object({ organizationId: organizationIdSchema });
 
 const organizationStatusOutput = z.object({
   organizationId: z.string(),

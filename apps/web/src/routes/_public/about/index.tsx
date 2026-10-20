@@ -1,144 +1,116 @@
+import { Badge } from "@org-saas/ui/components/badge";
 import { Button } from "@org-saas/ui/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@org-saas/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@org-saas/ui/components/card";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Mail, MapPin } from "lucide-react";
+import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/_public/about/")({
+  head: () => ({
+    meta: [
+      { title: "About | Org SaaS" },
+      {
+        name: "description",
+        content:
+          "Learn how Org SaaS organizes organization membership, roles, teams, and audit history.",
+      },
+    ],
+  }),
   component: AboutPage,
 });
+
+const capabilities = [
+  {
+    title: "Membership and roles",
+    description:
+      "Invite members and manage organization access with owner, admin, member, and custom roles.",
+    details: [
+      "Manage organization members and invitations",
+      "Use owner, admin, and member roles",
+      "Create custom roles within granted permissions",
+    ],
+  },
+  {
+    title: "Team collaboration",
+    description: "Organize members into teams while keeping access scoped to each organization.",
+    details: [
+      "Create and update teams",
+      "Manage team membership",
+      "Teams do not grant permissions by themselves",
+    ],
+  },
+  {
+    title: "Audit history",
+    description:
+      "Review organization activity with permission-aware access and a 180-day retention policy.",
+    details: [
+      "Review organization audit events",
+      "Access follows organization audit permissions",
+      "Audit records follow a 180-day retention policy",
+    ],
+  },
+];
 
 function AboutPage() {
   return (
     <section className="container mx-auto px-4 py-20">
-      <div className="mb-12 text-center">
-        <h1 className="mb-4 text-4xl font-bold md:text-5xl">About Us</h1>
-        <p className="text-muted-foreground text-lg">
-          Building tools that help organizations thrive
-        </p>
-      </div>
+      <div className="mx-auto max-w-5xl">
+        <header className="mx-auto mb-12 max-w-3xl text-center">
+          <Badge variant="secondary" className="mb-4">
+            Org SaaS
+          </Badge>
+          <h1 className="mb-4 text-4xl font-bold md:text-5xl">
+            Organization workspaces with clear access
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Org SaaS helps organizations manage members, roles, teams, and activity from one shared
+            workspace.
+          </p>
+        </header>
 
-      <div className="mx-auto max-w-4xl space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Our Mission</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground leading-relaxed">
-              We believe that effective collaboration is the key to success in today's fast-paced
-              world. Our platform is designed to simplify how organizations manage their teams,
-              members, and resources. We're committed to providing intuitive tools that empower
-              teams to work together seamlessly, regardless of their size or complexity.
-            </p>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Our Values</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="mb-2 font-semibold">Simplicity First</h3>
-                <p className="text-muted-foreground">
-                  Complex problems deserve simple solutions. We strive to make every interaction
-                  intuitive and straightforward.
-                </p>
-              </div>
-              <div>
-                <h3 className="mb-2 font-semibold">Reliability Matters</h3>
-                <p className="text-muted-foreground">
-                  You can count on us. We build robust systems that work when you need them most.
-                </p>
-              </div>
-              <div>
-                <h3 className="mb-2 font-semibold">Continuous Innovation</h3>
-                <p className="text-muted-foreground">
-                  We never stop improving. Your feedback drives our evolution, and we're always
-                  pushing forward.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="mb-3 font-semibold">Get in Touch</h3>
-                <p className="text-muted-foreground mb-4">
-                  Have questions or want to learn more? We'd love to hear from you.
-                </p>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                      <Mail className="text-primary h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Email</p>
-                      <p className="text-muted-foreground text-sm">support@example.com</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                      <MapPin className="text-primary h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Location</p>
-                      <p className="text-muted-foreground text-sm">San Francisco, CA</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-3 font-semibold">Business Hours</h3>
-                <div className="text-muted-foreground space-y-2">
-                  <div className="flex justify-between">
-                    <span>Monday - Friday</span>
-                    <span>9:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Saturday - Sunday</span>
-                    <span>Closed</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-3 font-semibold">Social Media</h3>
-                <div className="flex gap-3">
-                  <Link to="/" className="bg-muted hover:bg-muted/80 rounded-md px-4 py-2 text-sm">
-                    Twitter
-                  </Link>
-                  <Link to="/" className="bg-muted hover:bg-muted/80 rounded-md px-4 py-2 text-sm">
-                    LinkedIn
-                  </Link>
-                  <Link to="/" className="bg-muted hover:bg-muted/80 rounded-md px-4 py-2 text-sm">
-                    GitHub
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid gap-6 md:grid-cols-3">
+          {capabilities.map(({ title, description, details }) => (
+            <Card key={title} className="h-full">
+              <CardHeader>
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="flex flex-col gap-3 text-sm">
+                  {details.map((detail) => (
+                    <li key={detail} className="flex items-start gap-2">
+                      <Check aria-hidden="true" className="text-primary mt-0.5 size-4 shrink-0" />
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <Card className="bg-primary text-primary-foreground">
-          <CardHeader>
-            <CardTitle>Join Our Team</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="mb-6 text-lg">
-              We're always looking for talented people to join our team and help us build the future
-              of collaboration.
-            </p>
+        <div className="bg-muted/30 mt-12 rounded-xl border p-8 text-center">
+          <h2 className="mb-3 text-2xl font-semibold">Explore Org SaaS</h2>
+          <p className="text-muted-foreground mx-auto mb-6 max-w-2xl">
+            Create an account to explore the organization workspace. Pricing and plan limits have
+            not been set.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
             <Link to="/login" search={{ redirect: undefined }}>
-              <Button size="lg" variant="secondary">
-                View Open Positions
+              <Button size="lg">Get started</Button>
+            </Link>
+            <Link to="/pricing">
+              <Button size="lg" variant="outline">
+                View pricing status
               </Button>
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -6,7 +6,7 @@
     "test:e2e": "node scripts/run-browser-tests.ts"
   },
   "devDependencies": {
-    "@better-auth/core": "1.7.7",
+    "@better-auth/core": "catalog:",
     "@org-saas/api": "workspace:*",
     "@org-saas/auth": "workspace:*",
     "@org-saas/config": "workspace:*",
